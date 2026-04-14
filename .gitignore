@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# Ignore node modules and environment files
+node_modules/
+.env
