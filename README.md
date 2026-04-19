@@ -8,7 +8,6 @@ What sets GIU Nexus apart from traditional job boards is its integration of AI-p
 ---
 
 ## Key Features
-
 ### For Students
 - **AI Skill Extraction**  
   Automatically detects skills from student profiles using natural language processing (NLP), eliminating the need for manual tagging.
@@ -35,7 +34,6 @@ What sets GIU Nexus apart from traditional job boards is its integration of AI-p
 
 ## AI Capabilities
 GIU Nexus leverages the Hugging Face Inference API to power:
-
 - Named Entity Recognition (NER) or Text Classification for skill extraction  
 - Job Category Classification  
 - Semantic Matching between student profiles and job descriptions  
