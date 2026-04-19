@@ -13,8 +13,6 @@ const LocationSchema = new mongoose.Schema(
 
 const JobPostSchema = new mongoose.Schema(
   {
-   
-
     title: {
       type: String,
       required: true,
