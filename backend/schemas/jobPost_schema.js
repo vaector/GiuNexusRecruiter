@@ -13,7 +13,7 @@ const LocationSchema = new mongoose.Schema(
 
 const JobPostSchema = new mongoose.Schema(
   {
-    // ✅ ORDER FIXED AS REQUESTED
+   
 
     title: {
       type: String,
