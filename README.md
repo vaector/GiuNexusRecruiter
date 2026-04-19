@@ -1,6 +1,6 @@
 # GIU Nexus – AI-Powered Career Platform
 
-## Overview
+## Overview .
 GIU Nexus is a full-stack web application designed to help university students discover internships and job opportunities while enabling recruiters to efficiently find the most suitable candidates.
 
 What sets GIU Nexus apart from traditional job boards is its integration of AI-powered features using the Hugging Face Inference API. The platform intelligently analyzes user data, automates classification, and delivers personalized recommendations—making the job search process smarter and faster.
