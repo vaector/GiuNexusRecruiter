@@ -129,6 +129,13 @@ const JobSearchStatus = Object.freeze({
   NOT_LOOKING: "not_looking",
 });
 
+const PreviousAppraisalRating = Object.freeze({
+  EXCELLENT: "excellent",
+  GOOD: "good",
+  SATISFACTORY: "satisfactory",
+  NEEDS_IMPROVEMENT: "needs_improvement",
+});
+
 const SalaryPeriod = Object.freeze({
   HOURLY: "hourly",
   MONTHLY: "monthly",
@@ -197,6 +204,7 @@ module.exports = {
   ReferralStatus,
   AuditAction,
   JobSearchStatus,
+  PreviousAppraisalRating,
   SalaryPeriod,
   ScreeningQuestionType,
   ReportReason,
