@@ -1,5 +1,6 @@
 ```mermaid
 erDiagram
+    User ||--|| JobSeeker : extends
     User ||--o{ JobPost : creates
     User ||--o{ Application : submits
     JobPost ||--o{ Application : receives
@@ -26,6 +27,12 @@ erDiagram
         string role
         string email
         string name
+    }
+
+    JobSeeker {
+        objectId _id
+        string resumeUrl
+        object previousAppraisals[]
     }
 
     JobPost {

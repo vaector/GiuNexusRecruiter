@@ -19,7 +19,7 @@ What sets GIU Nexus apart from traditional job boards is its integration of AI-p
 ## User Roles
 
 ### Job Seeker
-A university student looking for internships or entry-level positions. Job seekers can create a profile, browse approved job listings, apply to jobs, track their applications, and receive AI-generated skill suggestions based on their profile content. 
+A university student looking for internships or entry-level positions. Job seekers can create a profile, browse approved job listings, apply to jobs, track their applications, upload supporting evidence such as prior performance reviews, and receive AI-generated skill suggestions based on their profile content. 
 
 ### Recruiter
 A company representative who can create, edit, and manage job listings. Recruiters can view applicants, update application statuses, and benefit from AI-based job categorization and candidate matching. 
@@ -39,7 +39,7 @@ System administrators manage recruiter approvals, moderate listings, and monitor
   Recommends relevant internships and jobs based on profile content, extracted skills, and similarity matching.
 
 - **Profile Management**  
-  Create, update, and manage academic and professional profiles.
+  Create, update, and manage academic and professional profiles, including supporting documents such as prior performance reviews.
 
 - **Application Tracking**  
   Apply to jobs and monitor application progress through the platform. 

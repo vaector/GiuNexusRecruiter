@@ -10,6 +10,8 @@ Indexes focus on common access paths such as job filtering, recruiter-owned post
 Embeddings are stored directly on `JobSeeker` and `JobPost`.
 This keeps writes simple and avoids a separate vector store for now.
 The tradeoff is that similarity search stays application-driven and will not scale as far as dedicated ANN infrastructure.
+`JobSeeker` also stores applicant-owned supporting evidence such as prior employer performance reviews in `previousAppraisals`.
+These are uploaded once on the candidate profile and shown during application review without being treated as platform-generated appraisals.
 
 ## 2. AI Pipeline
 The AI pipeline has three main entry points.
@@ -38,6 +40,7 @@ Each stage change is stored in `stageHistory` so the system keeps a clear candid
 Interview details can live in an `interviewSchedule` subdocument.
 
 Hiring documents like offer letters, contracts, and NDAs live in a separate `ApplicationDocument` collection linked to the application.
+That collection stays distinct from profile evidence like resumes, portfolios, and prior performance-review PDFs stored on `JobSeeker`.
 This makes the platform closer to a real ATS instead of a simple apply-or-reject system.
 
 ## 5. Real-Time Communication

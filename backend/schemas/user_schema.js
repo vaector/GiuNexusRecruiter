@@ -7,6 +7,7 @@ const {
   ExperienceLevel,
   CompanySize,
   JobSearchStatus,
+  PreviousAppraisalRating,
 } = require("../enums");
 
 const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
@@ -68,6 +69,44 @@ const JobSeekerSkillSchema = new mongoose.Schema(
     flagged: {
       type: Boolean,
       default: false,
+    },
+  },
+  { _id: false }
+);
+
+const PreviousAppraisalSchema = new mongoose.Schema(
+  {
+    company: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 120,
+    },
+    role: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 120,
+    },
+    period: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 80,
+    },
+    rating: {
+      type: String,
+      enum: Object.values(PreviousAppraisalRating),
+      required: true,
+    },
+    documentUrl: {
+      type: String,
+      required: true,
+      trim: true,
+      match: [urlRegex, "Invalid URL format"],
+    },
+    verifiedAt: {
+      type: Date,
     },
   },
   { _id: false }
@@ -246,6 +285,8 @@ const JobSeeker = User.discriminator(
     embeddings: [Number],
 
     skills: [JobSeekerSkillSchema],
+
+    previousAppraisals: [PreviousAppraisalSchema],
 
   })
 );
