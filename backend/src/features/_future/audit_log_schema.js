@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const enums = require("../enums");
 
 const AuditLogSchema = new mongoose.Schema(
   {
@@ -10,6 +11,7 @@ const AuditLogSchema = new mongoose.Schema(
     actorRole: {
       type: String,
       required: true,
+      enum: Object.values(enums.Role),
     },
     action: {
       type: String,

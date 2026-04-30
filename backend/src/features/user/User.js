@@ -1,5 +1,98 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+
+const bcrypt = require("bcryptjs");
+
+const USER_ROLES = ["jobSeeker", "recruiter", "admin"];
+const USER_STATUSES = ["pending", "approved", "rejected"];
+
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
+
+    profilePicture: {
+      type: String,
+    },
+
+    bio: {
+      type: String,
+    },
+
+    skills: [String],
+
+    role: {
+      type: String,
+      enum: USER_ROLES,
+      default: "jobSeeker",
+    },
+
+    status: {
+      type: String,
+      enum: USER_STATUSES,
+      default: "pending",
+    },
+
+    savedJobs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "JobPost",
+      },
+    ],
+
+    resetPasswordToken: {
+      type: String,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+  }
+);
+
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+UserSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+UserSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.password;
+    delete ret.__v;
+    return ret;
+  },
+});
+
+const User = mongoose.models.User || mongoose.model("User", UserSchema);
+
+module.exports = User;
+
+// --- FUTURE FIELDS (not needed for M2) ---
+/*
 const {
   Role,
   RecruiterStatus,
@@ -8,7 +101,7 @@ const {
   CompanySize,
   JobSearchStatus,
   PreviousAppraisalRating,
-} = require("../enums");
+} = require("../../enums");
 
 const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
 
@@ -130,111 +223,53 @@ const ApplicationStatsSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const UserSchema = new mongoose.Schema(
-  {
-    userCode: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+userCode: {
+  type: String,
+  required: true,
+  unique: true,
+},
+linkedIn: {
+  type: String,
+  match: [urlRegex, "Invalid URL format"],
+},
+github: {
+  type: String,
+  match: [urlRegex, "Invalid URL format"],
+},
+portfolio: {
+  type: String,
+  match: [urlRegex, "Invalid URL format"],
+},
+lastActive: {
+  type: Date,
+  default: Date.now,
+},
+notificationPreferences: {
+  type: NotificationPreferencesSchema,
+  default: () => ({}),
+},
+twoFactorSecret: {
+  type: String,
+},
+twoFactorEnabled: {
+  type: Boolean,
+  default: false,
+},
+passwordReset: {
+  type: PasswordResetSchema,
+  default: () => ({}),
+},
+referralCode: {
+  type: String,
+  unique: true,
+  sparse: true,
+  trim: true,
+  uppercase: true,
+},
 
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      minlength: 4,
-      maxlength: 120,
-    },
-
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
-    },
-
-    password: {
-      type: String,
-      required: true,
-      minLength: 8,
-      maxLength: 30
-    },
-
-    role: {
-      type: String,
-      enum: Object.values(Role),
-      required: true,
-      default: Role.JOB_SEEKER,
-    },
-
-    bio: {
-      type: String,
-    },
-
-    linkedIn: {
-      type: String,
-      match: [urlRegex, "Invalid URL format"],
-    },
-
-    github: {
-      type: String,
-      match: [urlRegex, "Invalid URL format"],
-    },
-
-    portfolio: {
-      type: String,
-      match: [urlRegex, "Invalid URL format"],
-    },
-
-    lastActive: {
-      type: Date,
-      default: Date.now,
-    },
-
-    notificationPreferences: {
-      type: NotificationPreferencesSchema,
-      default: () => ({}),
-    },
-
-    twoFactorSecret: {
-      type: String,
-    },
-
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false,
-    },
-
-    passwordReset: {
-      type: PasswordResetSchema,
-      default: () => ({}),
-    },
-
-    profilePicture: {
-      type: String,
-    },
-
-    referralCode: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-      uppercase: true,
-    },
-  },
-
-  {
-    timestamps: true,
-    discriminatorKey: "role",
-  }
-
-);
-
-
-const User = mongoose.model("User", UserSchema);
-
+// Future role-specific model setup:
+// Add this to the UserSchema options if role-specific discriminator models are needed.
+discriminatorKey: "role",
 
 const JobSeeker = User.discriminator(
   Role.JOB_SEEKER,
@@ -242,63 +277,41 @@ const JobSeeker = User.discriminator(
     resumeUrl: {
       type: String,
     },
-
     preferredRoles: [String],
-
     availability: {
       type: String,
       enum: Object.values(Availability),
       default: Availability.IMMEDIATELY,
     },
-
     experienceLevel: {
       type: String,
       enum: Object.values(ExperienceLevel),
       default: ExperienceLevel.STUDENT,
     },
-
     jobSearchStatus: {
       type: String,
       enum: Object.values(JobSearchStatus),
       default: JobSearchStatus.ACTIVELY_LOOKING,
     },
-
     applicationStats: {
       type: ApplicationStatsSchema,
       default: () => ({}),
     },
-
     completenessScore: {
       type: Number,
       min: 0,
       max: 100,
       default: 0,
     },
-
-    savedJobs: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "job_post",
-      },
-    ],
-
     embeddings: [Number],
-
     skills: [JobSeekerSkillSchema],
-
     previousAppraisals: [PreviousAppraisalSchema],
-
   })
 );
 
 const Recruiter = User.discriminator(
   Role.RECRUITER,
   new mongoose.Schema({
-    status: {
-      type: String,
-      enum: Object.values(RecruiterStatus),
-      default: RecruiterStatus.PENDING,
-    },
     companyName: {
       type: String,
     },
@@ -316,32 +329,5 @@ const Recruiter = User.discriminator(
   })
 );
 
-const Admin = User.discriminator(
-  Role.ADMIN,
-  new mongoose.Schema({})
-);
-
-// Hooks
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
-
-// Methods
-UserSchema.methods.comparePassword = function (candidate) {
-  return bcrypt.compare(candidate, this.password);
-};
-
-// Remove sensitive data
-UserSchema.set("toJSON", {
-  transform: (_doc, ret) => {
-    delete ret.password;
-    delete ret.twoFactorSecret;
-    delete ret.passwordReset;
-    delete ret.__v;
-    return ret;
-  },
-});
-
-module.exports = mongoose.models.User || User;
+const Admin = User.discriminator(Role.ADMIN, new mongoose.Schema({}));
+*/
