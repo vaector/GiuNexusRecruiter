@@ -1,0 +1,16 @@
+$kind: http-request
+name: Update My Profile
+method: PATCH
+url: '{{baseUrl}}/api/v1/profile'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "tarek bastard",
+      "bio": "Crazy? I was crazy once. They locked me in a room. A rubber room. A rubber room with rats. And rats make me crazy.",
+      "profilePicture": "picture of tarek bastard"
+    }
