@@ -48,7 +48,7 @@ const register = asyncHandler(async (req, res, next) => {
     return next(createError(400, "Name, email, and password are required"));
   }
 
-  if (password.length <= 6) {
+  if (password.length < 6) {
     return next(createError(400, "Password must be greater than 6 characters"));
   }
 
