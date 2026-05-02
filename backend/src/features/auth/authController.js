@@ -48,6 +48,10 @@ const register = asyncHandler(async (req, res, next) => {
     return next(createError(400, "Name, email, and password are required"));
   }
 
+  if (password.length <= 6) {
+    return next(createError(400, "Password must be greater than 6 characters"));
+  }
+
   if (!["jobSeeker", "recruiter"].includes(role)) {
     return next(createError(400, "Role must be either jobSeeker or recruiter"));
   }
@@ -56,7 +60,7 @@ const register = asyncHandler(async (req, res, next) => {
   const existingUser = await User.findOne({ email: normalizedEmail });
 
   if (existingUser) {
-    return next(createError(409, "User with this email already exists"));
+    return next(createError(400, "User with this email already exists"));
   }
     const user = await User.create({
     name,
