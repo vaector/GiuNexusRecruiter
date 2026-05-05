@@ -1,7 +1,14 @@
 const express = require("express");
+const { getJobApplicants } = require("../application/applicationController");
+const { protect, authorize } = require("../../middleware/auth");
 
 const router = express.Router();
 
-// TODO: mount job post routes
+router.get(
+  "/:jobId/applicants",
+  protect,
+  authorize("recruiter"),
+  getJobApplicants
+);
 
 module.exports = router;
