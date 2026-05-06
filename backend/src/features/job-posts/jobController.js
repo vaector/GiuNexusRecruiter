@@ -55,6 +55,13 @@ const createJob = async(req, res, next) => {
 // PATCH /api/v1/jobs/:id
 const updateJob = async(req, res, next) => {
     try {
+        if (req.user.status !== "approved") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is pending approval. Wait for admin approval before posting jobs."
+            })
+        }
+
         const job = await JobPost.findById(req.params.id)
 
         if(!job) {
@@ -67,7 +74,7 @@ const updateJob = async(req, res, next) => {
         if(job.createdBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
-                message: " Not authorised to edit this job"
+                message: "Not authorised to edit this job"
             })
         }
 
