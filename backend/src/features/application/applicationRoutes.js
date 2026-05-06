@@ -1,4 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-// TODO: mount application controller functions
+const { listAllApplications } = require("./applicationController");
+const { protect, authorize } = require("../../middleware/auth");
+
+// More routes will be added by other team members
+router.get("/", protect, authorize("admin"), listAllApplications);
+
 module.exports = router;
