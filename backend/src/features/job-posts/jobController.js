@@ -1,3 +1,4 @@
+//Jobs: Browse & Detail (GET /jobs, GET /jobs/:id, GET /jobs/my-jobs)
 const JobPost = require("./JobPost");
 
 // GET /api/v1/jobs
