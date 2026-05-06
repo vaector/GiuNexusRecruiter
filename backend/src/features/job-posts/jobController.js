@@ -1,15 +1,29 @@
-//Jobs: Browse & Detail (GET /jobs, GET /jobs/:id, GET /jobs/my-jobs).
+// Jobs: Browse & Detail (GET /jobs, GET /jobs/:id, GET /jobs/my-jobs)
 const JobPost = require("./JobPost");
 
 // GET /api/v1/jobs
 const getAllJobs = async (req, res) => {
     try {
-        const { category, location, type, page = 1, limit = 10 } = req.query;
+        const { category, location, type, status, keyword, page = 1, limit = 10 } = req.query;
 
-        const filter = { status: "open" };
+        // Build filter dynamically
+        const filter = {};
+
+        // FIX 1: Allow status as a query param instead of hardcoding "open"
+        // Defaults to "open" but admins/recruiters can override with ?status=closed
+        if (status) filter.status = status;
+        else filter.status = "open";
+
         if (category) filter.category = category;
         if (location) filter.location = location;
         if (type) filter.type = type;
+
+        // FIX 2: Add keyword search across title and description
+        // Example: ?keyword=react will match jobs with "react" in title or description
+        if (keyword) filter.$or = [
+            { title: { $regex: keyword, $options: "i" } },
+            { description: { $regex: keyword, $options: "i" } }
+        ];
 
         const skip = (Number(page) - 1) * Number(limit);
 
@@ -67,11 +81,11 @@ const getJobById = async (req, res) => {
         res.status(200).json({ success: true, data: job });
     } 
     catch (error) {
-    if (error.name === "CastError") {
-      return res.status(404).json({ success: false, message: "Job not found" });
+        if (error.name === "CastError") {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+        res.status(500).json({ success: false, message: error.message });
     }
-    res.status(500).json({ success: false, message: error.message });
-  }
 };
 
 module.exports = { getAllJobs, getMyJobs, getJobById };

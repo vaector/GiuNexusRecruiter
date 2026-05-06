@@ -1,4 +1,5 @@
-// JobPost Model | Jobs: Browse & Detail.
+// JobPost Model | Jobs: Browse & Detail
+
 const mongoose = require("mongoose");
 
 const JOB_TYPES = ["full-time", "part-time", "internship"];
