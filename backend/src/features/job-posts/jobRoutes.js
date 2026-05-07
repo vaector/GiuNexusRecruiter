@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getAllJobs, getMyJobs, getJobById, createJob, updateJob, deleteJob, getRecommendedJobs } = require("./jobController");
-const { getJobApplicants } = require("../application/applicationController");
+const { getAllJobs, getMyJobs, getSavedJobs, getJobById, createJob, toggleSaveJob, updateJob, deleteJob, getRecommendedJobs } = require("./jobController");
+const { applyToJob, getJobApplicants } = require("../application/applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
 /**
@@ -10,22 +10,6 @@ const { protect, authorize } = require("../../middleware/auth");
  *   name: Jobs
  *   description: Job posting endpoints
  */
-
-/**
- * @swagger
- * /jobs/my-jobs:
- *   get:
- *     summary: Get all jobs posted by the authenticated recruiter
- *     tags: [Jobs]
- *     responses:
- *       200:
- *         description: List of jobs
- *       401:
- *         description: Not authorised
- *       403:
- *         description: Forbidden
- */
-router.get("/my-jobs", protect, authorize("recruiter"), getMyJobs);
 
 /**
  * @swagger
@@ -45,27 +29,35 @@ router.get("/recommended", protect, authorize("jobSeeker"), getRecommendedJobs);
 
 /**
  * @swagger
- * /jobs/{jobId}/applicants:
+ * /jobs/my-jobs:
  *   get:
- *     summary: Get all applicants for a specific job (recruiter owner only)
+ *     summary: Get all jobs posted by the authenticated recruiter
  *     tags: [Jobs]
- *     parameters:
- *       - in: path
- *         name: jobId
- *         required: true
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: List of applications for the job
+ *         description: List of jobs
  *       401:
  *         description: Not authorised
  *       403:
- *         description: Not authorised to view applicants for this job
- *       404:
- *         description: Job not found
+ *         description: Forbidden
  */
-router.get("/:jobId/applicants", protect, authorize("recruiter"), getJobApplicants);
+router.get("/my-jobs", protect, authorize("recruiter"), getMyJobs);
+
+/**
+ * @swagger
+ * /jobs/saved:
+ *   get:
+ *     summary: Get all saved jobs for the authenticated job seeker
+ *     tags: [Jobs]
+ *     responses:
+ *       200:
+ *         description: List of saved jobs
+ *       401:
+ *         description: Not authorised
+ *       403:
+ *         description: Forbidden
+ */
+router.get("/saved", protect, authorize("jobSeeker"), getSavedJobs);
 
 /**
  * @swagger
@@ -252,5 +244,81 @@ router.patch("/:id", protect, authorize("recruiter"), updateJob);
  *         description: Job not found
  */
 router.delete("/:id", protect, authorize("recruiter", "admin"), deleteJob);
+
+/**
+ * @swagger
+ * /jobs/{id}/save:
+ *   post:
+ *     summary: Toggle save/unsave a job (job seeker only)
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Job saved or removed from saved
+ *       400:
+ *         description: Cannot save a closed job
+ *       404:
+ *         description: Job not found
+ */
+router.post("/:id/save", protect, authorize("jobSeeker"), toggleSaveJob);
+
+/**
+ * @swagger
+ * /jobs/{jobId}/apply:
+ *   post:
+ *     summary: Apply to a job (job seeker only)
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               coverLetter:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Application submitted
+ *       400:
+ *         description: Already applied or job is closed
+ *       404:
+ *         description: Job not found
+ */
+router.post("/:jobId/apply", protect, authorize("jobSeeker"), applyToJob);
+
+/**
+ * @swagger
+ * /jobs/{jobId}/applicants:
+ *   get:
+ *     summary: Get all applicants for a specific job (recruiter owner only)
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of applications for the job
+ *       401:
+ *         description: Not authorised
+ *       403:
+ *         description: Not authorised to view applicants for this job
+ *       404:
+ *         description: Job not found
+ */
+router.get("/:jobId/applicants", protect, authorize("recruiter"), getJobApplicants);
 
 module.exports = router;
