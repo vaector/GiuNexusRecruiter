@@ -22,8 +22,13 @@ const updateMyProfile = asyncHandler(async (req, res, next) => {
   const updates = {};
 
   if (req.file) {
-    const result = await uploadImage(req.file.buffer)
-    updates.profilePicture = result.secure_url
+    try {
+      const result = await uploadImage(req.file.buffer);
+      updates.profilePicture = result.secure_url;
+    } catch (uploadError) {
+      console.error("Cloudinary upload failed:", uploadError.message);
+      return next(createError(500, "Image upload failed, please try again"));
+    }
   }
 
   for (const field of allowedFields) {
