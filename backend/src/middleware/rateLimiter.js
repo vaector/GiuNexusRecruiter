@@ -1,8 +1,8 @@
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 3,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
   skip: () => process.env.NODE_ENV === 'test',
   message: {
     success: false,
