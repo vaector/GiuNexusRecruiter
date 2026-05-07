@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const authLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 3,
+  skip: () => process.env.NODE_ENV === 'test',
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again after 5 minutes.'
