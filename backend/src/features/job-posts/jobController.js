@@ -110,35 +110,27 @@ const getMyJobs = asyncHandler(async (req, res) => {
 });
 
 // GET /api/v1/jobs/:id
-const getJobById = asyncHandler(async (req, res) => {
+const getJobById = asyncHandler(async (req, res, next) => {
     const job = await JobPost.findById(req.params.id).populate(
         "createdBy",
         "name email"
     );
 
-    if (!job) {
-        return res.status(404).json({ success: false, message: "Job not found" });
-    }
+    if (!job) return next(createError(404, "Job not found"));
 
     res.status(200).json({ success: true, job });
 });
 
 // POST /api/v1/jobs
-const createJob = asyncHandler(async (req, res) => {
+const createJob = asyncHandler(async (req, res, next) => {
     if (req.user.status !== "approved") {
-        return res.status(403).json({
-            success: false,
-            message: "Your account is pending approval. Wait for admin approval before posting jobs.",
-        });
+        return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
     const { title, company, description, requirements, location, type, salary, totalSlots } = req.body;
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields",
-        });
+        return next(createError(400, "Please provide all required fields"));
     }
 
     let category = "Other";
@@ -164,22 +156,17 @@ const createJob = asyncHandler(async (req, res) => {
 });
 
 // PATCH /api/v1/jobs/:id
-const updateJob = asyncHandler(async (req, res) => {
+const updateJob = asyncHandler(async (req, res, next) => {
     if (req.user.status !== "approved") {
-        return res.status(403).json({
-            success: false,
-            message: "Your account is pending approval. Wait for admin approval before posting jobs.",
-        });
+        return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
     const job = await JobPost.findById(req.params.id);
 
-    if (!job) {
-        return res.status(404).json({ success: false, message: "Job not found" });
-    }
+    if (!job) return next(createError(404, "Job not found"));
 
     if (job.createdBy.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ success: false, message: "Not authorised to edit this job" });
+        return next(createError(403, "Not authorised to edit this job"));
     }
 
     const originalDescription = job.description;
@@ -216,22 +203,17 @@ const updateJob = asyncHandler(async (req, res) => {
 });
 
 // DELETE /api/v1/jobs/:id
-const deleteJob = asyncHandler(async (req, res) => {
+const deleteJob = asyncHandler(async (req, res, next) => {
     if (req.user.role === "recruiter" && req.user.status !== "approved") {
-        return res.status(403).json({
-            success: false,
-            message: "Your account is pending approval. Wait for admin approval before managing jobs.",
-        });
+        return next(createError(403, "Your account is pending approval. Wait for admin approval before managing jobs."));
     }
 
     const job = await JobPost.findById(req.params.id);
 
-    if (!job) {
-        return res.status(404).json({ success: false, message: "Job not found" });
-    }
+    if (!job) return next(createError(404, "Job not found"));
 
     if (job.createdBy.toString() !== req.user._id.toString() && req.user.role !== "admin") {
-        return res.status(403).json({ success: false, message: "Not authorised to delete this job" });
+        return next(createError(403, "Not authorised to delete this job"));
     }
 
     await job.deleteOne();
