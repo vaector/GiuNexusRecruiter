@@ -9,6 +9,9 @@ const Message = require("./Message");
 const SAFE_USER_FIELDS = "name email role";
 const SAFE_JOB_FIELDS = "title company status";
 const MAX_MESSAGE_LENGTH = 2000;
+const DEFAULT_MESSAGES_PAGE = 1;
+const DEFAULT_MESSAGES_LIMIT = 30;
+const MAX_MESSAGES_LIMIT = 100;
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -61,6 +64,23 @@ const cleanLatestMessage = (message) => ({
 const normalizeBody = (body) => {
   if (typeof body !== "string") return "";
   return body.trim();
+};
+
+const parsePositiveInteger = (value, fallback) => {
+  if (Array.isArray(value)) return fallback;
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+
+  return parsed;
+};
+
+const getMessagePagination = (query) => {
+  const page = parsePositiveInteger(query.page, DEFAULT_MESSAGES_PAGE);
+  const rawLimit = parsePositiveInteger(query.limit, DEFAULT_MESSAGES_LIMIT);
+  const limit = Math.min(rawLimit, MAX_MESSAGES_LIMIT);
+
+  return { page, limit };
 };
 
 const hasConversationRefs = (message) =>
@@ -275,28 +295,73 @@ const getMessages = asyncHandler(async (req, res, next) => {
   }
 
   const currentUserId = req.user._id;
-
-  await Message.updateMany(
-    {
-      job: jobId,
-      sender: otherUserId,
-      recipient: currentUserId,
-      readAt: null,
-    },
-    { $set: { readAt: new Date() } }
-  );
-
-  const messages = await Message.find({
+  const { page, limit } = getMessagePagination(req.query);
+  const messageFilter = {
     job: jobId,
     $or: [
       { sender: currentUserId, recipient: otherUserId },
       { sender: otherUserId, recipient: currentUserId },
     ],
-  })
-    .populate("sender", SAFE_USER_FIELDS)
-    .sort({ createdAt: 1 });
+  };
 
-  return res.status(200).json({ success: true, messages });
+  const [total] = await Promise.all([
+    Message.countDocuments(messageFilter),
+    Message.updateMany(
+      {
+        job: jobId,
+        sender: otherUserId,
+        recipient: currentUserId,
+        readAt: null,
+      },
+      { $set: { readAt: new Date() } }
+    ),
+  ]);
+
+  if (total === 0) {
+    return res.status(200).json({
+      success: true,
+      page: DEFAULT_MESSAGES_PAGE,
+      limit,
+      total,
+      totalPages: 0,
+      hasMore: false,
+      messages: [],
+    });
+  }
+
+  const totalPages = Math.ceil(total / limit);
+
+  if (page > totalPages) {
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages,
+      hasMore: false,
+      messages: [],
+    });
+  }
+
+  const skip = Math.max(total - page * limit, 0);
+  const pageEnd = total - (page - 1) * limit;
+  const adjustedLimit = pageEnd - skip;
+
+  const messages = await Message.find(messageFilter)
+    .populate("sender", SAFE_USER_FIELDS)
+    .sort({ createdAt: 1 })
+    .skip(skip)
+    .limit(adjustedLimit);
+
+  return res.status(200).json({
+    success: true,
+    page,
+    limit,
+    total,
+    totalPages,
+    hasMore: page < totalPages,
+    messages,
+  });
 });
 
 // GET /api/v1/conversations
