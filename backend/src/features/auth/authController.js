@@ -110,7 +110,6 @@ const logout = (req, res) => {
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  // Always return 200 to prevent email enumeration
   const response = {
     success: true,
     message: "Password reset email sent",
@@ -125,30 +124,62 @@ const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(response);
   }
 
-  const resetToken = crypto.randomBytes(20).toString("hex");
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  user.resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-
+  user.otpCode = crypto.createHash("sha256").update(otp).digest("hex");
+  user.otpExpire = Date.now() + 10 * 60 * 1000;
   await user.save({ validateBeforeSave: false });
 
   try {
     await sendEmail({
       to: user.email,
-      subject: "Password Reset Token",
-      text: `Use this token to reset your password: ${resetToken}`,
+      subject: "Your GIU Nexus verification code",
+      text: `Your OTP is: ${otp}. It expires in 10 minutes. Do not share it with anyone.`,
     });
   } catch (err) {
     console.error("Email send failed:", err);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    user.otpCode = undefined;
+    user.otpExpire = undefined;
     await user.save({ validateBeforeSave: false });
   }
 
   return res.status(200).json(response);
+});
+
+// POST /api/v1/auth/verify-otp
+const verifyOtp = asyncHandler(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return next(createError(400, "Email and OTP are required"));
+  }
+
+  const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+  const user = await User.findOne({
+    email: normalizeEmail(email),
+    otpCode: hashedOtp,
+    otpExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(createError(400, "OTP is invalid or has expired"));
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  user.otpCode = undefined;
+  user.otpExpire = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    success: true,
+    message: "OTP verified",
+    resetToken,
+  });
 });
 
 // PATCH /api/v1/auth/reset-password/:token
@@ -183,4 +214,4 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   return authResponse(res, 200, user);
 });
 
-module.exports = { register, login, logout, forgotPassword, resetPassword };
+module.exports = { register, login, logout, forgotPassword, verifyOtp, resetPassword };
