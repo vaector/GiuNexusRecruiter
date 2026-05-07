@@ -48,6 +48,7 @@ const getRecommendedJobs = asyncHandler(async (req, res, next) => {
                 ...job,
                 score: cosineSimilarity(studentVector, embeddings[index + 1]),
             }))
+            .map(({ __v, ...job }) => job)
             .sort((a, b) => b.score - a.score);
 
         return res.status(200).json({ success: true, jobs });

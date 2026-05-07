@@ -98,8 +98,8 @@ const extractSkills = asyncHandler(async (req, res) => {
     const skills = [
       ...new Set(
         result
-          .filter((entity) => ["B-MISC", "I-MISC", "B-ORG"].includes(entity.entity_group))
-          .map((entity) => entity.word)
+          .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
+          .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""))
       ),
     ];
 
