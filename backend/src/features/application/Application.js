@@ -33,6 +33,13 @@ const ApplicationSchema = new mongoose.Schema({
 
 ApplicationSchema.index({ user: 1, job: 1 }, { unique: true });
 
+ApplicationSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 module.exports =
   mongoose.models.Application ||
   mongoose.model("Application", ApplicationSchema);

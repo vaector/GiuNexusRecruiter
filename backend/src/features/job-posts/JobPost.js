@@ -71,6 +71,13 @@ const JobPostSchema = new mongoose.Schema(
 JobPostSchema.index({ category: 1, status: 1 });
 JobPostSchema.index({ createdBy: 1 });
 
+JobPostSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 module.exports =
   mongoose.models.JobPost || mongoose.model("JobPost", JobPostSchema);
 

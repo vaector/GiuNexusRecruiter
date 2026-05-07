@@ -1,10 +1,71 @@
 const hf = require("../../services/hfService");
 const JobPost = require("./JobPost");
+const User = require("../user/User");
+
+function cosineSimilarity(vecA, vecB) {
+    const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+    return dot / (magA * magB);
+}
+
+const createError = (statusCode, message) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+// GET /api/v1/jobs/recommended
+const getRecommendedJobs = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select("skills");
+        if (!user) return next(createError(404, "User not found"));
+
+        const skills = Array.isArray(user.skills) ? user.skills : [];
+        const studentText = skills.join(", ");
+        const openJobs = await JobPost.find({ status: "open" }).lean();
+
+        if (openJobs.length === 0) {
+            return res.status(200).json({ success: true, jobs: [] });
+        }
+
+        try {
+            const jobTexts = openJobs.map((job) => {
+                const reqs = Array.isArray(job.requirements)
+                    ? job.requirements.join(" ")
+                    : job.requirements || "";
+                return [job.title, reqs].filter(Boolean).join(" ");
+            });
+
+            const embeddings = await hf.featureExtraction({
+                model: "sentence-transformers/all-MiniLM-L6-v2",
+                inputs: [studentText, ...jobTexts],
+            });
+
+            const studentVector = embeddings[0];
+            const jobs = openJobs
+                .map((job, index) => ({
+                    ...job,
+                    score: cosineSimilarity(studentVector, embeddings[index + 1]),
+                }))
+                .sort((a, b) => b.score - a.score);
+
+            return res.status(200).json({ success: true, jobs });
+        } catch (hfError) {
+            console.error("HuggingFace recommendations failed:", hfError.message);
+            return res.status(200).json({ success: true, jobs: openJobs });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
 
 // GET /api/v1/jobs
-const getAllJobs = async (req, res) => {
+const getAllJobs = async (req, res, next) => {
     try {
-        const { category, location, type, status, keyword, page = 1, limit = 10 } = req.query;
+        const { category, location, type, status, keyword } = req.query;
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
 
         const filter = {};
 
@@ -38,12 +99,12 @@ const getAllJobs = async (req, res) => {
             jobs,
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // GET /api/v1/jobs/my-jobs
-const getMyJobs = async (req, res) => {
+const getMyJobs = async (req, res, next) => {
     try {
         const jobs = await JobPost.find({ createdBy: req.user._id }).sort({
             createdAt: -1,
@@ -55,12 +116,12 @@ const getMyJobs = async (req, res) => {
             jobs,
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // GET /api/v1/jobs/:id
-const getJobById = async (req, res) => {
+const getJobById = async (req, res, next) => {
     try {
         const job = await JobPost.findById(req.params.id).populate(
             "createdBy",
@@ -73,10 +134,7 @@ const getJobById = async (req, res) => {
 
         res.status(200).json({ success: true, job });
     } catch (error) {
-        if (error.name === "CastError") {
-            return res.status(404).json({ success: false, message: "Job not found" });
-        }
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
@@ -161,7 +219,11 @@ const updateJob = async (req, res, next) => {
             }
         }
 
-        if (req.body.description) {
+        const descriptionChanged = Object.prototype.hasOwnProperty.call(req.body, "description") &&
+            req.body.description !== job.description;
+
+        if (descriptionChanged) {
+
             try {
                 const result = await hf.zeroShotClassification({
                     model: "facebook/bart-large-mnli",
@@ -182,6 +244,9 @@ const updateJob = async (req, res, next) => {
             job
         });
     } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
         next(error);
     }
 };
@@ -189,6 +254,13 @@ const updateJob = async (req, res, next) => {
 // DELETE /api/v1/jobs/:id
 const deleteJob = async (req, res, next) => {
     try {
+        if (req.user.role === "recruiter" && req.user.status !== "approved") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is pending approval. Wait for admin approval before managing jobs."
+            });
+        }
+
         const job = await JobPost.findById(req.params.id);
 
         if (!job) {
@@ -211,8 +283,11 @@ const deleteJob = async (req, res, next) => {
             message: "Job deleted"
         });
     } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
         next(error);
     }
 };
 
-module.exports = { getAllJobs, getMyJobs, getJobById, createJob, updateJob, deleteJob };
+module.exports = { getAllJobs, getMyJobs, getJobById, createJob, updateJob, deleteJob, getRecommendedJobs };
