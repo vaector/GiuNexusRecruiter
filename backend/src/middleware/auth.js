@@ -29,7 +29,7 @@ const protect = async (req, res, next) => {
       return unauthorized(res);
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return unauthorized(res);
@@ -37,8 +37,11 @@ const protect = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (_error) {
-    return unauthorized(res);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      return unauthorized(res);
+    }
+    next(err);
   }
 };
 

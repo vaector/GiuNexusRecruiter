@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../user/User");
-const sendEmail = require("../../services/emailService"); // adjust path if needed
+const sendEmail = require("../../services/emailService");
+const asyncHandler = require("../../middleware/asyncHandler");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -10,10 +11,6 @@ const createError = (statusCode, message) => {
 };
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
-
-const asyncHandler = (handler) => (req, res, next) => {
-  Promise.resolve(handler(req, res, next)).catch(next);
-};
 
 const signToken = (user) => {
   if (!process.env.JWT_SECRET) throw createError(500, "JWT_SECRET is not configured");
@@ -50,7 +47,7 @@ const register = asyncHandler(async (req, res, next) => {
     return next(createError(400, "Name, email, and password are required"));
   }
   if (password.length < 6) {
-    return next(createError(400, "Password must be greater than 6 characters"));
+    return next(createError(400, "Password must be at least 6 characters"));
   }
   if (!["jobSeeker", "recruiter"].includes(role)) {
     return next(createError(400, "Role must be either jobSeeker or recruiter"));
@@ -84,6 +81,10 @@ const login = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: normalizeEmail(email) });
   if (!user || !(await user.comparePassword(password))) {
     return next(createError(401, "Invalid email or password"));
+  }
+
+  if (user.status === "rejected") {
+    return next(createError(403, "Your account has been rejected"));
   }
 
   return authResponse(res, 200, user);
@@ -126,11 +127,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   await user.save({ validateBeforeSave: false });
 
-  await sendEmail({
-    to: user.email,
-    subject: "Password Reset Token",
-    text: `Use this token to reset your password: ${resetToken}`,
-  });
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Token",
+      text: `Use this token to reset your password: ${resetToken}`,
+    });
+  } catch (err) {
+    console.error("Email send failed:", err);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+  }
 
   return res.status(200).json(response);
 });
