@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../user/User");
 const sendEmail = require("../../services/emailService");
+const asyncHandler = require("../../middleware/asyncHandler");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -10,10 +11,6 @@ const createError = (statusCode, message) => {
 };
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
-
-const asyncHandler = (handler) => (req, res, next) => {
-  Promise.resolve(handler(req, res, next)).catch(next);
-};
 
 const signToken = (user) => {
   if (!process.env.JWT_SECRET) throw createError(500, "JWT_SECRET is not configured");

@@ -29,6 +29,8 @@ const ApplicationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+}, {
+  timestamps: { createdAt: true, updatedAt: false },
 });
 
 ApplicationSchema.index({ user: 1, job: 1 }, { unique: true });

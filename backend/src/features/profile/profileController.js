@@ -1,141 +1,116 @@
+const asyncHandler = require("../../middleware/asyncHandler");
 const hf = require("../../services/hfService");
 const User = require("../user/User");
 
 // GET /api/v1/profile — private
-const getMyProfile = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
+const getMyProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    return res.status(200).json({ success: true, user });
-  } catch (error) {
-    next(error);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
   }
-};
+
+  return res.status(200).json({ success: true, user });
+});
 
 // PATCH /api/v1/profile — private
-const updateMyProfile = async (req, res, next) => {
-  try {
-    const allowedFields = ["name", "bio", "profilePicture"];
-    const updates = {};
+const updateMyProfile = asyncHandler(async (req, res) => {
+  const allowedFields = ["name", "bio", "profilePicture"];
+  const updates = {};
 
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
     }
-
-    const user = await User.findByIdAndUpdate(req.user._id, updates, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    return res.status(200).json({ success: true, user });
-  } catch (error) {
-    next(error);
   }
-};
+
+  const user = await User.findByIdAndUpdate(req.user._id, updates, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  return res.status(200).json({ success: true, user });
+});
 
 // PATCH /api/v1/profile/change-password — private
-const changeMyPassword = async (req, res, next) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
+const changeMyPassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "currentPassword and newPassword are required",
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters",
-      });
-    }
-
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const isMatch = await user.comparePassword(currentPassword);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Current password is incorrect",
-      });
-    }
-
-    user.password = newPassword;
-    await user.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Password updated successfully",
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "currentPassword and newPassword are required",
     });
-  } catch (error) {
-    next(error);
   }
-};
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters",
+    });
+  }
+
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  const isMatch = await user.comparePassword(currentPassword);
+
+  if (!isMatch) {
+    return res.status(401).json({
+      success: false,
+      message: "Current password is incorrect",
+    });
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Password updated successfully",
+  });
+});
 
 // POST /api/v1/profile/extract-skills — jobSeeker only
-const extractSkills = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
+const extractSkills = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
 
-    if (!user.bio || !user.bio.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Bio is empty. Update your profile first.",
-      });
-    }
-
-    try {
-      const result = await hf.tokenClassification({
-        model: "dslim/bert-base-NER",
-        inputs: user.bio,
-      });
-
-      const skills = [
-        ...new Set(
-          result
-            .filter((entity) =>
-              ["B-MISC", "I-MISC", "B-ORG"].includes(entity.entity_group)
-            )
-            .map((entity) => entity.word)
-        ),
-      ];
-
-      user.skills = skills;
-      await user.save();
-
-      return res.status(200).json({
-        success: true,
-        skills,
-        extracted: skills,
-      });
-    } catch (hfError) {
-      console.error("HuggingFace NER failed:", hfError.message);
-      return res.status(200).json({
-        success: true,
-        skills: user.skills,
-        extracted: user.skills,
-      });
-    }
-  } catch (error) {
-    next(error);
+  if (!user.bio || !user.bio.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Bio is empty. Update your profile first.",
+    });
   }
-};
+
+  try {
+    const result = await hf.tokenClassification({
+      model: "dslim/bert-base-NER",
+      inputs: user.bio,
+    });
+
+    const skills = [
+      ...new Set(
+        result
+          .filter((entity) => ["B-MISC", "I-MISC", "B-ORG"].includes(entity.entity_group))
+          .map((entity) => entity.word)
+      ),
+    ];
+
+    user.skills = skills;
+    await user.save();
+
+    return res.status(200).json({ success: true, skills, extracted: skills });
+  } catch (hfError) {
+    console.error("HuggingFace NER failed:", hfError.message);
+    return res.status(200).json({ success: true, skills: user.skills, extracted: user.skills });
+  }
+});
 
 module.exports = { getMyProfile, updateMyProfile, changeMyPassword, extractSkills };
