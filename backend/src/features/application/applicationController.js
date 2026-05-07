@@ -4,6 +4,7 @@ const JobPost = require("../job-posts/JobPost");
 
 const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
 
+// GET /api/v1/applications
 const listAllApplications = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
@@ -22,6 +23,7 @@ const listAllApplications = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, total, page, applications });
 });
 
+// GET /api/v1/jobs/:jobId/applicants
 const getJobApplicants = asyncHandler(async (req, res) => {
   const { jobId } = req.params;
   const job = await JobPost.findById(jobId);
@@ -39,6 +41,7 @@ const getJobApplicants = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, applications });
 });
 
+// GET /api/v1/applications/my
 const getMyApplications = asyncHandler(async (req, res) => {
   const applications = await Application.find({ user: req.user._id })
     .populate("job", "title company type status location category")
@@ -47,6 +50,7 @@ const getMyApplications = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, applications });
 });
 
+// PATCH /api/v1/applications/:id/status
 const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
