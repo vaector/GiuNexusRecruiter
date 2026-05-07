@@ -4,6 +4,12 @@ const JobPost = require("../job-posts/JobPost");
 
 const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
 
+const createError = (statusCode, message) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
 // GET /api/v1/applications
 const listAllApplications = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -24,14 +30,14 @@ const listAllApplications = asyncHandler(async (req, res) => {
 });
 
 // GET /api/v1/jobs/:jobId/applicants
-const getJobApplicants = asyncHandler(async (req, res) => {
+const getJobApplicants = asyncHandler(async (req, res, next) => {
   const { jobId } = req.params;
-  const job = await JobPost.findById(jobId);
 
-  if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+  const job = await JobPost.findById(jobId);
+  if (!job) return next(createError(404, "Job not found"));
 
   if (job.createdBy.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: "Not authorised to view applicants for this job" });
+    return next(createError(403, "Not authorised to view applicants for this job"));
   }
 
   const applications = await Application.find({ job: jobId })
@@ -51,21 +57,20 @@ const getMyApplications = asyncHandler(async (req, res) => {
 });
 
 // PATCH /api/v1/applications/:id/status
-const updateApplicationStatus = asyncHandler(async (req, res) => {
+const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
 
   if (!ALLOWED_APPLICATION_STATUSES.includes(status)) {
-    return res.status(400).json({ success: false, message: "Status must be one of: pending, shortlisted, rejected" });
+    return next(createError(400, "Status must be one of: pending, shortlisted, rejected"));
   }
 
   const application = await Application.findById(id).populate("job", "createdBy");
-
-  if (!application) return res.status(404).json({ success: false, message: "Application not found" });
-  if (!application.job) return res.status(404).json({ success: false, message: "Related job not found" });
+  if (!application) return next(createError(404, "Application not found"));
+  if (!application.job) return next(createError(404, "Related job not found"));
 
   if (application.job.createdBy.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: "Not authorised to update this application" });
+    return next(createError(403, "Not authorised to update this application"));
   }
 
   application.status = status;
