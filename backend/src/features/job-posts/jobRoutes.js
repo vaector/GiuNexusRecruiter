@@ -1,11 +1,11 @@
-//..
-
 const express = require("express");
 const router = express.Router();
 const { getAllJobs, getMyJobs, getJobById, createJob, updateJob, deleteJob } = require("./jobController");
+const { getJobApplicants } = require("../application/applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
 router.get("/my-jobs", protect, authorize("recruiter"), getMyJobs);
+router.get("/:jobId/applicants", protect, authorize("recruiter"), getJobApplicants);
 router.get("/", getAllJobs);
 router.get("/:id", getJobById);
 router.post("/", protect, authorize("recruiter"), createJob);
