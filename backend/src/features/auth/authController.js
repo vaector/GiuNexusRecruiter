@@ -16,7 +16,7 @@ const signToken = (user) => {
   if (!process.env.JWT_SECRET) throw createError(500, "JWT_SECRET is not configured");
   if (!process.env.JWT_EXPIRE) throw createError(500, "JWT_EXPIRE is not configured");
   return jwt.sign(
-    { _id: user._id, role: user.role },
+    { _id: user._id, role: user.role, jti: crypto.randomUUID() },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }
   );

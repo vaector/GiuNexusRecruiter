@@ -1,4 +1,5 @@
 const User = require("../features/user/User");
+const { isBlacklisted } = require('./tokenBlacklist');
 
 const jwt = require("jsonwebtoken");
 
