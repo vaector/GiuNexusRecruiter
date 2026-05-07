@@ -109,6 +109,27 @@ const getMyJobs = asyncHandler(async (req, res) => {
     });
 });
 
+// GET /api/v1/jobs/saved
+const getSavedJobs = asyncHandler(async (req, res, next) => {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId)
+        .select("savedJobs")
+        .populate(
+            "savedJobs",
+            "title company description location type salary category status createdAt"
+        );
+
+    if (!user) {
+        return next(createError(404, "User not found"));
+    }
+
+    return res.status(200).json({
+        success: true,
+        jobs: user.savedJobs,
+    });
+});
+
 // GET /api/v1/jobs/:id
 const getJobById = asyncHandler(async (req, res, next) => {
     const job = await JobPost.findById(req.params.id).populate(
@@ -153,6 +174,44 @@ const createJob = asyncHandler(async (req, res, next) => {
     });
 
     return res.status(201).json({ success: true, job });
+});
+
+// POST /api/v1/jobs/:id/save (toggle)
+const toggleSaveJob = asyncHandler(async (req, res, next) => {
+    const jobId = req.params.id;
+    const userId = req.user._id;
+
+    const job = await JobPost.findById(jobId);
+    if (!job) {
+        return next(createError(404, "Job not found"));
+    }
+
+    const user = await User.findById(userId).select("savedJobs");
+    if (!user) {
+        return next(createError(404, "User not found"));
+    }
+
+    const alreadySaved = user.savedJobs.some((id) => id.equals(jobId));
+
+    if (alreadySaved) {
+        await User.findByIdAndUpdate(userId, { $pull: { savedJobs: job._id } });
+        return res.status(200).json({
+            success: true,
+            message: "Job removed from saved",
+            saved: false,
+        });
+    }
+
+    if (job.status !== "open") {
+        return next(createError(400, "Cannot save a closed job"));
+    }
+
+    await User.findByIdAndUpdate(userId, { $addToSet: { savedJobs: job._id } });
+    return res.status(200).json({
+        success: true,
+        message: "Job saved",
+        saved: true,
+    });
 });
 
 // PATCH /api/v1/jobs/:id
@@ -220,4 +279,14 @@ const deleteJob = asyncHandler(async (req, res, next) => {
     return res.status(200).json({ success: true, message: "Job deleted" });
 });
 
-module.exports = { getAllJobs, getMyJobs, getJobById, createJob, updateJob, deleteJob, getRecommendedJobs };
+module.exports = {
+    getAllJobs,
+    getMyJobs,
+    getSavedJobs,
+    getJobById,
+    createJob,
+    toggleSaveJob,
+    updateJob,
+    deleteJob,
+    getRecommendedJobs,
+};

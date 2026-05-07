@@ -83,4 +83,50 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   return res.status(200).json({ success: true, application: updatedApplication });
 });
 
-module.exports = { listAllApplications, getJobApplicants, getMyApplications, updateApplicationStatus };
+// POST /api/v1/jobs/:jobId/apply — jobSeeker only
+const applyToJob = async (req, res, next) => {
+  try {
+    const { jobId } = req.params;
+    const { coverLetter } = req.body;
+
+    const job = await JobPost.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    if (job.status !== "open") {
+      return res.status(400).json({ success: false, message: "Cannot apply to a closed job" });
+    }
+
+    const existing = await Application.findOne({ user: req.user._id, job: jobId });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "You have already applied to this job" });
+    }
+
+    let application;
+    try {
+      application = await Application.create({
+        user: req.user._id,
+        job: jobId,
+        ...(coverLetter && { coverLetter }),
+      });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(400).json({ success: false, message: "You have already applied to this job" });
+      }
+      return next(err);
+    }
+
+    return res.status(201).json({ success: true, application });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  listAllApplications,
+  getJobApplicants,
+  getMyApplications,
+  updateApplicationStatus,
+  applyToJob,
+};
