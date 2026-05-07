@@ -3,44 +3,44 @@ const { isBlacklisted } = require('./tokenBlacklist');
 
 const jwt = require("jsonwebtoken");
 
-const unauthorized = (res) =>
-  res.status(401).json({
-    success: false,
-    message: "Not authorised, token missing or invalid",
-  });
+const createError = (statusCode, message) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
 
 const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return unauthorized(res);
+      return next(createError(401, "Not authorised, token missing or invalid"));
     }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return unauthorized(res);
+      return next(createError(401, "Not authorised, token missing or invalid"));
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id || decoded._id || decoded.userId;
 
     if (!userId) {
-      return unauthorized(res);
+      return next(createError(401, "Not authorised, token missing or invalid"));
     }
 
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
-      return unauthorized(res);
+      return next(createError(401, "Not authorised, token missing or invalid"));
     }
 
     req.user = user;
     next();
   } catch (err) {
     if (err instanceof jwt.JsonWebTokenError) {
-      return unauthorized(res);
+      return next(createError(401, "Not authorised, token missing or invalid"));
     }
     next(err);
   }
@@ -49,10 +49,7 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: insufficient role",
-      });
+      return next(createError(403, "Forbidden: insufficient role"));
     }
 
     next();
