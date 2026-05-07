@@ -24,6 +24,11 @@ const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (isBlacklisted(decoded.jti)) {
+      return next(createError(401, "Token has been invalidated"));
+    }
+
     const userId = decoded.id || decoded._id || decoded.userId;
 
     if (!userId) {

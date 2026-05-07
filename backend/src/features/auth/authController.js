@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const User = require("../user/User");
 const sendEmail = require("../../services/emailService");
 const asyncHandler = require("../../middleware/asyncHandler");
+const { addToBlacklist } = require('../../middleware/tokenBlacklist');
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -91,7 +92,14 @@ const login = asyncHandler(async (req, res, next) => {
 });
 
 // POST /api/v1/auth/logout
-const logout = (_req, res) => {
+const logout = (req, res) => {
+  const token = req.headers.authorization.split(" ")[1];
+  const decoded = jwt.decode(token);
+
+  if (decoded?.jti) {
+    addToBlacklist(decoded.jti);
+  }
+
   return res.status(200).json({
     success: true,
     message: "Logged out successfully",
