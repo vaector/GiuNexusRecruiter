@@ -1,6 +1,10 @@
+
+
 const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+require("./src/features/referrals/userReferralExtension");
 
 const express = require("express");
 const cors = require("cors");
@@ -11,6 +15,7 @@ const jobRoutes = require("./src/features/job-posts/jobRoutes");
 const applicationRoutes = require("./src/features/application/applicationRoutes");
 const profileRoutes = require("./src/features/profile/profileRoutes");
 const adminRoutes = require("./src/features/admin/adminRoutes");
+const referralRoutes = require("./src/features/referrals/referralRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 const swaggerUi = require("swagger-ui-express");
@@ -32,6 +37,7 @@ app.use("/api/v1/jobs", jobRoutes);
 app.use("/api/v1/applications", applicationRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/referrals", referralRoutes);
 
 app.use(errorHandler);
 

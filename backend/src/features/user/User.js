@@ -55,6 +55,15 @@ const UserSchema = new mongoose.Schema(
       },
     ],
 
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+      index: true,
+      trim: true,
+    },
+
     resetPasswordToken: {
       type: String,
     },
