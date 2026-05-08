@@ -1,17 +1,21 @@
 const mongoose = require("mongoose");
-const { DocumentType, DocumentStatus } = require("../enums");
+const { DocumentType, DocumentStatus } = require("../../enums");
 
 const DocumentSchema = new mongoose.Schema(
   {
     application: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "application",
+      ref: "Application",
       required: true,
     },
     type: {
       type: String,
       enum: Object.values(DocumentType),
       required: true,
+    },
+    fileName: {
+      type: String,
+      trim: true,
     },
     fileUrl: {
       type: String,
@@ -23,6 +27,11 @@ const DocumentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    signedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     signedAt: {
       type: Date,
     },
@@ -30,6 +39,12 @@ const DocumentSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(DocumentStatus),
       default: DocumentStatus.PENDING,
+    },
+    fileHash: {
+      type: String,
+    },
+    signatureToken: {
+      type: String,
     },
   },
   {

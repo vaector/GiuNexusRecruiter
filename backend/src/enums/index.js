@@ -39,6 +39,7 @@ const Role = Object.freeze({
   JOB_SEEKER: "jobSeeker",
   ADMIN: "admin",
   RECRUITER: "recruiter",
+  SYSTEM: 'system',
 });
 
 const RecruiterStatus = Object.freeze({
@@ -72,17 +73,23 @@ const CompanySize = Object.freeze({
 const NotificationType = Object.freeze({
   APPLICATION_STATUS_CHANGED: "application_status_changed",
   NEW_APPLICANT: "new_applicant",
-  JOB_APPROVED: "job_approved",
-  JOB_REJECTED: "job_rejected",
   ACCOUNT_APPROVED: "account_approved",
   ACCOUNT_REJECTED: "account_rejected",
   NEW_JOB_MATCH: "new_job_match",
+  APPLICATION_WITHDRAWN: "application_withdrawn",
+  REFERRAL_APPLIED: "referral_applied",
+  REFERRAL_REQUESTED: "referral_requested",
+  REFERRAL_RESPONDED: "referral_responded",
+  NEW_MESSAGE: "new_message",
 });
 
 const DocumentType = Object.freeze({
   OFFER_LETTER: "offer_letter",
   CONTRACT: "contract",
   NDA: "nda",
+  CV: "cv",
+  COVER_LETTER: "cover_letter",
+  OTHER: "other",
 });
 
 const DocumentStatus = Object.freeze({
@@ -104,17 +111,22 @@ const OnboardingStatus = Object.freeze({
 
 const ReferralStatus = Object.freeze({
   PENDING: "pending",
-  HIRED: "hired",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
   EXPIRED: "expired",
 });
 
 const AuditAction = Object.freeze({
   USER_CREATED: "USER_CREATED",
   USER_BANNED: "USER_BANNED",
+  USER_DELETED: "USER_DELETED",
+  USER_PASSWORD_RESET: "USER_PASSWORD_RESET",
   JOB_CREATED: "JOB_CREATED",
   JOB_APPROVED: "JOB_APPROVED",
   JOB_REJECTED: "JOB_REJECTED",
   JOB_CLOSED: "JOB_CLOSED",
+  JOB_DELETED: "JOB_DELETED",
+  JOB_AUTO_CLOSED: "JOB_AUTO_CLOSED",
   APPLICATION_CREATED: "APPLICATION_CREATED",
   APPLICATION_SHORTLISTED: "APPLICATION_SHORTLISTED",
   APPLICATION_REJECTED: "APPLICATION_REJECTED",
@@ -153,6 +165,7 @@ const ReportReason = Object.freeze({
   MISLEADING: "misleading",
   INAPPROPRIATE: "inappropriate",
   FAKE_COMPANY: "fake_company",
+  HARASSMENT: "harassment",
   OTHER: "other",
 });
 

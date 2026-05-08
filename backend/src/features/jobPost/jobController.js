@@ -1,7 +1,11 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const hf = require("../../services/hfService");
-const JobPost = require("./JobPost");
+const JobPost = require("./jobPost");
 const User = require("../user/User");
+const AuditLog = require("../auditLog/auditLog");
+const Report = require("../reports/reports");
+const Referral = require("../referrals/Referral");
+const { AuditAction } = require("../../enums");
 
 function cosineSimilarity(vecA, vecB) {
     const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
@@ -173,6 +177,15 @@ const createJob = asyncHandler(async (req, res, next) => {
         title, company, description, requirements, location, type, salary, totalSlots, category, createdBy: req.user._id,
     });
 
+    await AuditLog.record({
+        actor: req.user,
+        action: AuditAction.JOB_CREATED,
+        targetModel: "JobPost",
+        targetId: job._id,
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+    });
+
     return res.status(201).json({ success: true, job });
 });
 
@@ -230,6 +243,8 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     const originalDescription = job.description;
 
+    const previousStatus = job.status;
+
     const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status"];
 
     for (const field of fields) {
@@ -258,6 +273,20 @@ const updateJob = asyncHandler(async (req, res, next) => {
     }
 
     await job.save();
+
+    if (previousStatus !== "closed" && job.status === "closed") {
+        await AuditLog.record({
+            actor: req.user,
+            action: AuditAction.JOB_CLOSED,
+            targetModel: "JobPost",
+            targetId: job._id,
+            metadata: { from: previousStatus, to: job.status },
+            ipAddress: req.ip,
+            userAgent: req.get("User-Agent"),
+        });
+        await Referral.updateMany({ job: job._id, status: "pending" }, { status: "expired" });
+    }
+
     return res.status(200).json({ success: true, job });
 });
 
@@ -276,6 +305,22 @@ const deleteJob = asyncHandler(async (req, res, next) => {
     }
 
     await job.deleteOne();
+
+    await Report.updateMany(
+        { targetModel: 'JobPost', targetId: job._id, status: 'open' },
+        { status: 'actioned', adminNote: 'Resolved via job deletion', reviewedBy: req.user._id, reviewedAt: new Date() }
+    );
+
+    await AuditLog.record({
+        actor: req.user,
+        action: AuditAction.JOB_DELETED,
+        targetModel: "JobPost",
+        targetId: job._id,
+        metadata: { title: job.title, company: job.company, status: job.status, createdBy: job.createdBy },
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+    });
+
     return res.status(200).json({ success: true, message: "Job deleted" });
 });
 

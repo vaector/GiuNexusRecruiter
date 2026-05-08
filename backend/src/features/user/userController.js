@@ -1,7 +1,11 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const User = require("./User");
-const JobPost = require("../job-posts/JobPost");
+const JobPost = require("../jobPost/jobPost");
 const Application = require("../application/Application");
+const AuditLog = require("../auditLog/auditLog");
+const Notification = require("../notification/notification");
+const Report = require("../reports/reports");
+const { AuditAction, NotificationType } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -43,12 +47,36 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
   if (!status || !allowedStatuses.includes(status)) {
     return next(createError(400, `Status must be one of: ${allowedStatuses.join(", ")}`));
   }
+  const existingUser = await User.findById(req.params.id).select("status");
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { status },
     { new: true, runValidators: true }
   ).select("-password");
   if (!user) return next(createError(404, "User not found"));
+  if (status === "approved" || status === "rejected") {
+    await AuditLog.record({
+      actor: req.user,
+      action: status === "approved" ? AuditAction.RECRUITER_APPROVED : AuditAction.RECRUITER_REJECTED,
+      targetModel: "User",
+      targetId: user._id,
+      metadata: { from: existingUser?.status, to: status },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+    await Notification.send({
+      recipient: user._id,
+      type: status === "approved" ? NotificationType.ACCOUNT_APPROVED : NotificationType.ACCOUNT_REJECTED,
+      title: "Account Update",
+      message: `Your recruiter account has been ${status}`,
+    });
+    if (status === "rejected") {
+      await Report.updateMany(
+        { targetModel: 'User', targetId: user._id, status: 'open' },
+        { status: 'actioned', adminNote: 'Resolved via account rejection', reviewedBy: req.user._id, reviewedAt: new Date() }
+      );
+    }
+  }
   res.status(200).json({ success: true, user });
 });
 
@@ -66,5 +94,20 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
     await Application.deleteMany({ user: user._id });
   }
   await user.deleteOne();
+
+  await Report.updateMany(
+    { targetModel: 'User', targetId: user._id, status: 'open' },
+    { status: 'actioned', adminNote: 'Resolved via user deletion', reviewedBy: req.user._id, reviewedAt: new Date() }
+  );
+
+  await AuditLog.record({
+    actor: req.user,
+    action: AuditAction.USER_DELETED,
+    targetModel: "User",
+    targetId: user._id,
+    metadata: { name: user.name, email: user.email, role: user.role, status: user.status },
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
   res.status(200).json({ success: true, message: "User deleted" });
 });

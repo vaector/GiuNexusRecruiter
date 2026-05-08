@@ -14,10 +14,13 @@ User.schema.pre("save", async function (next) {
 
   let code;
   let exists = true;
-  while (exists) {
+  let attempts = 0;
+  while (exists && attempts < 10) {
     code = generateCode();
     exists = await User.findOne({ referralCode: code });
+    attempts++;
   }
+  if (attempts === 10) return next(new Error('Could not generate unique referral code'));
   this.referralCode = code;
   next();
 });

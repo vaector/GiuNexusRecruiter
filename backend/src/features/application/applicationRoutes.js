@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { listAllApplications, getMyApplications, updateApplicationStatus } = require("./applicationController");
+const { listAllApplications, getMyApplications, updateApplicationStatus, withdrawApplication } = require("./applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
 /**
@@ -89,5 +89,6 @@ router.get("/my", protect, authorize("jobSeeker"), getMyApplications);
  *         description: Application not found
  */
 router.patch("/:id/status", protect, authorize("recruiter"), updateApplicationStatus);
+router.delete("/:id/withdraw", protect, authorize("jobSeeker"), withdrawApplication);
 
 module.exports = router;

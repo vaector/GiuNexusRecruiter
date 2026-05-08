@@ -9,12 +9,24 @@ cloudinary.config({
 const uploadImage = async (buffer) => {
     const base64 = buffer.toString("base64")
     const dataUri = `data:image/jpeg;base64,${base64}`
-    
+
     const result = await cloudinary.uploader.upload(dataUri, {
         folder: "profile_pictures"
     })
-    
+
     return result
 }
 
-module.exports = { uploadImage }
+const uploadFile = async (buffer, mimetype) => {
+    const base64 = buffer.toString("base64")
+    const dataUri = `data:${mimetype};base64,${base64}`
+
+    const result = await cloudinary.uploader.upload(dataUri, {
+        folder: "documents",
+        resource_type: "auto"
+    })
+
+    return result
+}
+
+module.exports = { uploadImage, uploadFile }

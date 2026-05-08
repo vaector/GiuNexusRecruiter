@@ -10,6 +10,9 @@ const RequestLogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    url: {
+      type: String,
+    },
     statusCode: {
       type: Number,
       required: true,
@@ -26,7 +29,7 @@ const RequestLogSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -40,6 +43,10 @@ const RequestLogSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
       required: true,
+    },
+    isError: {
+      type: Boolean,
+      default: false,
     },
   },
   {
