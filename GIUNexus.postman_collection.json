@@ -119,7 +119,7 @@
               "host": ["{{BASE_URL}}"],
               "path": ["auth", "login"]
             },
-            "description": "Login and receive JWT. TOKEN is auto-set in collection variable via test script.\n\nIf MFA is enabled, response includes requiresMFA: true and userId. Use Verify MFA endpoint to complete login.\n\nTest scenario (a): step 2 of full auth flow."
+            "description": "Login and receive JWT. TOKEN is auto-set in collection variable via test script.\n\nIf MFA is enabled, response includes mfaRequired: true and userId. Use Verify MFA endpoint to complete login.\n\nTest scenario (a): step 2 of full auth flow."
           },
           "response": []
         },
@@ -313,7 +313,7 @@
               "host": ["{{BASE_URL}}"],
               "path": ["auth", "verify-mfa"]
             },
-            "description": "[ADDITIONAL] Complete MFA login. Use when login returns requiresMFA: true.\n\nFor TOTP: replace otp with totp and set method to 'totp'.\nFor email OTP: set method to 'email_otp'.\n\nReturns JWT on success."
+            "description": "[ADDITIONAL] Complete MFA login. Use when login returns mfaRequired: true.\n\nFor TOTP: replace otp with totp and set method to 'totp'.\nFor email OTP: set method to 'email_otp'.\n\nReturns JWT on success."
           },
           "response": []
         },
