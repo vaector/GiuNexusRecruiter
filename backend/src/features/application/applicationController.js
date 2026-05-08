@@ -165,7 +165,7 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
 const applyToJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
-    const { coverLetter } = req.body;
+    const { coverLetter, screeningAnswers } = req.body;
 
     const [job, user] = await Promise.all([
       JobPost.findById(jobId),
@@ -196,6 +196,17 @@ const applyToJob = async (req, res, next) => {
       return next(createError(400, "You have already applied to this job"));
     }
 
+    if (job.screeningQuestions && job.screeningQuestions.length > 0) {
+      const answers = Array.isArray(screeningAnswers) ? screeningAnswers : [];
+      for (const sq of job.screeningQuestions) {
+        if (!sq.required) continue; // ← skip optional questions
+        const match = answers.find((a) => a.question === sq.question);
+        if (!match || !match.answer || (typeof match.answer === 'string' && !match.answer.trim())) {
+          return next(createError(400, `Please answer required question: "${sq.question}"`));
+        }
+      }
+    }
+
     let aiMatchScore = null;
     if (job.embeddings && job.embeddings.length > 0 && user.skills && user.skills.length > 0) {
       try {
@@ -218,6 +229,7 @@ const applyToJob = async (req, res, next) => {
         job: jobId,
         ...(coverLetter && { coverLetter }),
         ...(aiMatchScore !== null && { aiMatchScore }),
+        screeningAnswers: Array.isArray(screeningAnswers) ? screeningAnswers : [],
         stageHistory: [{ stage: HiringStage.PENDING, updatedBy: req.user._id }],
       });
     } catch (err) {

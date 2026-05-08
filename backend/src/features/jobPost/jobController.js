@@ -5,13 +5,31 @@ const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Report = require("../reports/reports");
 const Referral = require("../referrals/Referral");
-const { AuditAction, JobStatus, UserStatus } = require("../../enums");
+const { AuditAction, JobStatus, UserStatus, ScreeningQuestionType } = require("../../enums");
 const cosineSimilarity = require("../../utils/cosineSimilarity");
 
 const createError = (statusCode, message) => {
     const error = new Error(message);
     error.statusCode = statusCode;
     return error;
+};
+
+const validateScreeningQuestions = (questions) => {
+    if (!Array.isArray(questions)) return 'screeningQuestions must be an array';
+    for (const q of questions) {
+        if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
+            return 'Each screening question must have a non-empty question string';
+        }
+        if (!Object.values(ScreeningQuestionType).includes(q.type)) {
+            return `Question type must be one of: ${Object.values(ScreeningQuestionType).join(', ')}`;
+        }
+        if (q.type === ScreeningQuestionType.MULTIPLE_CHOICE) {
+            if (!Array.isArray(q.options) || q.options.length < 2) {
+                return 'Multiple choice questions must have at least 2 options';
+            }
+        }
+    }
+    return null;
 };
 
 // GET /api/v1/jobs/recommended
@@ -146,7 +164,7 @@ const createJob = asyncHandler(async (req, res, next) => {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
-    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages } = req.body;
+    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions } = req.body;
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
         return next(createError(400, "Please provide all required fields"));
@@ -162,6 +180,11 @@ const createJob = asyncHandler(async (req, res, next) => {
 
     if (experience && experience.minYears < 0) {
         return next(createError(400, 'experience.minYears cannot be negative'));
+    }
+
+    if (screeningQuestions) {
+        const validationError = validateScreeningQuestions(screeningQuestions);
+        if (validationError) return next(createError(400, validationError));
     }
 
     let category = "Other";
@@ -195,7 +218,7 @@ const createJob = asyncHandler(async (req, res, next) => {
     }
 
     const job = await JobPost.create({
-        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
+        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
     });
 
     await AuditLog.record({
@@ -266,7 +289,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     const previousStatus = job.status;
 
-    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline", "requiresCv", "requiresCoverLetter", "experience", "requiredEducation", "requiredEducationField", "workplaceType", "perks", "hiringStages"];
+    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline", "requiresCv", "requiresCoverLetter", "experience", "requiredEducation", "requiredEducationField", "workplaceType", "perks", "hiringStages", "screeningQuestions"];
 
     for (const field of fields) {
         if (req.body[field] !== undefined) {
@@ -284,6 +307,11 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     if (req.body.experience && req.body.experience.minYears < 0) {
         return next(createError(400, 'experience.minYears cannot be negative'));
+    }
+
+    if (req.body.screeningQuestions) {
+        const validationError = validateScreeningQuestions(req.body.screeningQuestions);
+        if (validationError) return next(createError(400, validationError));
     }
 
     const descriptionChanged =
