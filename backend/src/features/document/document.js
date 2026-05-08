@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { DocumentType, DocumentStatus } = require("../enums");
+const { DocumentType, DocumentStatus } = require("../../enums");
 
 const DocumentSchema = new mongoose.Schema(
   {
@@ -39,6 +39,12 @@ const DocumentSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(DocumentStatus),
       default: DocumentStatus.PENDING,
+    },
+    fileHash: {
+      type: String,
+    },
+    signatureToken: {
+      type: String,
     },
   },
   {

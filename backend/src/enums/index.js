@@ -86,6 +86,7 @@ const DocumentType = Object.freeze({
   CONTRACT: "contract",
   NDA: "nda",
   CV: "cv",
+  COVER_LETTER: "cover_letter",
   OTHER: "other",
 });
 
