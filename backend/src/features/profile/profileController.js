@@ -1,6 +1,7 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const hf = require("../../services/hfService");
 const User = require("../user/User");
+const { uploadImage } = require("../../services/cloudinaryService")
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -19,6 +20,17 @@ const getMyProfile = asyncHandler(async (req, res, next) => {
 const updateMyProfile = asyncHandler(async (req, res, next) => {
   const allowedFields = ["name", "bio", "profilePicture"];
   const updates = {};
+
+  if (req.file) {
+    try {
+      const result = await uploadImage(req.file.buffer);
+      updates.profilePicture = result.secure_url;
+    } catch (uploadError) {
+      console.error("Cloudinary upload failed:", uploadError.message);
+      return next(createError(500, "Image upload failed, please try again"));
+    }
+  }
+
   for (const field of allowedFields) {
     if (req.body[field] !== undefined) {
       updates[field] = req.body[field];

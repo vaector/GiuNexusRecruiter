@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { getMyProfile, updateMyProfile, changeMyPassword, extractSkills } = require("./profileController");
 const { protect, authorize } = require("../../middleware/auth");
+const upload = require("../../middleware/upload");
 
 /**
  * @swagger
@@ -35,7 +36,7 @@ router.get("/", protect, getMyProfile);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -45,6 +46,7 @@ router.get("/", protect, getMyProfile);
  *                 type: string
  *               profilePicture:
  *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: Profile updated successfully
@@ -53,7 +55,7 @@ router.get("/", protect, getMyProfile);
  *       404:
  *         description: User not found
  */
-router.patch("/", protect, updateMyProfile);
+router.patch("/", protect, upload.single("profilePicture"), updateMyProfile);
 
 /**
  * @swagger
