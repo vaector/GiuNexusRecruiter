@@ -6,7 +6,16 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --testEnvironment node --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/backend/src/tests/setup.js"
+    ],
+    "testMatch": [
+      "<rootDir>/backend/src/tests/**/*.test.js"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -19,12 +28,18 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.5.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.23.1",
     "multer": "^2.1.1",
-    "nodemailer": "^8.0.7"
+    "nodemailer": "^8.0.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "jest": "^30.3.0",
+    "mongodb-memory-server": "^11.1.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }

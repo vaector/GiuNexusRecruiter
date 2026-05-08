@@ -13,9 +13,14 @@ const profileRoutes = require("./src/features/profile/profileRoutes");
 const adminRoutes = require("./src/features/admin/adminRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./src/config/swagger");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (_req, res) => {
   res.json({ status: "ok", message: "Server is running" });
