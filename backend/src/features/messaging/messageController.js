@@ -20,6 +20,10 @@ const createError = (statusCode, message) => {
 };
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+const normalizeObjectId = (value) =>
+  value instanceof mongoose.Types.ObjectId
+    ? value
+    : new mongoose.Types.ObjectId(value);
 
 const sameId = (left, right) =>
   left && right && left.toString() === right.toString();
@@ -101,25 +105,33 @@ const findJobSeekerApplication = async (jobId, userId) =>
   Application.findOne({ job: jobId, user: userId });
 
 const listConversationSummaries = async ({ currentUserId, jobIds }) => {
-  if (!jobIds.length) return [];
+  if (!Array.isArray(jobIds) || !jobIds.length) return [];
+  const normalizedCurrentUserId = normalizeObjectId(currentUserId);
 
   return Message.aggregate([
     {
       $match: {
         job: { $in: jobIds },
-        $or: [{ sender: currentUserId }, { recipient: currentUserId }],
+        $or: [
+          { sender: normalizedCurrentUserId },
+          { recipient: normalizedCurrentUserId },
+        ],
       },
     },
     {
       $addFields: {
         otherUser: {
-          $cond: [{ $eq: ["$sender", currentUserId] }, "$recipient", "$sender"],
+          $cond: [
+            { $eq: ["$sender", normalizedCurrentUserId] },
+            "$recipient",
+            "$sender",
+          ],
         },
         unreadForCurrentUser: {
           $cond: [
             {
               $and: [
-                { $eq: ["$recipient", currentUserId] },
+                { $eq: ["$recipient", normalizedCurrentUserId] },
                 { $eq: ["$readAt", null] },
               ],
             },
@@ -147,13 +159,15 @@ const hydrateConversations = async ({
   currentUserId,
   isAllowedThread,
 }) => {
-  if (!summaries.length) return [];
+  if (!Array.isArray(summaries) || !summaries.length) return [];
 
   const latestMessageIds = summaries.map((summary) => summary.latestMessageId);
   const latestMessages = await Message.find({ _id: { $in: latestMessageIds } })
-    .populate("job", `${SAFE_JOB_FIELDS} createdBy`)
-    .populate("sender", SAFE_USER_FIELDS)
-    .populate("recipient", SAFE_USER_FIELDS)
+    .populate([
+      { path: "job", select: `${SAFE_JOB_FIELDS} createdBy` },
+      { path: "sender", select: SAFE_USER_FIELDS },
+      { path: "recipient", select: SAFE_USER_FIELDS },
+    ])
     .lean();
 
   const latestById = new Map(
@@ -184,12 +198,14 @@ const hydrateConversations = async ({
 };
 
 const requireJobSeekerApplicant = async (jobId, userId) => {
+  const normalizedUserId = normalizeObjectId(userId);
+
   const [recipient, application] = await Promise.all([
-    User.findOne({ _id: userId, role: "jobSeeker" }).select("_id role"),
-    findJobSeekerApplication(jobId, userId),
+    User.findById(normalizedUserId).select("_id role"),
+    findJobSeekerApplication(jobId, normalizedUserId),
   ]);
 
-  if (!recipient || !application) return null;
+  if (!recipient || recipient.role !== "jobSeeker" || !application) return null;
   return application;
 };
 
@@ -235,7 +251,8 @@ const sendMessage = asyncHandler(async (req, res, next) => {
     );
     if (invalidRecipientId) return next(invalidRecipientId);
 
-    const application = await requireJobSeekerApplicant(jobId, recipientId);
+    const recipientObjectId = normalizeObjectId(recipientId);
+    const application = await requireJobSeekerApplicant(jobId, recipientObjectId);
     if (!application) {
       return res.status(403).json({
         success: false,
@@ -249,7 +266,7 @@ const sendMessage = asyncHandler(async (req, res, next) => {
       });
     }
 
-    recipient = recipientId;
+    recipient = recipientObjectId;
   }
 
   if (req.user.role === "jobSeeker") {
@@ -314,12 +331,13 @@ const getMessages = asyncHandler(async (req, res, next) => {
     );
     if (invalidApplicantId) return next(invalidApplicantId);
 
-    const application = await requireJobSeekerApplicant(jobId, applicantId);
+    const applicantObjectId = normalizeObjectId(applicantId);
+    const application = await requireJobSeekerApplicant(jobId, applicantObjectId);
     if (!application) {
       return next(createError(403, "Applicant has not applied to this job"));
     }
 
-    otherUserId = applicantId;
+    otherUserId = applicantObjectId;
   }
 
   if (req.user.role === "jobSeeker") {
@@ -406,7 +424,7 @@ const getMessages = asyncHandler(async (req, res, next) => {
 // GET /api/v1/conversations
 const getConversations = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id.toString();
-  const currentUserObjectId = new mongoose.Types.ObjectId(req.user._id);
+  const currentUserObjectId = normalizeObjectId(req.user._id);
   let conversations = [];
 
   if (req.user.role === "recruiter") {
