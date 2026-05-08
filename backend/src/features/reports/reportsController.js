@@ -15,6 +15,14 @@ const createReport = asyncHandler(async (req, res, next) => {
     return next(createError(400, 'targetModel, targetId, and reason are required'));
   }
 
+  if (!Object.values(ReportReason).includes(reason)) {
+    return next(createError(400, `reason must be one of: ${Object.values(ReportReason).join(', ')}`))
+  }
+  
+  if (!["JobPost", "User"].includes(targetModel)) {
+    return next(createError(400, 'targetModel must be JobPost or User'))
+  }
+
   const existing = await Report.findOne({
     reporter: req.user._id,
     targetModel,
@@ -66,6 +74,10 @@ const reviewReport = asyncHandler(async (req, res, next) => {
 
   if (!status) {
     return next(createError(400, 'status is required'));
+  }
+
+  if (!Object.values(ReportStatus).includes(status)) {
+    return next(createError(400, `status must be one of: ${Object.values(ReportStatus).join(', ')}`))
   }
 
   const report = await Report.findById(req.params.id);
