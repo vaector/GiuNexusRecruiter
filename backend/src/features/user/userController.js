@@ -5,7 +5,7 @@ const Application = require("../application/Application");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
 const Report = require("../reports/reports");
-const { AuditAction, NotificationType } = require("../../enums");
+const { AuditAction, NotificationType, UserStatus } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -43,7 +43,7 @@ exports.getUserById = asyncHandler(async (req, res, next) => {
 // PATCH /api/v1/users/:id/status
 exports.updateUserStatus = asyncHandler(async (req, res, next) => {
   const { status } = req.body;
-  const allowedStatuses = ["approved", "rejected", "pending"];
+  const allowedStatuses = Object.values(UserStatus);
   if (!status || !allowedStatuses.includes(status)) {
     return next(createError(400, `Status must be one of: ${allowedStatuses.join(", ")}`));
   }
@@ -54,10 +54,10 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
     { new: true, runValidators: true }
   ).select("-password");
   if (!user) return next(createError(404, "User not found"));
-  if (status === "approved" || status === "rejected") {
+  if (status === UserStatus.APPROVED || status === UserStatus.REJECTED) {
     await AuditLog.record({
       actor: req.user,
-      action: status === "approved" ? AuditAction.RECRUITER_APPROVED : AuditAction.RECRUITER_REJECTED,
+      action: status === UserStatus.APPROVED ? AuditAction.RECRUITER_APPROVED : AuditAction.RECRUITER_REJECTED,
       targetModel: "User",
       targetId: user._id,
       metadata: { from: existingUser?.status, to: status },
@@ -66,11 +66,11 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
     });
     await Notification.send({
       recipient: user._id,
-      type: status === "approved" ? NotificationType.ACCOUNT_APPROVED : NotificationType.ACCOUNT_REJECTED,
+      type: status === UserStatus.APPROVED ? NotificationType.ACCOUNT_APPROVED : NotificationType.ACCOUNT_REJECTED,
       title: "Account Update",
       message: `Your recruiter account has been ${status}`,
     });
-    if (status === "rejected") {
+    if (status === UserStatus.REJECTED) {
       await Report.updateMany(
         { targetModel: 'User', targetId: user._id, status: 'open' },
         { status: 'actioned', adminNote: 'Resolved via account rejection', reviewedBy: req.user._id, reviewedAt: new Date() }

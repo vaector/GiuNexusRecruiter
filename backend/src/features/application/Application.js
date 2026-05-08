@@ -1,9 +1,8 @@
 const mongoose = require("mongoose");
 
-const APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
-
 const {
-  HiringStage
+  ApplicationStatus,
+  HiringStage,
 } = require("../../enums");
 
 const ScreeningAnswerSchema = new mongoose.Schema(
@@ -56,8 +55,8 @@ const ApplicationSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: APPLICATION_STATUSES,
-    default: "pending",
+    enum: Object.values(ApplicationStatus),
+    default: ApplicationStatus.PENDING,
   },
 
   appliedAt: {

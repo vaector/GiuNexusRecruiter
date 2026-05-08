@@ -2,9 +2,6 @@
 
 const mongoose = require("mongoose");
 
-const JOB_TYPES = ["full-time", "part-time", "internship"];
-const JOB_STATUSES = ["open", "closed"];
-
 const EXCHANGE_RATES_TO_USD = { USD: 1, EGP: 0.02, EUR: 1.08, GBP: 1.27 };
 
 const {
@@ -103,7 +100,7 @@ const JobPostSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: JOB_TYPES,
+      enum: Object.values(JobType),
       required: true,
     },
 
@@ -122,8 +119,8 @@ const JobPostSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: JOB_STATUSES,
-      default: "open",
+      enum: Object.values(JobStatus),
+      default: JobStatus.OPEN,
     },
 
     createdBy: {

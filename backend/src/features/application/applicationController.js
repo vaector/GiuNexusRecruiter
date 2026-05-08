@@ -1,4 +1,5 @@
 const asyncHandler = require("../../middleware/asyncHandler");
+const hf = require("../../services/hfService");
 const Application = require("./Application");
 const Document = require("../document/document");
 const JobPost = require("../jobPost/jobPost");
@@ -6,9 +7,10 @@ const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
 const Referral = require("../referrals/Referral");
-const { AuditAction, NotificationType } = require("../../enums");
+const { AuditAction, NotificationType, HiringStage, ApplicationStatus, JobStatus } = require("../../enums");
+const cosineSimilarity = require("../../utils/cosineSimilarity");
 
-const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
+const ALLOWED_APPLICATION_STATUSES = Object.values(ApplicationStatus);
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -81,12 +83,23 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
 
   const previousStatus = application.status;
   application.status = status;
+
+  application.stageHistory.push({
+    stage: status,
+    updatedBy: req.user._id,
+    updatedAt: new Date(),
+  });
+
+  if (req.body.recruiterNotes !== undefined) {
+    application.recruiterNotes = req.body.recruiterNotes;
+  }
+
   await application.save();
 
   const statsInc = {};
-  if (previousStatus === "pending") statsInc['applicationStats.totalPending'] = -1;
-  if (status === "shortlisted") statsInc['applicationStats.totalShortlisted'] = 1;
-  else if (status === "rejected") statsInc['applicationStats.totalRejected'] = 1;
+  if (previousStatus === ApplicationStatus.PENDING) statsInc['applicationStats.totalPending'] = -1;
+  if (status === ApplicationStatus.SHORTLISTED) statsInc['applicationStats.totalShortlisted'] = 1;
+  else if (status === ApplicationStatus.REJECTED) statsInc['applicationStats.totalRejected'] = 1;
   if (Object.keys(statsInc).length > 0) {
     await User.findByIdAndUpdate(application.user, { $inc: statsInc });
   }
@@ -98,10 +111,10 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     $set: { 'applicationStats.responseRate': responseRate }
   });
 
-  if (status === "shortlisted" || status === "rejected") {
+  if (status === ApplicationStatus.SHORTLISTED || status === ApplicationStatus.REJECTED) {
     await AuditLog.record({
       actor: req.user,
-      action: status === "shortlisted" ? AuditAction.APPLICATION_SHORTLISTED : AuditAction.APPLICATION_REJECTED,
+      action: status === ApplicationStatus.SHORTLISTED ? AuditAction.APPLICATION_SHORTLISTED : AuditAction.APPLICATION_REJECTED,
       targetModel: "Application",
       targetId: application._id,
       metadata: { from: previousStatus, to: status },
@@ -123,7 +136,7 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     relatedApplication: updatedApplication._id,
   });
 
-  if (status === "shortlisted" || status === "rejected") {
+  if (status === ApplicationStatus.SHORTLISTED || status === ApplicationStatus.REJECTED) {
     const referral = await Referral.findOne({
       referred: updatedApplication.user._id,
       job: updatedApplication.job._id,
@@ -131,13 +144,13 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     if (referral) {
       await Referral.updateOne(
         { _id: referral._id },
-        { status: status === "shortlisted" ? "accepted" : "rejected" }
+        { status: status === ApplicationStatus.SHORTLISTED ? "accepted" : "rejected" }
       );
       await Notification.send({
         recipient: referral.referrer,
         type: NotificationType.REFERRAL_APPLIED,
-        title: status === "shortlisted" ? "Referral Accepted" : "Referral Update",
-        message: status === "shortlisted"
+        title: status === ApplicationStatus.SHORTLISTED ? "Referral Accepted" : "Referral Update",
+        message: status === ApplicationStatus.SHORTLISTED
           ? `Your referral for ${updatedApplication.job.title} was accepted — ${updatedApplication.user.name} was shortlisted`
           : `Your referral for ${updatedApplication.job.title} was not successful — ${updatedApplication.user.name} was rejected`,
         relatedJob: updatedApplication.job._id,
@@ -154,12 +167,16 @@ const applyToJob = async (req, res, next) => {
     const { jobId } = req.params;
     const { coverLetter } = req.body;
 
-    const job = await JobPost.findById(jobId);
+    const [job, user] = await Promise.all([
+      JobPost.findById(jobId),
+      User.findById(req.user._id).select("skills"),
+    ]);
+
     if (!job) {
       return next(createError(404, "Job not found"));
     }
 
-    if (job.status !== "open") {
+    if (job.status !== JobStatus.OPEN) {
       return next(createError(400, "Cannot apply to a closed job"));
     }
 
@@ -179,12 +196,29 @@ const applyToJob = async (req, res, next) => {
       return next(createError(400, "You have already applied to this job"));
     }
 
+    let aiMatchScore = null;
+    if (job.embeddings && job.embeddings.length > 0 && user.skills && user.skills.length > 0) {
+      try {
+        const studentText = user.skills.join(', ');
+        const studentEmbedding = await hf.featureExtraction({
+          model: 'sentence-transformers/all-MiniLM-L6-v2',
+          inputs: studentText,
+        });
+        const vec = Array.isArray(studentEmbedding[0]) ? studentEmbedding[0] : studentEmbedding;
+        aiMatchScore = Math.max(0, Math.round(cosineSimilarity(vec, job.embeddings) * 100));
+      } catch (err) {
+        console.error('aiMatchScore computation failed:', err.message);
+      }
+    }
+
     let application;
     try {
       application = await Application.create({
         user: req.user._id,
         job: jobId,
         ...(coverLetter && { coverLetter }),
+        ...(aiMatchScore !== null && { aiMatchScore }),
+        stageHistory: [{ stage: HiringStage.PENDING, updatedBy: req.user._id }],
       });
     } catch (err) {
       if (err.code === 11000) {
@@ -237,6 +271,7 @@ const withdrawApplication = asyncHandler(async (req, res, next) => {
     action: AuditAction.APPLICATION_WITHDRAWN,
     targetModel: "Application",
     targetId: application._id,
+    metadata: { withdrawnAt: new Date(), jobTitle: job?.title },
     ipAddress: req.ip,
     userAgent: req.get("User-Agent"),
   });
@@ -253,6 +288,29 @@ const withdrawApplication = asyncHandler(async (req, res, next) => {
   return res.status(200).json({ success: true, message: "Application withdrawn" });
 });
 
+// PATCH /api/v1/applications/:id/notes — recruiter only
+const updateRecruiterNotes = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const { recruiterNotes } = req.body;
+
+  const application = await Application.findById(id).populate("job", "createdBy");
+  if (!application) return next(createError(404, "Application not found"));
+  if (!application.job) return next(createError(404, "Related job not found"));
+
+  if (application.job.createdBy.toString() !== req.user._id.toString()) {
+    return next(createError(403, "Not authorised to update notes for this application"));
+  }
+
+  application.recruiterNotes = recruiterNotes;
+  await application.save();
+
+  const updatedApplication = await Application.findById(application._id)
+    .populate("user", "name email")
+    .populate("job", "title company");
+
+  return res.status(200).json({ success: true, application: updatedApplication });
+});
+
 module.exports = {
   listAllApplications,
   getJobApplicants,
@@ -260,4 +318,5 @@ module.exports = {
   updateApplicationStatus,
   applyToJob,
   withdrawApplication,
+  updateRecruiterNotes,
 };

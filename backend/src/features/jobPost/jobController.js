@@ -5,14 +5,8 @@ const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Report = require("../reports/reports");
 const Referral = require("../referrals/Referral");
-const { AuditAction } = require("../../enums");
-
-function cosineSimilarity(vecA, vecB) {
-    const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
-    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
-    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
-    return dot / (magA * magB);
-}
+const { AuditAction, JobStatus, UserStatus } = require("../../enums");
+const cosineSimilarity = require("../../utils/cosineSimilarity");
 
 const createError = (statusCode, message) => {
     const error = new Error(message);
@@ -148,7 +142,7 @@ const getJobById = asyncHandler(async (req, res, next) => {
 
 // POST /api/v1/jobs
 const createJob = asyncHandler(async (req, res, next) => {
-    if (req.user.status !== "approved") {
+    if (req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
@@ -242,7 +236,7 @@ const toggleSaveJob = asyncHandler(async (req, res, next) => {
         });
     }
 
-    if (job.status !== "open") {
+    if (job.status !== JobStatus.OPEN) {
         return next(createError(400, "Cannot save a closed job"));
     }
 
@@ -256,7 +250,7 @@ const toggleSaveJob = asyncHandler(async (req, res, next) => {
 
 // PATCH /api/v1/jobs/:id
 const updateJob = asyncHandler(async (req, res, next) => {
-    if (req.user.status !== "approved") {
+    if (req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
@@ -331,7 +325,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     await job.save();
 
-    if (previousStatus !== "closed" && job.status === "closed") {
+    if (previousStatus !== JobStatus.CLOSED && job.status === JobStatus.CLOSED) {
         await AuditLog.record({
             actor: req.user,
             action: AuditAction.JOB_CLOSED,
@@ -349,7 +343,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
 // DELETE /api/v1/jobs/:id
 const deleteJob = asyncHandler(async (req, res, next) => {
-    if (req.user.role === "recruiter" && req.user.status !== "approved") {
+    if (req.user.role === "recruiter" && req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before managing jobs."));
     }
 

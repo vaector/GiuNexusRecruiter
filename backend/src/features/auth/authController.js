@@ -5,7 +5,7 @@ const sendEmail = require("../../services/emailService");
 const asyncHandler = require("../../middleware/asyncHandler");
 const { addToBlacklist } = require('../../middleware/tokenBlacklist');
 const AuditLog = require("../auditLog/auditLog");
-const { AuditAction } = require("../../enums");
+const { AuditAction, Role, UserStatus } = require("../../enums");
 const { generateSecret, verifyTotp, printQrToConsole } = require("../../middleware/totpService");
 
 const createError = (statusCode, message) => {
@@ -68,7 +68,7 @@ const register = asyncHandler(async (req, res, next) => {
     email: normalizedEmail,
     password,
     role,
-    status: role === "recruiter" ? "pending" : "approved",
+    status: role === Role.RECRUITER ? UserStatus.PENDING : UserStatus.APPROVED,
   });
 
   return authResponse(res, 201, user);
@@ -87,7 +87,7 @@ const login = asyncHandler(async (req, res, next) => {
     return next(createError(401, "Invalid email or password"));
   }
 
-  if (user.status === "rejected") {
+  if (user.status === UserStatus.REJECTED) {
     return next(createError(403, "Your account has been rejected"));
   }
 

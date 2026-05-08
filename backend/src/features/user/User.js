@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 
 const bcrypt = require("bcryptjs");
 
-const USER_ROLES = ["jobSeeker", "recruiter", "admin"];
-const USER_STATUSES = ["pending", "approved", "rejected"];
+const { Role, UserStatus } = require("../../enums");
 
 const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
 
@@ -88,14 +87,14 @@ const UserSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: USER_ROLES,
-      default: "jobSeeker",
+      enum: Object.values(Role),
+      default: Role.JOB_SEEKER,
     },
 
     status: {
       type: String,
-      enum: USER_STATUSES,
-      default: "pending",
+      enum: Object.values(UserStatus),
+      default: UserStatus.PENDING,
     },
 
     savedJobs: [
