@@ -73,13 +73,19 @@ const extractSkills = asyncHandler(async (req, res, next) => {
       model: "dslim/bert-base-NER",
       inputs: user.bio,
     });
-    const skills = [
-      ...new Set(
-        result
-          .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
-          .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""))
-      ),
-    ];
+    let extractedWords = result
+      .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
+      .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""));
+
+    // Fix common tokenization splits
+    for (let i = 0; i < extractedWords.length - 1; i++) {
+      if (extractedWords[i] === "No" && extractedWords[i + 1] === "de.js") {
+        extractedWords.splice(i, 2, "Node.js");
+        i--; // Adjust index after splice
+      }
+    }
+
+    const skills = [...new Set(extractedWords)];
     user.skills = skills;
     await user.save();
     return res.status(200).json({ success: true, skills, extracted: skills });

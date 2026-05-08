@@ -69,8 +69,9 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!ALLOWED_APPLICATION_STATUSES.includes(status)) {
-    return next(createError(400, "Status must be one of: pending, shortlisted, rejected"));
+  const validStatuses = [...ALLOWED_APPLICATION_STATUSES, ...Object.values(HiringStage)];
+  if (!validStatuses.includes(status)) {
+    return next(createError(400, "Invalid status or hiring stage"));
   }
 
   const application = await Application.findById(id).populate("job", "createdBy");
@@ -82,10 +83,29 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   }
 
   const previousStatus = application.status;
-  application.status = status;
+  
+  // If the status corresponds to a HiringStage but not an ApplicationStatus, keep the 
+  // 'application.status' as shortlisted, but update the stageHistory.
+  if (ALLOWED_APPLICATION_STATUSES.includes(status)) {
+    application.status = status;
+  } else if (Object.values(HiringStage).includes(status)) {
+    application.status = ApplicationStatus.SHORTLISTED;
+  }
+
+  let stageToSet;
+  if (status === ApplicationStatus.SHORTLISTED) {
+    stageToSet = HiringStage.SCREENING;
+  } else if (status === ApplicationStatus.REJECTED) {
+    stageToSet = HiringStage.REJECTED;
+  } else if (Object.values(HiringStage).includes(status)) {
+    // If the input was actually a HiringStage like 'interview', 'offer'
+    stageToSet = status;
+  } else {
+    stageToSet = status;
+  }
 
   application.stageHistory.push({
-    stage: status,
+    stage: stageToSet,
     updatedBy: req.user._id,
     updatedAt: new Date(),
   });
