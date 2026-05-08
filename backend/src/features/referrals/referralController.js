@@ -202,7 +202,9 @@ const listAllReferrals = asyncHandler(async (req, res) => {
       .limit(limit),
   ]);
 
-  return res.status(200).json({ success: true, total, page, referrals });
+  const pages = Math.ceil(total / limit);
+
+  return res.status(200).json({ success: true, total, page, pages, referrals });
 });
 
 // PATCH /api/v1/referrals/:id/status — admin only

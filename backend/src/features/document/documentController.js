@@ -99,7 +99,10 @@ const getDocuments = asyncHandler(async (req, res, next) => {
 const signDocument = asyncHandler(async (req, res, next) => {
     const document = await Document.findById(req.params.id).populate({
         path: 'application',
-        populate: { path: 'job' }
+        populate: [
+            { path: 'job' },
+            { path: 'user', select: '_id'}
+        ]
     });
 
     if (!document) {
