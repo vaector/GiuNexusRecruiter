@@ -158,6 +158,10 @@ const UserSchema = new mongoose.Schema(
       default: Date.now,
     },
 
+    mfaEnabled: { type: Boolean, default: false },
+    mfaMethod: { type: String, enum: ['email_otp', 'totp'], default: 'email_otp' },
+    totpSecret: { type: String }, // encrypted TOTP secret for authenticator app
+
     notificationPreferences: {
       type: NotificationPreferencesSchema,
       default: () => ({}),
@@ -188,6 +192,9 @@ UserSchema.set("toJSON", {
   transform: (_doc, ret) => {
     delete ret.password;
     delete ret.__v;
+    delete ret.totpSecret;
+    delete ret.otpCode;
+    delete ret.resetPasswordToken;
     return ret;
   },
 });
@@ -270,22 +277,6 @@ const PreviousAppraisalSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
-twoFactorSecret: {
-  type: String,
-},
-twoFactorEnabled: {
-  type: Boolean,
-  default: false,
-},
-
-referralCode: {
-  type: String,
-  unique: true,
-  sparse: true,
-  trim: true,
-  uppercase: true,
-},
 
 // Future role-specific model setup:
 // Add this to the UserSchema options if role-specific discriminator models are needed.
