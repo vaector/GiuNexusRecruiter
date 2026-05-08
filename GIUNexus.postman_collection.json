@@ -1,0 +1,1675 @@
+{
+  "info": {
+    "_postman_id": "f7e6d5c4-b3a2-9180-7654-321fedcba098",
+    "name": "GIU Nexus API - Milestone 2",
+    "description": "Complete API collection for GIU Nexus - AI-Powered Career & Talent Platform (Milestone 2).\n\nSETUP:\n1. BASE_URL is pre-set to http://localhost:5000/api/v1\n2. Run Login -> TOKEN auto-sets via test script\n3. Admin accounts must be created directly in the DB (no /register for admin)\n4. JOB_ID auto-sets after Create Job; APP_ID auto-sets after Apply to Job\n\nMILESTONE 2 REQUIRED TEST SCENARIOS:\na) Full auth flow: Register as jobSeeker -> Login -> Use protected route\nb) Recruiter approval: Register recruiter (pending) -> Admin approves -> Recruiter posts job\nc) AI category: Create job -> Check auto-assigned category in response\nd) Skill extraction: Update bio -> POST /profile/extract-skills -> Skills saved to profile\ne) Job recommendations: GET /jobs/recommended -> Ranked list with score values\nf) Full application flow: Apply -> Recruiter shortlists -> GET /applications/my shows updated status\ng) Business rules: Duplicate apply -> 400 | Pending recruiter posts job -> 403\n\nEndpoints marked [ADDITIONAL] are implemented but outside the Milestone 2 spec.\nEndpoints marked [BONUS] are from the Milestone 2 Bonus Features section.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "BASE_URL", "value": "http://localhost:5000/api/v1", "type": "string"},
+    {"key": "TOKEN", "value": "", "type": "string", "description": "JWT - auto-set after Login"},
+    {"key": "JOB_ID", "value": "", "type": "string", "description": "Auto-set after Create Job"},
+    {"key": "APP_ID", "value": "", "type": "string", "description": "Auto-set after Apply to Job"},
+    {"key": "USER_ID", "value": "", "type": "string", "description": "Auto-set after Register; also set manually for admin ops"},
+    {"key": "RESET_TOKEN", "value": "", "type": "string", "description": "Auto-set after Verify OTP"},
+    {"key": "NOTIFICATION_ID", "value": "", "type": "string"},
+    {"key": "SAVED_SEARCH_ID", "value": "", "type": "string"},
+    {"key": "REPORT_ID", "value": "", "type": "string"},
+    {"key": "DOCUMENT_ID", "value": "", "type": "string"},
+    {"key": "REFERRAL_ID", "value": "", "type": "string"},
+    {"key": "CONVERSATION_JOB_ID", "value": "", "type": "string", "description": "Job ID used as conversation thread key"}
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints: register, login, logout, password reset with OTP, and MFA.\n\nAll rate-limited: 10 requests per 15 minutes per IP (express-rate-limit).\n\nMilestone: register, login, logout, forgot-password, reset-password\nBonus: verify-otp (OTP-based MFA), token blacklist logout\nAdditional: verify-mfa, setup-totp",
+      "item": [
+        {
+          "name": "Register - Job Seeker",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.user && res.user._id) pm.collectionVariables.set('USER_ID', res.user._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Ahmed\",\n  \"email\": \"sara@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"jobSeeker\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new job seeker. Returns 201 with JWT and user object (status: approved).\n\nTest scenario (a): step 1 of full auth flow."
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Recruiter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.user && res.user._id) pm.collectionVariables.set('USER_ID', res.user._id);",
+                  "// Recruiter is created with status: pending - cannot post jobs until admin approves"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mohamed Ali\",\n  \"email\": \"recruiter@techco.com\",\n  \"password\": \"password123\",\n  \"role\": \"recruiter\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new recruiter. Returns 201 with status: pending.\n\nTest scenario (b): Recruiter approval flow step 1. Recruiter cannot post jobs until admin approves."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('TOKEN', res.token);",
+                  "  pm.environment.set('TOKEN', res.token);",
+                  "  console.log('TOKEN set:', res.token.substring(0, 20) + '...');",
+                  "}",
+                  "if (res.user && res.user._id) pm.collectionVariables.set('USER_ID', res.user._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sara@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login and receive JWT. TOKEN is auto-set in collection variable via test script.\n\nIf MFA is enabled, response includes requiresMFA: true and userId. Use Verify MFA endpoint to complete login.\n\nTest scenario (a): step 2 of full auth flow."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('TOKEN', res.token);",
+                  "  pm.environment.set('TOKEN', res.token);",
+                  "  console.log('Admin TOKEN set');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@giunexus.com\",\n  \"password\": \"adminpassword123\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as admin. Admin accounts must be created directly in the DB (seed script or MongoDB Compass).\n\nTest scenario (b): step 3 - log in as admin to approve recruiter."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Recruiter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('TOKEN', res.token);",
+                  "  pm.environment.set('TOKEN', res.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"recruiter@techco.com\",\n  \"password\": \"password123\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as recruiter. Use after admin has approved the recruiter account.\n\nTest scenario (b): step 5 - recruiter can now post jobs after approval."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/logout",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Stateless logout. Token is blacklisted (Bonus: token blacklist via JTI). Client should discard token.\n\nReturns 200 with message: 'Logged out successfully'."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password - Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sara@example.com\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/forgot-password",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Send a 6-digit OTP to the given email for password reset (Bonus: OTP-based MFA).\n\nAlways returns 200 to avoid email enumeration attacks.\n\nFlow: Forgot Password -> Verify OTP (get reset token) -> Reset Password"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP - Get Reset Token [BONUS]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.resetToken) pm.collectionVariables.set('RESET_TOKEN', res.resetToken);",
+                  "// Use RESET_TOKEN in the Reset Password request"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sara@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/verify-otp",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "[BONUS] Verify the 6-digit OTP sent to email. Returns a password reset token (RESET_TOKEN auto-set).\n\nError 400: OTP is invalid or has expired."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newpassword456\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/reset-password/:token",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "reset-password", ":token"],
+              "variable": [
+                {"key": "token", "value": "{{RESET_TOKEN}}", "description": "Token from Verify OTP response"}
+              ]
+            },
+            "description": "Reset password using the token from Verify OTP. Min 6 characters.\n\nReturns 200 with a new JWT token.\nError 400: Token is invalid or has expired."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Verify MFA",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{USER_ID}}\",\n  \"otp\": \"123456\",\n  \"method\": \"email_otp\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/verify-mfa",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "verify-mfa"]
+            },
+            "description": "[ADDITIONAL] Complete MFA login. Use when login returns requiresMFA: true.\n\nFor TOTP: replace otp with totp and set method to 'totp'.\nFor email OTP: set method to 'email_otp'.\n\nReturns JWT on success."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Setup TOTP",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/setup-totp",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "setup-totp"]
+            },
+            "description": "[ADDITIONAL] Generate a TOTP secret for authenticator app setup. Returns otpauth URL and QR code data.\n\nRequires authentication (Bearer token)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (Admin Only)",
+      "description": "User management endpoints. All require admin role.\n\nMilestone: GET /, GET /:id, PATCH /:id/status, DELETE /:id\n\nTest scenario (b): Use 'Get Pending Recruiters' -> copy recruiter ID -> 'Approve Recruiter'.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/users?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"],
+              "query": [
+                {"key": "role", "value": "jobSeeker", "disabled": true},
+                {"key": "status", "value": "approved", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "Paginated list of all users. Filter by role and/or status.\n\nReturns: { success, total, page, users: [...] }"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Recruiters",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/users?role=recruiter&status=pending&page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"],
+              "query": [
+                {"key": "role", "value": "recruiter"},
+                {"key": "status", "value": "pending"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "Get all recruiters awaiting approval.\n\nTest scenario (b): step 2 - confirm recruiter status is pending. Copy the _id and set it as USER_ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id"],
+              "variable": [{"key": "id", "value": "{{USER_ID}}"}]
+            },
+            "description": "Get a single user by ID.\n\nError 404: User not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Recruiter",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id", "status"],
+              "variable": [{"key": "id", "value": "{{USER_ID}}", "description": "Recruiter's user ID"}]
+            },
+            "description": "Approve a pending recruiter account. After this, the recruiter can post jobs.\n\nTest scenario (b): step 4 - admin approves recruiter.\n\nStatus options: 'approved' | 'rejected' | 'pending'"
+          },
+          "response": []
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id", "status"],
+              "variable": [{"key": "id", "value": "{{USER_ID}}"}]
+            },
+            "description": "Reject a user account."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id"],
+              "variable": [{"key": "id", "value": "{{USER_ID}}"}]
+            },
+            "description": "Permanently delete a user account.\n\nReturns 200: { success: true, message: 'User deleted' }\nError 404: User not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only platform management endpoints.\n\nMilestone: GET /admin/stats\nAdditional: request-logs, audit-logs",
+      "item": [
+        {
+          "name": "Get Platform Stats",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "stats"]
+            },
+            "description": "Platform-wide statistics via MongoDB aggregation pipelines.\n\nReturns: usersByRole, jobsByStatus, appsByStatus, topJobs (by application count)"
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Request Log Stats",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/request-logs/stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "request-logs", "stats"]
+            },
+            "description": "[ADDITIONAL] Aggregated request statistics: slowest routes, error rates, AI call counts."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Request Logs",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/request-logs?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "request-logs"],
+              "query": [
+                {"key": "route", "value": "/api/v1/jobs", "disabled": true},
+                {"key": "method", "value": "POST", "disabled": true},
+                {"key": "statusCode", "value": "200", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Paginated request logs. Filter by route, method, statusCode, dateRange."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/audit-logs?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                {"key": "actorRole", "value": "admin", "disabled": true},
+                {"key": "action", "value": "USER_CREATED", "disabled": true},
+                {"key": "targetModel", "value": "User", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Paginated audit trail. Actions include USER_CREATED, JOB_DELETED, APPLICATION_SHORTLISTED, etc."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "description": "Authenticated user's own profile management.\n\nMilestone: GET /, PATCH /, PATCH /change-password, POST /extract-skills\nAdditional: PATCH /mfa",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile"]
+            },
+            "description": "Returns the full profile of the authenticated user.\n\nTest scenario (a): step 3 - use token on a protected route."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Ahmed\",\n  \"bio\": \"Experienced full-stack developer with expertise in React, Node.js, MongoDB, and Express. Passionate about building scalable web applications and solving complex engineering problems.\",\n  \"profilePicture\": \"https://example.com/avatar.jpg\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile"]
+            },
+            "description": "Update name, bio, and/or profilePicture URL. All fields optional.\n\nTest scenario (d): Update bio first, then call Extract Skills."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile - With Picture Upload [BONUS]",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "name", "value": "Sara Ahmed", "type": "text"},
+                {"key": "bio", "value": "Full-stack developer with React and Node.js expertise.", "type": "text"},
+                {"key": "profilePicture", "src": "", "type": "file", "description": "Profile image (JPG/PNG)"}
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile"]
+            },
+            "description": "[BONUS] Upload profile picture as multipart/form-data. Uses multer + Cloudinary or local disk storage."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/profile/change-password",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile", "change-password"]
+            },
+            "description": "Change password while logged in. Requires knowing the current password (separate from forgot-password flow).\n\nError 401: Current password is incorrect"
+          },
+          "response": []
+        },
+        {
+          "name": "Extract Skills from Bio (AI - NER)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/profile/extract-skills",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile", "extract-skills"]
+            },
+            "description": "Reads user bio from DB and runs it through HuggingFace NER model (dslim/bert-base-NER).\nFilters B-MISC, I-MISC, B-ORG tags -> deduplicates -> saves to user.skills.\n\nNo request body needed.\n\nTest scenario (d): Update bio first (PATCH /profile), then call this.\nError 400: Bio is empty. Update your profile first."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Update MFA Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true,\n  \"method\": \"email_otp\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/profile/mfa",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile", "mfa"]
+            },
+            "description": "[ADDITIONAL] Enable/disable MFA and set method.\n\nmethod options: 'email_otp' | 'totp'\nSet enabled: false to disable MFA."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "description": "Job post management. Public browsing, recruiter posting with AI classification, job seeker application and recommendations.\n\nMilestone: all endpoints in this folder.\nAI integration: POST / triggers category classification (facebook/bart-large-mnli)\nAI integration: GET /recommended uses embeddings (sentence-transformers/all-MiniLM-L6-v2)",
+      "item": [
+        {
+          "name": "Get All Jobs - Public",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs?page=1&limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"],
+              "query": [
+                {"key": "keyword", "value": "react", "disabled": true},
+                {"key": "location", "value": "Cairo", "disabled": true},
+                {"key": "type", "value": "internship", "disabled": true},
+                {"key": "status", "value": "open", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            },
+            "description": "Public endpoint. Returns paginated, filterable job listings.\n\nEnable query params to filter. Available filters: keyword, location, type (full-time|part-time|internship), status (open|closed)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Jobs - Filtered",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs?keyword=backend&location=Cairo&type=internship&status=open&page=1&limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"],
+              "query": [
+                {"key": "keyword", "value": "backend"},
+                {"key": "location", "value": "Cairo"},
+                {"key": "type", "value": "internship"},
+                {"key": "status", "value": "open"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            },
+            "description": "Filtered job search with all query params active."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Public endpoint. Returns single job with recruiter info populated.\n\nError 404: Job not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Job (AI Classifies Category)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.job && res.job._id) {",
+                  "  pm.collectionVariables.set('JOB_ID', res.job._id);",
+                  "  console.log('JOB_ID set:', res.job._id);",
+                  "  console.log('AI Category assigned:', res.job.category);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Backend Developer Intern\",\n  \"company\": \"TechCo\",\n  \"description\": \"We are seeking a talented Backend Developer Intern to join our engineering team. You will design and implement RESTful APIs, work with MongoDB databases, and build scalable Node.js microservices. Strong understanding of Express.js and asynchronous programming required.\",\n  \"requirements\": [\"Node.js\", \"MongoDB\", \"Express.js\", \"REST APIs\", \"JavaScript\", \"Git\"],\n  \"location\": \"Cairo\",\n  \"type\": \"internship\",\n  \"salary\": 5000,\n  \"totalSlots\": 3,\n  \"applicationDeadline\": \"2026-07-30\",\n  \"screeningQuestions\": [\n    {\"question\": \"What is your experience with Node.js?\", \"required\": true},\n    {\"question\": \"Are you available for a full-time internship starting June 2026?\", \"required\": false}\n  ]\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"]
+            },
+            "description": "Create a new job post. Requires approved recruiter.\n\nAI automatically classifies description using facebook/bart-large-mnli into: Frontend, Backend, AI/ML, DevOps, Data Engineering, Other.\n\nJOB_ID is auto-set from response via test script.\n\nTest scenario (c): Check 'category' field in response - should be auto-assigned.\nError 403: Your account is pending approval."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Backend Developer Intern\",\n  \"salary\": 6000,\n  \"totalSlots\": 5\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Update a job post. Only the recruiter who owns it can update.\n\nIf description is changed, AI re-classifies category automatically.\n\nError 403: Not authorised to edit this job"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job - Re-classify (change description)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"We need a frontend developer skilled in React, TypeScript, and CSS frameworks. You will build responsive user interfaces and implement state management solutions.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Update job description to trigger AI re-classification. The category should change from Backend to Frontend."
+          },
+          "response": []
+        },
+        {
+          "name": "Close Job",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"closed\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Close a job posting. After closing, job seekers cannot save it (business rule e)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Permanently delete a job. Only owner recruiter or admin.\n\nError 403: Not authorised to delete this job"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Jobs (Recruiter)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/my-jobs",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "my-jobs"]
+            },
+            "description": "Returns all job posts created by the authenticated recruiter."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Saved Jobs (Job Seeker)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/saved",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "saved"]
+            },
+            "description": "Returns all jobs saved/bookmarked by the authenticated job seeker."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recommended Jobs (AI - Embeddings)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/recommended",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "recommended"]
+            },
+            "description": "AI-ranked job recommendations using cosine similarity between user skills and job requirements.\n\nModel: sentence-transformers/all-MiniLM-L6-v2\nJobs sorted by similarity score descending.\n\nTest scenario (e): Must have skills on profile first (run Extract Skills). Response includes score per job."
+          },
+          "response": []
+        },
+        {
+          "name": "Save Job (Toggle)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id/save",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id", "save"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Toggle save/unsave. If already saved -> unsaved; if not saved -> saved.\n\nOnly open jobs can be saved (business rule e).\nError 400: Cannot save a closed job"
+          },
+          "response": []
+        },
+        {
+          "name": "Apply to Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.application && res.application._id) {",
+                  "  pm.collectionVariables.set('APP_ID', res.application._id);",
+                  "  console.log('APP_ID set:', res.application._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverLetter\": \"I am very excited about this Backend Developer Intern position at TechCo. With my 2 years of hands-on experience in Node.js and MongoDB, I am confident I can contribute significantly to your engineering team from day one.\",\n  \"screeningAnswers\": [\n    {\n      \"question\": \"What is your experience with Node.js?\",\n      \"answer\": \"I have 2 years of professional experience building REST APIs with Node.js and Express.js, including this GIU Nexus project.\"\n    }\n  ]\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:jobId/apply",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":jobId", "apply"],
+              "variable": [{"key": "jobId", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Submit job application. Duplicate applications rejected at DB level (unique compound index on {user, job}).\n\nAPP_ID auto-set from response.\n\nTest scenario (f): step 1.\nError 400: You have already applied to this job\nError 404: Job not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job Applicants (Recruiter)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:jobId/applicants",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":jobId", "applicants"],
+              "variable": [{"key": "jobId", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Get all applicants for a job. Only the owner recruiter can access this.\n\nReturns populated user info including skills.\n\nTest scenario (f): step 2 - recruiter sees applicant."
+          },
+          "response": []
+        },
+        {
+          "name": "BUSINESS RULE: Apply Twice - Expect 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverLetter\": \"Applying again - this should fail.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:jobId/apply",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":jobId", "apply"],
+              "variable": [{"key": "jobId", "value": "{{JOB_ID}}"}]
+            },
+            "description": "Test scenario (g): Business rule enforcement.\n\nRun AFTER 'Apply to Job'. Expected response: 400 with message 'You have already applied to this job'.\n\nEnforced via unique compound index on {user, job} in the Application model."
+          },
+          "response": []
+        },
+        {
+          "name": "BUSINESS RULE: Pending Recruiter Post Job - Expect 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Job From Pending Recruiter\",\n  \"company\": \"TestCo\",\n  \"description\": \"This post attempt should be rejected because the recruiter is still pending approval.\",\n  \"requirements\": [\"JavaScript\"],\n  \"location\": \"Cairo\",\n  \"type\": \"full-time\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"]
+            },
+            "description": "Test scenario (g): Business rule enforcement.\n\nLogin as a PENDING recruiter (before admin approves) and call this.\nExpected: 403 with message 'Your account is pending approval. Wait for admin approval before posting jobs.'"
+          },
+          "response": []
+        },
+        {
+          "name": "BUSINESS RULE: Save Closed Job - Expect 400",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/:id/save",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", ":id", "save"],
+              "variable": [{"key": "id", "value": "{{JOB_ID}}", "description": "ID of a CLOSED job"}]
+            },
+            "description": "Business rule (e): Only open jobs can be saved.\n\nFirst run 'Close Job', then run this.\nExpected: 400 with message 'Cannot save a closed job'"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "description": "Application management for job seekers, recruiters, and admins.\n\nMilestone: GET /my, PATCH /:id/status, GET / (admin)\nAdditional: PATCH /:id/notes, DELETE /:id/withdraw",
+      "item": [
+        {
+          "name": "Get My Applications (Job Seeker)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/applications/my",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "my"]
+            },
+            "description": "Returns all applications submitted by the logged-in job seeker with job details populated.\n\nTest scenario (f): step 4 - check that status updated to 'shortlisted' after recruiter shortlists."
+          },
+          "response": []
+        },
+        {
+          "name": "Shortlist Application (Recruiter)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shortlisted\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/applications/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", ":id", "status"],
+              "variable": [{"key": "id", "value": "{{APP_ID}}"}]
+            },
+            "description": "Update application status. Only the recruiter who owns the job can update.\n\nStatus options: 'pending' | 'shortlisted' | 'rejected'\n\nTest scenario (f): step 3 - recruiter shortlists application.\nError 403: Not authorised to update this application"
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Application (Recruiter)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/applications/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", ":id", "status"],
+              "variable": [{"key": "id", "value": "{{APP_ID}}"}]
+            },
+            "description": "Reject an application."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Applications (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/applications?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "Admin only. Paginated list of all applications on the platform with user and job details."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Add Recruiter Notes",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Strong Node.js background, excellent problem-solving skills. Recommend for technical interview round.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/applications/:id/notes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", ":id", "notes"],
+              "variable": [{"key": "id", "value": "{{APP_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Recruiter adds private notes to an application. Only visible to the recruiter who owns the job."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Withdraw Application (Job Seeker)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/applications/:id/withdraw",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", ":id", "withdraw"],
+              "variable": [{"key": "id", "value": "{{APP_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Job seeker withdraws their own application."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications [ADDITIONAL]",
+      "description": "[ADDITIONAL] All notification endpoints. Not in Milestone 2 spec.\n\nAll require authentication.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] Get Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.notifications && res.notifications.length > 0) {",
+                  "  pm.collectionVariables.set('NOTIFICATION_ID', res.notifications[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/notifications?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["notifications"],
+              "query": [
+                {"key": "isRead", "value": "false", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Paginated notifications for the authenticated user. Filter by isRead=true/false."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Mark All Notifications as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/notifications/read-all",
+              "host": ["{{BASE_URL}}"],
+              "path": ["notifications", "read-all"]
+            },
+            "description": "[ADDITIONAL] Mark all of the user's notifications as read in one call."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/notifications/:id/read",
+              "host": ["{{BASE_URL}}"],
+              "path": ["notifications", ":id", "read"],
+              "variable": [{"key": "id", "value": "{{NOTIFICATION_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Mark a single notification as read."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Saved Searches [ADDITIONAL]",
+      "description": "[ADDITIONAL] Job seeker saved search filters. Not in Milestone 2 spec.\n\nLimit: 10 saved searches per user.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] Create Saved Search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.savedSearch && res.savedSearch._id) pm.collectionVariables.set('SAVED_SEARCH_ID', res.savedSearch._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Backend Internships in Cairo\",\n  \"filters\": {\n    \"keyword\": \"backend\",\n    \"location\": \"Cairo\",\n    \"type\": \"internship\",\n    \"status\": \"open\"\n  }\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/saved-searches",
+              "host": ["{{BASE_URL}}"],
+              "path": ["saved-searches"]
+            },
+            "description": "[ADDITIONAL] Save a search filter set. Job seeker only. Max 10 per user."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Saved Searches",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/saved-searches",
+              "host": ["{{BASE_URL}}"],
+              "path": ["saved-searches"]
+            },
+            "description": "[ADDITIONAL] Get all active saved searches for the logged-in job seeker."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Delete Saved Search",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/saved-searches/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["saved-searches", ":id"],
+              "variable": [{"key": "id", "value": "{{SAVED_SEARCH_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Soft delete a saved search."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messaging [ADDITIONAL]",
+      "description": "[ADDITIONAL] Conversation and messaging system. Not in Milestone 2 spec.\n\nConversations are organized per job thread. Recruiters and job seekers can message each other.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] Get My Conversations",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/conversations?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["conversations"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Paginated list of conversations for the authenticated user (recruiter or job seeker)."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello, I am very interested in the Backend Developer Intern position. Could you provide more details about the onboarding process and the team structure?\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/conversations/:jobId/messages",
+              "host": ["{{BASE_URL}}"],
+              "path": ["conversations", ":jobId", "messages"],
+              "variable": [{"key": "jobId", "value": "{{JOB_ID}}", "description": "Job ID acts as conversation thread key"}]
+            },
+            "description": "[ADDITIONAL] Send a message in a job conversation thread."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/conversations/:jobId/messages?page=1&limit=50",
+              "host": ["{{BASE_URL}}"],
+              "path": ["conversations", ":jobId", "messages"],
+              "variable": [{"key": "jobId", "value": "{{JOB_ID}}"}],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "50"}
+              ]
+            },
+            "description": "[ADDITIONAL] Paginated messages in a conversation thread (oldest-first)."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get All Conversations (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/conversations/admin?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["conversations", "admin"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Admin view of all platform conversations."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reports [ADDITIONAL]",
+      "description": "[ADDITIONAL] Content reporting system. Not in Milestone 2 spec.\n\nAny authenticated user can file reports. Only admins can review them.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] File a Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.report && res.report._id) pm.collectionVariables.set('REPORT_ID', res.report._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"JobPost\",\n  \"targetId\": \"{{JOB_ID}}\",\n  \"reason\": \"spam\",\n  \"description\": \"This job posting appears to be spam and contains misleading salary information.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/reports",
+              "host": ["{{BASE_URL}}"],
+              "path": ["reports"]
+            },
+            "description": "[ADDITIONAL] File a report against a JobPost or User.\n\ntargetType: 'JobPost' | 'User'"
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get All Reports (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/reports?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["reports"],
+              "query": [
+                {"key": "status", "value": "pending", "disabled": true},
+                {"key": "targetType", "value": "JobPost", "disabled": true},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Admin only. Paginated list of all reports. Filter by status and targetType."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Review Report (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"adminNotes\": \"Investigated and confirmed the report. Appropriate action has been taken.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/reports/:id/review",
+              "host": ["{{BASE_URL}}"],
+              "path": ["reports", ":id", "review"],
+              "variable": [{"key": "id", "value": "{{REPORT_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Admin reviews and resolves a report."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents [ADDITIONAL]",
+      "description": "[ADDITIONAL] Document upload and signing system. Not in Milestone 2 spec.\n\nSupports PDF/DOC/DOCX/images up to 5MB. Linked to applications.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] Upload Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.document && res.document._id) pm.collectionVariables.set('DOCUMENT_ID', res.document._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select a PDF, DOC, DOCX, or image file (max 5MB)"
+                },
+                {
+                  "key": "applicationId",
+                  "value": "{{APP_ID}}",
+                  "type": "text",
+                  "description": "Application this document belongs to"
+                },
+                {
+                  "key": "type",
+                  "value": "resume",
+                  "type": "text",
+                  "description": "Options: resume | cover_letter | certificate | offer_letter | contract"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/documents",
+              "host": ["{{BASE_URL}}"],
+              "path": ["documents"]
+            },
+            "description": "[ADDITIONAL] Upload a document using multipart/form-data. Linked to an application.\n\nSupported: PDF, DOC, DOCX, images. Max 5MB."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Documents for Application",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/documents/:applicationId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["documents", ":applicationId"],
+              "variable": [{"key": "applicationId", "value": "{{APP_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Get all documents attached to an application. Accessible by recruiter or applicant."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Sign Document",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signature\": \"base64encodedSignatureDataHere\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/documents/:id/sign",
+              "host": ["{{BASE_URL}}"],
+              "path": ["documents", ":id", "sign"],
+              "variable": [{"key": "id", "value": "{{DOCUMENT_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Sign a document. Only the job seeker who owns the document can sign it."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Verify Document",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/documents/:id/verify",
+              "host": ["{{BASE_URL}}"],
+              "path": ["documents", ":id", "verify"],
+              "variable": [{"key": "id", "value": "{{DOCUMENT_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Verify document integrity and signature authenticity."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Referrals [ADDITIONAL]",
+      "description": "[ADDITIONAL] Referral system. Not in Milestone 2 spec.\n\nJob seekers can request referrals. Users have a unique referral code.",
+      "item": [
+        {
+          "name": "[ADDITIONAL] Request Referral",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.referral && res.referral._id) pm.collectionVariables.set('REFERRAL_ID', res.referral._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobId\": \"{{JOB_ID}}\",\n  \"message\": \"I would really appreciate a referral for this Backend Developer position. I have strong Node.js and MongoDB skills and believe I am a great fit for the team.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/request",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", "request"]
+            },
+            "description": "[ADDITIONAL] Job seeker requests a referral for a job."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get My Referral Code",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/my-code",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", "my-code"]
+            },
+            "description": "[ADDITIONAL] Get the authenticated user's unique referral code."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Sent Referrals",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/sent",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", "sent"]
+            },
+            "description": "[ADDITIONAL] Get all referrals the authenticated user has sent."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get Received Referrals",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/received",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", "received"]
+            },
+            "description": "[ADDITIONAL] Get all referral requests received by the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Get All Referrals (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN}}"}],
+            "url": {
+              "raw": "{{BASE_URL}}/referrals?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "[ADDITIONAL] Admin only. List all referrals on the platform."
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Respond to Referral",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\",\n  \"message\": \"Happy to refer you! I have submitted your profile to the hiring manager. Best of luck!\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/:id/respond",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", ":id", "respond"],
+              "variable": [{"key": "id", "value": "{{REFERRAL_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Respond to a referral request. Status: 'accepted' | 'declined'"
+          },
+          "response": []
+        },
+        {
+          "name": "[ADDITIONAL] Update Referral Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{TOKEN}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/referrals/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["referrals", ":id", "status"],
+              "variable": [{"key": "id", "value": "{{REFERRAL_ID}}"}]
+            },
+            "description": "[ADDITIONAL] Admin updates referral status."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

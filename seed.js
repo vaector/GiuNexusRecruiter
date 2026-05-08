@@ -1,14 +1,14 @@
-require("dotenv").config();
+require("dotenv").config({ path: "./backend/.env" });
 const mongoose = require("mongoose");
 const User = require("./backend/src/features/user/User");
 
 async function seed() {
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGODB_URI);
 
   await User.create({
     name: "Admin",
-    email: "admin@giu.edu",
-    password: "admin123",
+    email: "admin@giunexus.com",
+    password: "adminpassword123",
     role: "admin",
     status: "approved",
   });
