@@ -1,5 +1,5 @@
 const asyncHandler = require("../../middleware/asyncHandler");
-const AuditLog = require('./AuditLog');
+const AuditLog = require("./auditLog");
 const User = require("../user/User");
 
 const createError = (statusCode, message) => {
