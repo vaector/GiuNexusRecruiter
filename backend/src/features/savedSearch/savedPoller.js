@@ -29,7 +29,7 @@ const buildJobFilter = (filters, lastCheckedAt) => {
       { description: { $regex: filters.keywords, $options: 'i' } },
     ];
   }
-  if (filters.location) jobFilter.location = { $regex: filters.location, $options: 'i' };
+  if (filters.location) jobFilter['location.city'] = { $regex: filters.location, $options: 'i' };
   if (filters.type)     jobFilter.type = filters.type;
   if (filters.category) jobFilter.category = filters.category;
   if (filters.isRemote !== undefined && filters.isRemote !== null) jobFilter.isRemote = filters.isRemote;

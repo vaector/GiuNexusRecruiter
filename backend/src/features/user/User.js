@@ -2,8 +2,57 @@ const mongoose = require("mongoose");
 
 const bcrypt = require("bcryptjs");
 
-const USER_ROLES = ["jobSeeker", "recruiter", "admin"];
-const USER_STATUSES = ["pending", "approved", "rejected"];
+const { Role, UserStatus } = require("../../enums");
+
+const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+
+const ApplicationStatsSchema = new mongoose.Schema(
+  {
+    totalApplied: {
+      type: Number,
+      default: 0,
+    },
+    totalShortlisted: {
+      type: Number,
+      default: 0,
+    },
+    totalRejected: {
+      type: Number,
+      default: 0,
+    },
+    totalWithdrawn: {
+      type: Number,
+      default: 0,
+    },
+    totalPending: {
+      type: Number,
+      default: 0,
+    },
+    responseRate: {
+      type: Number,
+      default: 0,
+    },
+    lastAppliedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
+const NotificationPreferencesSchema = new mongoose.Schema(
+  {
+    email: {
+      type: Boolean,
+      default: true,
+    },
+    inApp: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { _id: false }
+);
 
 const UserSchema = new mongoose.Schema(
   {
@@ -38,14 +87,14 @@ const UserSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: USER_ROLES,
-      default: "jobSeeker",
+      enum: Object.values(Role),
+      default: Role.JOB_SEEKER,
     },
 
     status: {
       type: String,
-      enum: USER_STATUSES,
-      default: "pending",
+      enum: Object.values(UserStatus),
+      default: UserStatus.PENDING,
     },
 
     savedJobs: [
@@ -79,6 +128,48 @@ const UserSchema = new mongoose.Schema(
     otpExpire: {
       type: Date,
     },
+
+    userCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    linkedIn: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    github: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    portfolio: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    lastActive: {
+      type: Date,
+      default: Date.now,
+    },
+
+    mfaEnabled: { type: Boolean, default: false },
+    mfaMethod: { type: String, enum: ['email_otp', 'totp'], default: 'email_otp' },
+    totpSecret: { type: String }, // encrypted TOTP secret for authenticator app
+
+    notificationPreferences: {
+      type: NotificationPreferencesSchema,
+      default: () => ({}),
+    },
+
+    applicationStats: {
+      type: ApplicationStatsSchema,
+      default: () => ({}),
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
@@ -86,6 +177,12 @@ const UserSchema = new mongoose.Schema(
 );
 
 UserSchema.pre("save", async function (next) {
+  // Admin accounts always have MFA enforced via email OTP
+  if (this.isNew && this.role === 'admin') {
+    this.mfaEnabled = true;
+    this.mfaMethod = 'email_otp';
+  }
+
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 10);
@@ -100,6 +197,9 @@ UserSchema.set("toJSON", {
   transform: (_doc, ret) => {
     delete ret.password;
     delete ret.__v;
+    delete ret.totpSecret;
+    delete ret.otpCode;
+    delete ret.resetPasswordToken;
     return ret;
   },
 });
@@ -119,45 +219,6 @@ const {
   JobSearchStatus,
   PreviousAppraisalRating,
 } = require("../../enums");
-
-const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
-
-const NotificationPreferencesSchema = new mongoose.Schema(
-  {
-    email: {
-      type: Boolean,
-      default: true,
-    },
-    inApp: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  { _id: false }
-);
-
-const PasswordResetSchema = new mongoose.Schema(
-  {
-    otpHash: {
-      type: String,
-    },
-    otpExpiresAt: {
-      type: Date,
-    },
-    requestedAt: {
-      type: Date,
-    },
-    verifiedAt: {
-      type: Date,
-    },
-    attemptCount: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-  },
-  { _id: false }
-);
 
 const JobSeekerSkillSchema = new mongoose.Schema(
   {
@@ -222,68 +283,6 @@ const PreviousAppraisalSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const ApplicationStatsSchema = new mongoose.Schema(
-  {
-    totalApplied: {
-      type: Number,
-      default: 0,
-    },
-    totalShortlisted: {
-      type: Number,
-      default: 0,
-    },
-    totalRejected: {
-      type: Number,
-      default: 0,
-    },
-  },
-  { _id: false }
-);
-
-userCode: {
-  type: String,
-  required: true,
-  unique: true,
-},
-linkedIn: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-github: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-portfolio: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-lastActive: {
-  type: Date,
-  default: Date.now,
-},
-notificationPreferences: {
-  type: NotificationPreferencesSchema,
-  default: () => ({}),
-},
-twoFactorSecret: {
-  type: String,
-},
-twoFactorEnabled: {
-  type: Boolean,
-  default: false,
-},
-passwordReset: {
-  type: PasswordResetSchema,
-  default: () => ({}),
-},
-referralCode: {
-  type: String,
-  unique: true,
-  sparse: true,
-  trim: true,
-  uppercase: true,
-},
-
 // Future role-specific model setup:
 // Add this to the UserSchema options if role-specific discriminator models are needed.
 discriminatorKey: "role",
@@ -309,10 +308,6 @@ const JobSeeker = User.discriminator(
       type: String,
       enum: Object.values(JobSearchStatus),
       default: JobSearchStatus.ACTIVELY_LOOKING,
-    },
-    applicationStats: {
-      type: ApplicationStatsSchema,
-      default: () => ({}),
     },
     completenessScore: {
       type: Number,

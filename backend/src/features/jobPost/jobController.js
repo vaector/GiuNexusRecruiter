@@ -5,19 +5,60 @@ const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Report = require("../reports/reports");
 const Referral = require("../referrals/Referral");
-const { AuditAction } = require("../../enums");
-
-function cosineSimilarity(vecA, vecB) {
-    const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
-    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
-    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
-    return dot / (magA * magB);
-}
+const { AuditAction, JobStatus, UserStatus, ScreeningQuestionType } = require("../../enums");
+const cosineSimilarity = require("../../utils/cosineSimilarity");
 
 const createError = (statusCode, message) => {
     const error = new Error(message);
     error.statusCode = statusCode;
     return error;
+};
+
+const validateScreeningQuestions = (questions) => {
+    if (!Array.isArray(questions)) return 'screeningQuestions must be an array';
+    for (const q of questions) {
+        if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
+            return 'Each screening question must have a non-empty question string';
+        }
+        if (!Object.values(ScreeningQuestionType).includes(q.type)) {
+            return `Question type must be one of: ${Object.values(ScreeningQuestionType).join(', ')}`;
+        }
+        if (q.type === ScreeningQuestionType.MULTIPLE_CHOICE) {
+            if (!Array.isArray(q.options) || q.options.length < 2) {
+                return 'Multiple choice questions must have at least 2 options';
+            }
+        }
+    }
+    return null;
+};
+
+const normalizeLocation = (location) => {
+    if (typeof location === 'string') {
+        return { city: location };
+    }
+    return location;
+};
+
+const normalizeSalary = (salary) => {
+    if (typeof salary === 'number') {
+        return { min: salary };
+    }
+    return salary;
+};
+
+const getTopClassification = (result) => {
+    const top = Array.isArray(result) ? result[0] : result;
+    return {
+        label: top?.labels?.[0] || top?.label || "Other",
+        score: top?.scores?.[0] ?? top?.score ?? null,
+    };
+};
+
+const normalizeEmbedding = (embedding) => {
+    if (Array.isArray(embedding?.[0])) {
+        return embedding[0];
+    }
+    return embedding;
 };
 
 // GET /api/v1/jobs/recommended
@@ -27,38 +68,30 @@ const getRecommendedJobs = asyncHandler(async (req, res, next) => {
 
     const skills = Array.isArray(user.skills) ? user.skills : [];
     const studentText = skills.join(", ");
-    const openJobs = await JobPost.find({ status: "open" }).lean();
+    const openJobs = await JobPost.find({ status: 'open', 'embeddings.0': { $exists: true } }).lean();
 
     if (openJobs.length === 0) {
-        return res.status(200).json({ success: true, jobs: [] });
+        const fallbackJobs = await JobPost.find({ status: 'open' }).lean();
+        return res.status(200).json({ success: true, jobs: fallbackJobs });
     }
 
     try {
-        const jobTexts = openJobs.map((job) => {
-            const reqs = Array.isArray(job.requirements)
-                ? job.requirements.join(" ")
-                : job.requirements || "";
-            return [job.title, reqs].filter(Boolean).join(" ");
-        });
+        const studentEmbedding = normalizeEmbedding(await hf.featureExtraction({
+            model: 'sentence-transformers/all-MiniLM-L6-v2',
+            inputs: studentText,
+        }));
 
-        const embeddings = await hf.featureExtraction({
-            model: "sentence-transformers/all-MiniLM-L6-v2",
-            inputs: [studentText, ...jobTexts],
-        });
-
-        const studentVector = embeddings[0];
         const jobs = openJobs
-            .map((job, index) => ({
+            .map(({ embeddings, __v, ...job }) => ({
                 ...job,
-                score: cosineSimilarity(studentVector, embeddings[index + 1]),
+                score: cosineSimilarity(studentEmbedding, embeddings),
             }))
-            .map(({ __v, ...job }) => job)
             .sort((a, b) => b.score - a.score);
 
         return res.status(200).json({ success: true, jobs });
     } catch (hfError) {
         console.error("HuggingFace recommendations failed:", hfError.message);
-        return res.status(200).json({ success: true, jobs: openJobs });
+        return res.status(200).json({ success: true, jobs: openJobs.map(({ embeddings, __v, ...job }) => job) });
     }
 });
 
@@ -72,13 +105,20 @@ const getAllJobs = asyncHandler(async (req, res) => {
 
     if (status) filter.status = status;
     if (category) filter.category = category;
-    if (location) filter.location = location;
+    if (location) filter['location.city'] = { $regex: location, $options: 'i' };
     if (type) filter.type = type;
 
     if (keyword) filter.$or = [
         { title: { $regex: keyword, $options: "i" } },
         { description: { $regex: keyword, $options: "i" } },
     ];
+
+    if (req.query.isRemote !== undefined) filter.isRemote = req.query.isRemote === 'true';
+    if (req.query.workplaceType) filter.workplaceType = req.query.workplaceType;
+    if (req.query.requiredEducation) filter.requiredEducation = req.query.requiredEducation;
+    if (req.query.minExperience) filter['experience.minYears'] = { $lte: parseInt(req.query.minExperience) };
+    if (req.query.requiresCv !== undefined) filter.requiresCv = req.query.requiresCv === 'true';
+    if (req.query.salaryMin) filter['salary.normalizedUSD'] = { $gte: parseFloat(req.query.salaryMin) };
 
     const skip = (page - 1) * limit;
 
@@ -136,45 +176,77 @@ const getSavedJobs = asyncHandler(async (req, res, next) => {
 
 // GET /api/v1/jobs/:id
 const getJobById = asyncHandler(async (req, res, next) => {
-    const job = await JobPost.findById(req.params.id).populate(
-        "createdBy",
-        "name email"
-    );
+    const job = await JobPost.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { viewCount: 1 } },
+        { new: true }
+    ).populate('createdBy', 'name email');
 
-    if (!job) return next(createError(404, "Job not found"));
+    if (!job) return next(createError(404, 'Job not found'));
 
     res.status(200).json({ success: true, job });
 });
 
 // POST /api/v1/jobs
 const createJob = asyncHandler(async (req, res, next) => {
-    if (req.user.status !== "approved") {
+    if (req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
-    const { title, company, description, requirements, location, type, salary, totalSlots } = req.body;
+    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions } = req.body;
+    const normalizedLocation = normalizeLocation(location);
+    const normalizedSalary = normalizeSalary(salary);
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
         return next(createError(400, "Please provide all required fields"));
     }
 
+    if (normalizedSalary && normalizedSalary.min && normalizedSalary.max && normalizedSalary.min > normalizedSalary.max) {
+        return next(createError(400, 'salary.min cannot be greater than salary.max'));
+    }
+
+    if (experience && experience.minYears < 0) {
+        return next(createError(400, 'experience.minYears cannot be negative'));
+    }
+
+    if (screeningQuestions) {
+        const validationError = validateScreeningQuestions(screeningQuestions);
+        if (validationError) return next(createError(400, validationError));
+    }
+
     let category = "Other";
+    let aiCategoryConfidence = null;
 
     try {
         const result = await hf.zeroShotClassification({
             model: "facebook/bart-large-mnli",
-            inputs: [description],
+            inputs: description,
             parameters: {
                 candidate_labels: ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"],
             },
         });
-        category = result[0].labels[0];
+        // console.log('HF raw result:', JSON.stringify(result, null, 2));
+        const classification = getTopClassification(result);
+        category = classification.label;
+        aiCategoryConfidence = classification.score;
     } catch (hfError) {
         console.error("AI classification failed:", hfError.message);
     }
 
+    let embeddings = [];
+    try {
+        const jobText = `${title} ${requirements.join(' ')}`;
+        const embedding = normalizeEmbedding(await hf.featureExtraction({
+            model: 'sentence-transformers/all-MiniLM-L6-v2',
+            inputs: jobText,
+        }));
+        embeddings = embedding;
+    } catch (embErr) {
+        console.error('Embedding computation failed:', embErr.message);
+    }
+
     const job = await JobPost.create({
-        title, company, description, requirements, location, type, salary, totalSlots, category, createdBy: req.user._id,
+        title, company, description, requirements, location: normalizedLocation, type, salary: normalizedSalary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
     });
 
     await AuditLog.record({
@@ -215,7 +287,7 @@ const toggleSaveJob = asyncHandler(async (req, res, next) => {
         });
     }
 
-    if (job.status !== "open") {
+    if (job.status !== JobStatus.OPEN) {
         return next(createError(400, "Cannot save a closed job"));
     }
 
@@ -229,7 +301,7 @@ const toggleSaveJob = asyncHandler(async (req, res, next) => {
 
 // PATCH /api/v1/jobs/:id
 const updateJob = asyncHandler(async (req, res, next) => {
-    if (req.user.status !== "approved") {
+    if (req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
@@ -245,12 +317,29 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     const previousStatus = job.status;
 
-    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status"];
+    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline", "requiresCv", "requiresCoverLetter", "experience", "requiredEducation", "requiredEducationField", "workplaceType", "perks", "hiringStages", "screeningQuestions"];
 
     for (const field of fields) {
         if (req.body[field] !== undefined) {
-            job[field] = req.body[field];
+            job[field] = field === "location"
+                ? normalizeLocation(req.body[field])
+                : field === "salary"
+                    ? normalizeSalary(req.body[field])
+                    : req.body[field];
         }
+    }
+
+    if (job.salary && job.salary.min && job.salary.max && job.salary.min > job.salary.max) {
+        return next(createError(400, 'salary.min cannot be greater than salary.max'));
+    }
+
+    if (req.body.experience && req.body.experience.minYears < 0) {
+        return next(createError(400, 'experience.minYears cannot be negative'));
+    }
+
+    if (req.body.screeningQuestions) {
+        const validationError = validateScreeningQuestions(req.body.screeningQuestions);
+        if (validationError) return next(createError(400, validationError));
     }
 
     const descriptionChanged =
@@ -261,20 +350,39 @@ const updateJob = asyncHandler(async (req, res, next) => {
         try {
             const result = await hf.zeroShotClassification({
                 model: "facebook/bart-large-mnli",
-                inputs: [req.body.description],
+                inputs: req.body.description,
                 parameters: {
                     candidate_labels: ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"],
                 },
             });
-            job.category = result[0].labels[0];
+            const classification = getTopClassification(result);
+            job.category = classification.label;
+            job.aiCategoryConfidence = classification.score;
         } catch (hfError) {
             console.error("AI classification failed:", hfError.message);
         }
     }
 
+    const needsReembedding = ['title', 'description', 'requirements'].some(
+        f => req.body[f] !== undefined
+    );
+
+    if (needsReembedding) {
+        try {
+            const jobText = `${job.title} ${job.requirements.join(' ')}`;
+            const embedding = normalizeEmbedding(await hf.featureExtraction({
+                model: 'sentence-transformers/all-MiniLM-L6-v2',
+                inputs: jobText,
+            }));
+            job.embeddings = embedding;
+        } catch (embErr) {
+            console.error('Embedding recomputation failed:', embErr.message);
+        }
+    }
+
     await job.save();
 
-    if (previousStatus !== "closed" && job.status === "closed") {
+    if (previousStatus !== JobStatus.CLOSED && job.status === JobStatus.CLOSED) {
         await AuditLog.record({
             actor: req.user,
             action: AuditAction.JOB_CLOSED,
@@ -292,7 +400,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
 // DELETE /api/v1/jobs/:id
 const deleteJob = asyncHandler(async (req, res, next) => {
-    if (req.user.role === "recruiter" && req.user.status !== "approved") {
+    if (req.user.role === "recruiter" && req.user.status !== UserStatus.APPROVED) {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before managing jobs."));
     }
 

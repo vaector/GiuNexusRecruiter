@@ -1,10 +1,6 @@
 const ApplicationStatus = Object.freeze({
   PENDING: "pending",
-  SCREENING: "screening",
-  INTERVIEW: "interview",
-  OFFER: "offer",
-  CONTRACT_SENT: "contract_sent",
-  ACCEPTED: "accepted",
+  SHORTLISTED: "shortlisted",
   REJECTED: "rejected",
 });
 
@@ -19,20 +15,14 @@ const HiringStage = Object.freeze({
 });
 
 const JobType = Object.freeze({
-  FULL_TIME: "full_time",
-  PART_TIME: "part_time",
+  FULL_TIME: "full-time",
+  PART_TIME: "part-time",
   INTERNSHIP: "internship",
 });
 
 const JobStatus = Object.freeze({
   OPEN: "open",
   CLOSED: "closed",
-});
-
-const PublishStatus = Object.freeze({
-  PENDING: "pending",
-  APPROVED: "approved",
-  REJECTED: "rejected",
 });
 
 const Role = Object.freeze({
@@ -81,6 +71,7 @@ const NotificationType = Object.freeze({
   REFERRAL_REQUESTED: "referral_requested",
   REFERRAL_RESPONDED: "referral_responded",
   NEW_MESSAGE: "new_message",
+  JOB_CLOSED: "job_closed",
 });
 
 const DocumentType = Object.freeze({
@@ -191,6 +182,12 @@ const SupportedCurrency = Object.freeze({
   SAR: "SAR",
 });
 
+const UserStatus = Object.freeze({
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+});
+
 const EducationDegrees = Object.freeze([
   "high school",
   "bachelor",
@@ -203,7 +200,6 @@ module.exports = {
   HiringStage,
   JobType,
   JobStatus,
-  PublishStatus,
   Role,
   RecruiterStatus,
   Availability,
@@ -224,5 +220,6 @@ module.exports = {
   ReportStatus,
   WorkplaceType,
   SupportedCurrency,
+  UserStatus,
   EducationDegrees,
 };

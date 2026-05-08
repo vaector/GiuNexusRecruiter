@@ -5,7 +5,9 @@ const {
   logout,
   forgotPassword,
   verifyOtp,
+  verifyMfaOtp,
   resetPassword,
+  setupTotp,
 } = require("./authController");
 const { protect } = require("../../middleware/auth");
 const { authLimiter } = require('../../middleware/rateLimiter');
@@ -119,7 +121,7 @@ router.post("/forgot-password", authLimiter, forgotPassword);
  * @swagger
  * /auth/verify-otp:
  *   post:
- *     summary: Verify OTP and receive a password reset token
+ *     summary: Verify password-reset OTP and receive a reset token
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -141,6 +143,52 @@ router.post("/forgot-password", authLimiter, forgotPassword);
  *         description: OTP is invalid or has expired
  */
 router.post("/verify-otp", authLimiter, verifyOtp);
+
+/**
+ * @swagger
+ * /auth/verify-mfa:
+ *   post:
+ *     summary: Complete MFA login by verifying OTP or TOTP code
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId, otp, method]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *               method:
+ *                 type: string
+ *                 enum: [email_otp, totp]
+ *     responses:
+ *       200:
+ *         description: MFA verified, JWT returned
+ *       400:
+ *         description: Invalid or expired OTP / Invalid authenticator code
+ *       404:
+ *         description: User not found
+ */
+router.post("/verify-mfa", authLimiter, verifyMfaOtp);
+
+/**
+ * @swagger
+ * /auth/setup-totp:
+ *   post:
+ *     summary: Generate a TOTP secret and print QR setup info to server console
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: TOTP secret generated
+ *       401:
+ *         description: Not authorised
+ */
+router.post("/setup-totp", protect, setupTotp);
 
 /**
  * @swagger

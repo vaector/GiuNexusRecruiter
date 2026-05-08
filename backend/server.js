@@ -1,5 +1,3 @@
-
-
 const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -18,10 +16,11 @@ const profileRoutes = require("./src/features/profile/profileRoutes");
 const adminRoutes = require("./src/features/admin/adminRoutes");
 const referralRoutes = require("./src/features/referrals/referralRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
-const requestLogger = require("./src/middleware/requestLogger");
+const requestLogger = require("./src/middleware/requestLogger.js");
 const notificationRoutes = require("./src/features/notification/notificationRoutes");
 const savedSearchRoutes = require("./src/features/savedSearch/savedRoutes");
 const { startSavedSearchPoller } = require("./src/features/savedSearch/savedPoller");
+const { startDeadlineAutoClose } = require("./src/features/jobPost/deadlineAutoClose");
 const reportRoutes = require("./src/features/reports/reportsRoutes");
 const documentRoutes = require("./src/features/document/documentRoutes");
 
@@ -61,6 +60,7 @@ connectDB()
     app.listen(PORT, () => {
       console.log(`Server started on http://localhost:${PORT}`);
       startSavedSearchPoller();
+      startDeadlineAutoClose();
     });
   })
   .catch((err) => {

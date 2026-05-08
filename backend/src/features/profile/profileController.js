@@ -73,13 +73,19 @@ const extractSkills = asyncHandler(async (req, res, next) => {
       model: "dslim/bert-base-NER",
       inputs: user.bio,
     });
-    const skills = [
-      ...new Set(
-        result
-          .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
-          .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""))
-      ),
-    ];
+    let extractedWords = result
+      .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
+      .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""));
+
+    // Fix common tokenization splits
+    for (let i = 0; i < extractedWords.length - 1; i++) {
+      if (extractedWords[i] === "No" && extractedWords[i + 1] === "de.js") {
+        extractedWords.splice(i, 2, "Node.js");
+        i--; // Adjust index after splice
+      }
+    }
+
+    const skills = [...new Set(extractedWords)];
     user.skills = skills;
     await user.save();
     return res.status(200).json({ success: true, skills, extracted: skills });
@@ -89,4 +95,26 @@ const extractSkills = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { getMyProfile, updateMyProfile, changeMyPassword, extractSkills };
+// PATCH /api/v1/profile/mfa — private
+const toggleMfa = asyncHandler(async (req, res, next) => {
+  const { mfaEnabled, mfaMethod } = req.body;
+
+  if (!['email_otp', 'totp'].includes(mfaMethod)) {
+    return next(createError(400, "mfaMethod must be 'email_otp' or 'totp'"));
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) return next(createError(404, 'User not found'));
+
+  if (mfaEnabled && mfaMethod === 'totp' && !user.totpSecret) {
+    return next(createError(400, 'Set up TOTP first via POST /auth/setup-totp'));
+  }
+
+  user.mfaEnabled = mfaEnabled;
+  user.mfaMethod = mfaMethod;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json({ success: true, mfaEnabled, mfaMethod });
+});
+
+module.exports = { getMyProfile, updateMyProfile, changeMyPassword, extractSkills, toggleMfa };

@@ -2,87 +2,8 @@
 
 const mongoose = require("mongoose");
 
-const JOB_TYPES = ["full-time", "part-time", "internship"];
-const JOB_STATUSES = ["open", "closed"];
+const EXCHANGE_RATES_TO_USD = { USD: 1, EGP: 0.02, EUR: 1.08, GBP: 1.27 };
 
-const JobPostSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: true,
-    },
-
-    company: {
-      type: String,
-      required: true,
-    },
-
-    description: {
-      type: String,
-      required: true,
-    },
-
-    requirements: {
-      type: [String],
-      required: true,
-    },
-
-    location: {
-      type: String,
-      required: true,
-    },
-
-    type: {
-      type: String,
-      enum: JOB_TYPES,
-      required: true,
-    },
-
-    salary: {
-      type: Number,
-    },
-
-    category: {
-      type: String,
-    },
-
-    totalSlots: {
-      type: Number,
-      default: 1,
-    },
-
-    status: {
-      type: String,
-      enum: JOB_STATUSES,
-      default: "open",
-    },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  },
-  {
-    timestamps: { createdAt: true, updatedAt: false },
-  }
-);
-
-JobPostSchema.index({ category: 1, status: 1 });
-JobPostSchema.index({ createdBy: 1 });
-
-JobPostSchema.set("toJSON", {
-  transform: (_doc, ret) => {
-    delete ret.__v;
-    return ret;
-  },
-});
-
-module.exports =
-  mongoose.models.JobPost || mongoose.model("JobPost", JobPostSchema);
-
-// --- FUTURE FIELDS (not needed for M2) ---
-/*
 const {
   JobType,
   JobStatus,
@@ -97,9 +18,9 @@ const {
 
 const LocationSchema = new mongoose.Schema(
   {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    country: { type: String, required: true },
+    street: { type: String },
+    city: { type: String },
+    country: { type: String },
     zipCode: { type: String },
   },
   { _id: false }
@@ -153,93 +74,135 @@ const ScreeningQuestionSchema = new mongoose.Schema(
   { _id: false }
 );
 
-embeddings: [Number],
-
-requirements: {
-  education: {
-    degree: {
+const JobPostSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
-      enum: EducationDegrees,
+      required: true,
     },
-    field: String,
-  },
-  experience: {
-    minYears: Number,
-  },
-  skills: [String],
-  certificates: [String],
-  other: [String],
-  requiresCv: {
-    type: Boolean,
-    default: true,
-  },
-  requiresCoverLetter: {
-    type: Boolean,
-    default: false,
-  },
-},
 
-location: LocationSchema,
-
-isRemote: {
-  type: Boolean,
-  default: false,
-},
-
-workplaceType: {
-  type: String,
-  enum: Object.values(WorkplaceType),
-  required: true,
-  default: WorkplaceType.ON_SITE,
-},
-
-salary: SalarySchema,
-
-applicationDeadline: {
-  type: Date,
-},
-
-viewCount: {
-  type: Number,
-  default: 0,
-},
-
-perks: [String],
-
-hiringStages: {
-  type: [
-    {
+    company: {
       type: String,
-      enum: Object.values(HiringStage),
+      required: true,
     },
-  ],
-  default: [
-    HiringStage.PENDING,
-    HiringStage.SCREENING,
-    HiringStage.INTERVIEW,
-    HiringStage.OFFER,
-    HiringStage.CONTRACT_SENT,
-    HiringStage.ACCEPTED,
-  ],
-},
 
-skills: [String],
+    description: {
+      type: String,
+      required: true,
+    },
 
-screeningQuestions: [ScreeningQuestionSchema],
+    requirements: {
+      type: [String],
+      required: true,
+    },
 
-aiCategoryConfidence: {
-  type: Number,
-  min: 0,
-  max: 1,
-},
+    location: LocationSchema,
 
-published: {
-  type: String,
-  enum: Object.values(PublishStatus),
-  default: PublishStatus.PENDING,
-},
+    type: {
+      type: String,
+      enum: Object.values(JobType),
+      required: true,
+    },
 
-optimisticConcurrency: true,
+    salary: SalarySchema,
+
+    screeningQuestions: [ScreeningQuestionSchema],
+
+    category: {
+      type: String,
+    },
+
+    totalSlots: {
+      type: Number,
+      default: 1,
+    },
+
+    status: {
+      type: String,
+      enum: Object.values(JobStatus),
+      default: JobStatus.OPEN,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    applicationDeadline: {
+      type: Date,
+    },
+
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
+
+    aiCategoryConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+
+    embeddings: [Number],
+
+    isRemote: {
+      type: Boolean,
+      default: false,
+    },
+
+    workplaceType: {
+      type: String,
+      enum: Object.values(WorkplaceType),
+      default: WorkplaceType.ON_SITE,
+    },
+
+    perks: [String],
+
+    hiringStages: {
+      type: [
+        {
+          type: String,
+          enum: Object.values(HiringStage),
+        },
+      ],
+      default: [
+        HiringStage.PENDING,
+        HiringStage.SCREENING,
+        HiringStage.INTERVIEW,
+        HiringStage.OFFER,
+        HiringStage.CONTRACT_SENT,
+        HiringStage.ACCEPTED,
+      ],
+    },
+
+    requiresCv: {
+      type: Boolean,
+      default: false,
+    },
+
+    requiresCoverLetter: {
+      type: Boolean,
+      default: false,
+    },
+
+    experience: {
+      minYears: Number,
+    },
+
+    requiredEducation: {
+      type: String,
+      enum: ['none', 'high_school', 'bachelor', 'master', 'phd'],
+      default: 'none',
+    },
+    requiredEducationField: {
+      type: String, // e.g. "Computer Science", "Engineering"
+    },
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+  }
+);
 
 JobPostSchema.pre("save", function (next) {
   if (this.workplaceType === WorkplaceType.ON_SITE) {
@@ -251,8 +214,29 @@ JobPostSchema.pre("save", function (next) {
     this.isRemote = true;
   }
 
+  if (this.salary && this.salary.min && this.salary.currency) {
+    const rate = EXCHANGE_RATES_TO_USD[this.salary.currency] || 1;
+    this.salary.normalizedUSD = Math.round(this.salary.min * rate * 100) / 100;
+  }
+
   next();
 });
 
-JobPostSchema.index({ "requirements.skills": 1 });
+JobPostSchema.index({ category: 1, status: 1 });
+JobPostSchema.index({ createdBy: 1 });
+
+JobPostSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.__v;
+    delete ret.embeddings;
+    return ret;
+  },
+});
+
+module.exports =
+  mongoose.models.JobPost || mongoose.model("JobPost", JobPostSchema);
+
+// --- FUTURE FIELDS ---
+/*
+  optimisticConcurrency: true,
 */

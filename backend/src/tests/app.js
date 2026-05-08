@@ -9,7 +9,7 @@ const cors = require("cors");
 
 const authRoutes = require("../features/auth/authRoutes");
 const userRoutes = require("../features/user/userRoutes");
-const jobRoutes = require("../features/job-posts/jobRoutes");
+const jobRoutes = require("../features/jobPost/jobRoutes");
 const applicationRoutes = require("../features/application/applicationRoutes");
 const profileRoutes = require("../features/profile/profileRoutes");
 const adminRoutes = require("../features/admin/adminRoutes");

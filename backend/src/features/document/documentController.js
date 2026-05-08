@@ -1,6 +1,6 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Document = require('./document');
-const Application = require('../application/application');
+const Application = require('../application/Application');
 const { uploadFile } = require('../../services/cloudinaryService');
 const crypto = require('crypto');
 
