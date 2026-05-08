@@ -1,5 +1,5 @@
 const SavedSearch = require('../savedSearch/savedSearch');
-const JobPost = require('../job-posts/jobPost');
+const JobPost = require('../jobPost/jobPost');
 const Notification = require('../notification/notification');
 const { NotificationType } = require('../../enums/index');
 

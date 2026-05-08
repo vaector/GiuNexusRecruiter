@@ -3,10 +3,10 @@ const mongoose = require("mongoose");
 const asyncHandler = require("../../middleware/asyncHandler");
 const { NotificationType } = require("../../enums");
 const Application = require("../application/Application");
-const JobPost = require("../job-posts/JobPost");
+const JobPost = require("../jobPost/jobPost");
 const Notification = require("../notification/notification");
 const User = require("../user/User");
-const Message = require("./Message");
+const Message = require("./message");
 
 const SAFE_USER_FIELDS = "name email role";
 const SAFE_JOB_FIELDS = "title company status";

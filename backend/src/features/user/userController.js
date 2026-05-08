@@ -1,6 +1,6 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const User = require("./User");
-const JobPost = require("../job-posts/JobPost");
+const JobPost = require("../jobPost/jobPost");
 const Application = require("../application/Application");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
