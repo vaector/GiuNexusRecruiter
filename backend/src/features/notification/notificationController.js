@@ -1,5 +1,5 @@
 const asyncHandler = require("../../middleware/asyncHandler");
-const Notification = require('./Notification');
+const Notification = require("./notification");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);

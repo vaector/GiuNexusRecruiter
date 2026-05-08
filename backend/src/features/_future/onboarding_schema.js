@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { OnboardingStatus } = require("../enums");
+const { OnboardingStatus } = require("../../enums");
 
 const OnboardingTaskSchema = new mongoose.Schema(
   {
