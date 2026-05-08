@@ -5,6 +5,56 @@ const bcrypt = require("bcryptjs");
 const USER_ROLES = ["jobSeeker", "recruiter", "admin"];
 const USER_STATUSES = ["pending", "approved", "rejected"];
 
+const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+
+const ApplicationStatsSchema = new mongoose.Schema(
+  {
+    totalApplied: {
+      type: Number,
+      default: 0,
+    },
+    totalShortlisted: {
+      type: Number,
+      default: 0,
+    },
+    totalRejected: {
+      type: Number,
+      default: 0,
+    },
+    totalWithdrawn: {
+      type: Number,
+      default: 0,
+    },
+    totalPending: {
+      type: Number,
+      default: 0,
+    },
+    responseRate: {
+      type: Number,
+      default: 0,
+    },
+    lastAppliedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
+const NotificationPreferencesSchema = new mongoose.Schema(
+  {
+    email: {
+      type: Boolean,
+      default: true,
+    },
+    inApp: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     name: {
@@ -79,6 +129,44 @@ const UserSchema = new mongoose.Schema(
     otpExpire: {
       type: Date,
     },
+
+    userCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    linkedIn: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    github: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    portfolio: {
+      type: String,
+      match: [urlRegex, "Invalid URL format"],
+    },
+
+    lastActive: {
+      type: Date,
+      default: Date.now,
+    },
+
+    notificationPreferences: {
+      type: NotificationPreferencesSchema,
+      default: () => ({}),
+    },
+
+    applicationStats: {
+      type: ApplicationStatsSchema,
+      default: () => ({}),
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
@@ -119,45 +207,6 @@ const {
   JobSearchStatus,
   PreviousAppraisalRating,
 } = require("../../enums");
-
-const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
-
-const NotificationPreferencesSchema = new mongoose.Schema(
-  {
-    email: {
-      type: Boolean,
-      default: true,
-    },
-    inApp: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  { _id: false }
-);
-
-const PasswordResetSchema = new mongoose.Schema(
-  {
-    otpHash: {
-      type: String,
-    },
-    otpExpiresAt: {
-      type: Date,
-    },
-    requestedAt: {
-      type: Date,
-    },
-    verifiedAt: {
-      type: Date,
-    },
-    attemptCount: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-  },
-  { _id: false }
-);
 
 const JobSeekerSkillSchema = new mongoose.Schema(
   {
@@ -222,49 +271,6 @@ const PreviousAppraisalSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const ApplicationStatsSchema = new mongoose.Schema(
-  {
-    totalApplied: {
-      type: Number,
-      default: 0,
-    },
-    totalShortlisted: {
-      type: Number,
-      default: 0,
-    },
-    totalRejected: {
-      type: Number,
-      default: 0,
-    },
-  },
-  { _id: false }
-);
-
-userCode: {
-  type: String,
-  required: true,
-  unique: true,
-},
-linkedIn: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-github: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-portfolio: {
-  type: String,
-  match: [urlRegex, "Invalid URL format"],
-},
-lastActive: {
-  type: Date,
-  default: Date.now,
-},
-notificationPreferences: {
-  type: NotificationPreferencesSchema,
-  default: () => ({}),
-},
 twoFactorSecret: {
   type: String,
 },
@@ -272,10 +278,7 @@ twoFactorEnabled: {
   type: Boolean,
   default: false,
 },
-passwordReset: {
-  type: PasswordResetSchema,
-  default: () => ({}),
-},
+
 referralCode: {
   type: String,
   unique: true,
@@ -309,10 +312,6 @@ const JobSeeker = User.discriminator(
       type: String,
       enum: Object.values(JobSearchStatus),
       default: JobSearchStatus.ACTIVELY_LOOKING,
-    },
-    applicationStats: {
-      type: ApplicationStatsSchema,
-      default: () => ({}),
     },
     completenessScore: {
       type: Number,

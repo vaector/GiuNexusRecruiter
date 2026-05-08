@@ -10,17 +10,33 @@ function generateCode() {
 }
 
 User.schema.pre("save", async function (next) {
-  if (!this.isNew || this.referralCode) return next();
+  if (!this.isNew) return next();
 
-  let code;
-  let exists = true;
-  let attempts = 0;
-  while (exists && attempts < 10) {
-    code = generateCode();
-    exists = await User.findOne({ referralCode: code });
-    attempts++;
+  if (!this.referralCode) {
+    let code;
+    let exists = true;
+    let attempts = 0;
+    while (exists && attempts < 10) {
+      code = generateCode();
+      exists = await User.findOne({ referralCode: code });
+      attempts++;
+    }
+    if (attempts === 10) return next(new Error('Could not generate unique referral code'));
+    this.referralCode = code;
   }
-  if (attempts === 10) return next(new Error('Could not generate unique referral code'));
-  this.referralCode = code;
+
+  if (!this.userCode) {
+    let code;
+    let exists = true;
+    let attempts = 0;
+    while (exists && attempts < 10) {
+      code = generateCode();
+      exists = await User.findOne({ userCode: code });
+      attempts++;
+    }
+    if (attempts === 10) return next(new Error('Could not generate unique user code'));
+    this.userCode = code;
+  }
+
   next();
 });

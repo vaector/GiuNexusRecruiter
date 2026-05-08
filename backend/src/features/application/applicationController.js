@@ -1,6 +1,7 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Application = require("./Application");
 const JobPost = require("../jobPost/jobPost");
+const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
 const Referral = require("../referrals/Referral");
@@ -80,6 +81,21 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   const previousStatus = application.status;
   application.status = status;
   await application.save();
+
+  const statsInc = {};
+  if (previousStatus === "pending") statsInc['applicationStats.totalPending'] = -1;
+  if (status === "shortlisted") statsInc['applicationStats.totalShortlisted'] = 1;
+  else if (status === "rejected") statsInc['applicationStats.totalRejected'] = 1;
+  if (Object.keys(statsInc).length > 0) {
+    await User.findByIdAndUpdate(application.user, { $inc: statsInc });
+  }
+
+  const updatedUser = await User.findById(application.user);
+  const { totalApplied, totalShortlisted, totalRejected } = updatedUser.applicationStats;
+  const responseRate = totalApplied > 0 ? (totalShortlisted + totalRejected) / totalApplied : 0;
+  await User.findByIdAndUpdate(application.user, {
+    $set: { 'applicationStats.responseRate': responseRate }
+  });
 
   if (status === "shortlisted" || status === "rejected") {
     await AuditLog.record({
@@ -165,6 +181,14 @@ const applyToJob = async (req, res, next) => {
       return next(err);
     }
 
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: {
+        'applicationStats.totalApplied': 1,
+        'applicationStats.totalPending': 1,
+      },
+      $set: { 'applicationStats.lastAppliedAt': new Date() },
+    });
+
     await Notification.send({
       recipient: job.createdBy,
       type: NotificationType.NEW_APPLICANT,
@@ -188,6 +212,13 @@ const withdrawApplication = asyncHandler(async (req, res, next) => {
   const job = await JobPost.findById(application.job).select("title createdBy");
 
   await application.deleteOne();
+
+  await User.findByIdAndUpdate(req.user._id, {
+    $inc: {
+      'applicationStats.totalWithdrawn': 1,
+      'applicationStats.totalPending': -1,
+    },
+  });
 
   await AuditLog.record({
     actor: req.user,
