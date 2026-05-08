@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { ReportReason, ReportStatus } = require("../enums");
+const { ReportReason, ReportStatus } = require("../../enums/index");
 
 const ReportSchema = new mongoose.Schema(
   {
@@ -38,6 +38,10 @@ const ReportSchema = new mongoose.Schema(
     reviewedAt: {
       type: Date,
     },
+    adminNote: {
+      type: String,
+      maxlength: 500,
+    },
   },
   {
     timestamps: true,
@@ -47,6 +51,7 @@ const ReportSchema = new mongoose.Schema(
 
 ReportSchema.index({ status: 1, createdAt: -1 });
 ReportSchema.index({ targetModel: 1, targetId: 1 });
+ReportSchema.index({ reporter: 1, targetModel: 1, targetId: 1 }, { unique: true });
 
 module.exports =
   mongoose.models.Report ||

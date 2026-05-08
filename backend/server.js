@@ -17,6 +17,7 @@ const requestLogger = require("./src/middleware/requestLogger");
 const notificationRoutes = require("./src/features/notification/notificationRoutes");
 const savedSearchRoutes = require("./src/features/savedSearch/savedRoutes");
 const { startSavedSearchPoller } = require("./src/features/savedSearch/savedPoller");
+const reportRoutes = require("./src/features/reports/reportsRoutes");
 
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
@@ -41,6 +42,7 @@ app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use('/api/v1/saved-searches', savedSearchRoutes);
+app.use('/api/v1/reports', reportRoutes);
 
 app.use(errorHandler);
 

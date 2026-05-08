@@ -159,6 +159,7 @@ const ReportReason = Object.freeze({
   MISLEADING: "misleading",
   INAPPROPRIATE: "inappropriate",
   FAKE_COMPANY: "fake_company",
+  HARASSMENT: "harassment",
   OTHER: "other",
 });
 
