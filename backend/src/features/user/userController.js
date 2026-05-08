@@ -3,7 +3,8 @@ const User = require("./User");
 const JobPost = require("../job-posts/JobPost");
 const Application = require("../application/Application");
 const AuditLog = require("../auditLog/auditLog");
-const { AuditAction } = require("../../enums");
+const Notification = require("../notification/notification");
+const { AuditAction, NotificationType } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -61,6 +62,12 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
       metadata: { from: existingUser?.status, to: status },
       ipAddress: req.ip,
       userAgent: req.get("User-Agent"),
+    });
+    await Notification.send({
+      recipient: user._id,
+      type: status === "approved" ? NotificationType.ACCOUNT_APPROVED : NotificationType.ACCOUNT_REJECTED,
+      title: "Account Update",
+      message: `Your recruiter account has been ${status}`,
     });
   }
   res.status(200).json({ success: true, user });

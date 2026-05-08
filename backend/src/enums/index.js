@@ -73,11 +73,11 @@ const CompanySize = Object.freeze({
 const NotificationType = Object.freeze({
   APPLICATION_STATUS_CHANGED: "application_status_changed",
   NEW_APPLICANT: "new_applicant",
-  JOB_APPROVED: "job_approved",
-  JOB_REJECTED: "job_rejected",
   ACCOUNT_APPROVED: "account_approved",
   ACCOUNT_REJECTED: "account_rejected",
   NEW_JOB_MATCH: "new_job_match",
+  APPLICATION_WITHDRAWN: "application_withdrawn",
+  REFERRAL_APPLIED: "referral_applied", 
 });
 
 const DocumentType = Object.freeze({

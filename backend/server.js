@@ -13,6 +13,7 @@ const profileRoutes = require("./src/features/profile/profileRoutes");
 const adminRoutes = require("./src/features/admin/adminRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const requestLogger = require("./src/middleware/requestLogger");
+const notificationRoutes = require("./src/features/notification/notificationRoutes");
 
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
@@ -34,6 +35,7 @@ app.use("/api/v1/jobs", jobRoutes);
 app.use("/api/v1/applications", applicationRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 app.use(errorHandler);
 

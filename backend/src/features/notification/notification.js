@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { NotificationType } = require("../enums");
+const { NotificationType } = require("../../enums/index");
 
 const NotificationSchema = new mongoose.Schema(
   {
@@ -25,11 +25,11 @@ const NotificationSchema = new mongoose.Schema(
     },
     relatedJob: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "job_post",
+      ref: "JobPost",
     },
     relatedApplication: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "application",
+      ref: "Application",
     },
     isRead: {
       type: Boolean,
@@ -47,6 +47,28 @@ const NotificationSchema = new mongoose.Schema(
 
 NotificationSchema.index({ recipient: 1, isRead: 1 });
 NotificationSchema.index({ recipient: 1, createdAt: -1 });
+
+NotificationSchema.statics.send = async function ({
+  recipient,
+  type,
+  title,
+  message,
+  relatedJob = null,
+  relatedApplication = null,
+}) {
+  try {
+    await this.create({
+      recipient,
+      type,
+      title,
+      message,
+      relatedJob,
+      relatedApplication,
+    });
+  } catch (err) {
+    console.error('[Notification] Failed to send notification:', err.message);
+  }
+};
 
 module.exports =
   mongoose.models.Notification ||

@@ -2,7 +2,8 @@ const asyncHandler = require("../../middleware/asyncHandler");
 const Application = require("./Application");
 const JobPost = require("../job-posts/JobPost");
 const AuditLog = require("../auditLog/auditLog");
-const { AuditAction } = require("../../enums");
+const Notification = require("../notification/notification");
+const { AuditAction, NotificationType } = require("../../enums");
 
 const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
 
@@ -95,6 +96,15 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     .populate("user", "name email skills")
     .populate("job", "title company type status");
 
+  await Notification.send({
+    recipient: updatedApplication.user._id,
+    type: NotificationType.APPLICATION_STATUS_CHANGED,
+    title: "Application Update",
+    message: `Your application for ${updatedApplication.job.title} at ${updatedApplication.job.company} has been ${status}`,
+    relatedJob: updatedApplication.job._id,
+    relatedApplication: updatedApplication._id,
+  });
+
   return res.status(200).json({ success: true, application: updatedApplication });
 });
 
@@ -132,6 +142,15 @@ const applyToJob = async (req, res, next) => {
       return next(err);
     }
 
+    await Notification.send({
+      recipient: job.createdBy,
+      type: NotificationType.NEW_APPLICANT,
+      title: "New Applicant",
+      message: `${req.user.name} applied to your job posting: ${job.title}`,
+      relatedJob: job._id,
+      relatedApplication: application._id,
+    });
+
     return res.status(201).json({ success: true, application });
   } catch (error) {
     next(error);
@@ -143,6 +162,8 @@ const withdrawApplication = asyncHandler(async (req, res, next) => {
   const application = await Application.findOne({ _id: req.params.id, user: req.user._id });
   if (!application) return next(createError(404, "Application not found"));
 
+  const job = await JobPost.findById(application.job).select("title createdBy");
+
   await application.deleteOne();
 
   await AuditLog.record({
@@ -152,6 +173,15 @@ const withdrawApplication = asyncHandler(async (req, res, next) => {
     targetId: application._id,
     ipAddress: req.ip,
     userAgent: req.get("User-Agent"),
+  });
+
+  await Notification.send({
+    recipient: job?.createdBy,
+    type: NotificationType.APPLICATION_WITHDRAWN,
+    title: "Application Withdrawn",
+    message: `${req.user.name} withdrew their application for ${job?.title}`,
+    relatedJob: application.job,
+    relatedApplication: application._id,
   });
 
   return res.status(200).json({ success: true, message: "Application withdrawn" });
