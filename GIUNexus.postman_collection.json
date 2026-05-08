@@ -135,7 +135,9 @@
                   "  pm.collectionVariables.set('TOKEN', res.token);",
                   "  pm.environment.set('TOKEN', res.token);",
                   "  console.log('Admin TOKEN set');",
-                  "}"
+                  "}",
+                  "if (res.user && res.user._id) pm.collectionVariables.set('USER_ID', res.user._id);",
+                  "if (res.userId) pm.collectionVariables.set('USER_ID', res.userId);"
                 ],
                 "type": "text/javascript"
               }
@@ -281,6 +283,23 @@
         },
         {
           "name": "[ADDITIONAL] Verify MFA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('TOKEN', res.token);",
+                  "  pm.environment.set('TOKEN', res.token);",
+                  "  console.log('TOKEN set after MFA verification');",
+                  "}",
+                  "if (res.user && res.user._id) pm.collectionVariables.set('USER_ID', res.user._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -620,7 +639,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"enabled\": true,\n  \"method\": \"email_otp\"\n}",
+              "raw": "{\n  \"mfaEnabled\": true,\n  \"mfaMethod\": \"email_otp\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -628,7 +647,7 @@
               "host": ["{{BASE_URL}}"],
               "path": ["profile", "mfa"]
             },
-            "description": "[ADDITIONAL] Enable/disable MFA and set method.\n\nmethod options: 'email_otp' | 'totp'\nSet enabled: false to disable MFA."
+            "description": "[ADDITIONAL] Enable/disable MFA and set method.\n\nmfaMethod options: 'email_otp' | 'totp'\nSet mfaEnabled: false to disable MFA."
           },
           "response": []
         }
@@ -723,7 +742,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Backend Developer Intern\",\n  \"company\": \"TechCo\",\n  \"description\": \"We are seeking a talented Backend Developer Intern to join our engineering team. You will design and implement RESTful APIs, work with MongoDB databases, and build scalable Node.js microservices. Strong understanding of Express.js and asynchronous programming required.\",\n  \"requirements\": [\"Node.js\", \"MongoDB\", \"Express.js\", \"REST APIs\", \"JavaScript\", \"Git\"],\n  \"location\": \"Cairo\",\n  \"type\": \"internship\",\n  \"salary\": 5000,\n  \"totalSlots\": 3,\n  \"applicationDeadline\": \"2026-07-30\",\n  \"screeningQuestions\": [\n    {\"question\": \"What is your experience with Node.js?\", \"required\": true},\n    {\"question\": \"Are you available for a full-time internship starting June 2026?\", \"required\": false}\n  ]\n}",
+              "raw": "{\n  \"title\": \"Backend Developer Intern\",\n  \"company\": \"TechCo\",\n  \"description\": \"We are seeking a talented Backend Developer Intern to join our engineering team. You will design and implement RESTful APIs, work with MongoDB databases, and build scalable Node.js microservices. Strong understanding of Express.js and asynchronous programming required.\",\n  \"requirements\": [\"Node.js\", \"MongoDB\", \"Express.js\", \"REST APIs\", \"JavaScript\", \"Git\"],\n  \"location\": \"Cairo\",\n  \"type\": \"internship\",\n  \"salary\": 5000,\n  \"totalSlots\": 3,\n  \"applicationDeadline\": \"2026-07-30\",\n  \"screeningQuestions\": [\n    {\"question\": \"What is your experience with Node.js?\", \"type\": \"text\", \"required\": true},\n    {\"question\": \"Are you available for a full-time internship starting June 2026?\", \"type\": \"yes_no\", \"required\": false}\n  ]\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1083,7 +1102,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"notes\": \"Strong Node.js background, excellent problem-solving skills. Recommend for technical interview round.\"\n}",
+              "raw": "{\n  \"recruiterNotes\": \"Strong Node.js background, excellent problem-solving skills. Recommend for technical interview round.\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1282,7 +1301,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"content\": \"Hello, I am very interested in the Backend Developer Intern position. Could you provide more details about the onboarding process and the team structure?\"\n}",
+              "raw": "{\n  \"body\": \"Hello, I am very interested in the Backend Developer Intern position. Could you provide more details about the onboarding process and the team structure?\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1360,7 +1379,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"targetType\": \"JobPost\",\n  \"targetId\": \"{{JOB_ID}}\",\n  \"reason\": \"spam\",\n  \"description\": \"This job posting appears to be spam and contains misleading salary information.\"\n}",
+              "raw": "{\n  \"targetModel\": \"JobPost\",\n  \"targetId\": \"{{JOB_ID}}\",\n  \"reason\": \"spam\",\n  \"details\": \"This job posting appears to be spam and contains misleading salary information.\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1368,7 +1387,7 @@
               "host": ["{{BASE_URL}}"],
               "path": ["reports"]
             },
-            "description": "[ADDITIONAL] File a report against a JobPost or User.\n\ntargetType: 'JobPost' | 'User'"
+            "description": "[ADDITIONAL] File a report against a JobPost or User.\n\ntargetModel: 'JobPost' | 'User'"
           },
           "response": []
         },
@@ -1382,13 +1401,13 @@
               "host": ["{{BASE_URL}}"],
               "path": ["reports"],
               "query": [
-                {"key": "status", "value": "pending", "disabled": true},
-                {"key": "targetType", "value": "JobPost", "disabled": true},
+                {"key": "status", "value": "open", "disabled": true},
+                {"key": "targetModel", "value": "JobPost", "disabled": true},
                 {"key": "page", "value": "1"},
                 {"key": "limit", "value": "20"}
               ]
             },
-            "description": "[ADDITIONAL] Admin only. Paginated list of all reports. Filter by status and targetType."
+            "description": "[ADDITIONAL] Admin only. Paginated list of all reports. Filter by status and targetModel."
           },
           "response": []
         },
@@ -1402,7 +1421,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"resolved\",\n  \"adminNotes\": \"Investigated and confirmed the report. Appropriate action has been taken.\"\n}",
+              "raw": "{\n  \"status\": \"actioned\",\n  \"adminNote\": \"Investigated and confirmed the report. Appropriate action has been taken.\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1455,9 +1474,9 @@
                 },
                 {
                   "key": "type",
-                  "value": "resume",
+                  "value": "cv",
                   "type": "text",
-                  "description": "Options: resume | cover_letter | certificate | offer_letter | contract"
+                  "description": "Options: cv | cover_letter | offer_letter | contract | nda"
                 }
               ]
             },
@@ -1551,7 +1570,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jobId\": \"{{JOB_ID}}\",\n  \"message\": \"I would really appreciate a referral for this Backend Developer position. I have strong Node.js and MongoDB skills and believe I am a great fit for the team.\"\n}",
+              "raw": "{\n  \"referrerCode\": \"REFCODE123\",\n  \"jobId\": \"{{JOB_ID}}\",\n  \"message\": \"I would really appreciate a referral for this Backend Developer position. I have strong Node.js and MongoDB skills and believe I am a great fit for the team.\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {
@@ -1656,7 +1675,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"completed\"\n}",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
               "options": {"raw": {"language": "json"}}
             },
             "url": {

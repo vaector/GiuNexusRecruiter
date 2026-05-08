@@ -3,7 +3,13 @@ const mongoose = require("mongoose");
 const User = require("./backend/src/features/user/User");
 
 async function seed() {
-  await mongoose.connect(process.env.MONGODB_URI);
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    throw new Error("MongoDB connection string is missing. Set MONGO_URI or MONGODB_URI.");
+  }
+
+  await mongoose.connect(mongoUri);
 
   await User.create({
     name: "Admin",

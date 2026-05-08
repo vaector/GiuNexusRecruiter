@@ -32,6 +32,35 @@ const validateScreeningQuestions = (questions) => {
     return null;
 };
 
+const normalizeLocation = (location) => {
+    if (typeof location === 'string') {
+        return { city: location };
+    }
+    return location;
+};
+
+const normalizeSalary = (salary) => {
+    if (typeof salary === 'number') {
+        return { min: salary };
+    }
+    return salary;
+};
+
+const getTopClassification = (result) => {
+    const top = Array.isArray(result) ? result[0] : result;
+    return {
+        label: top?.labels?.[0] || top?.label || "Other",
+        score: top?.scores?.[0] ?? top?.score ?? null,
+    };
+};
+
+const normalizeEmbedding = (embedding) => {
+    if (Array.isArray(embedding?.[0])) {
+        return embedding[0];
+    }
+    return embedding;
+};
+
 // GET /api/v1/jobs/recommended
 const getRecommendedJobs = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id).select("skills");
@@ -47,10 +76,10 @@ const getRecommendedJobs = asyncHandler(async (req, res, next) => {
     }
 
     try {
-        const studentEmbedding = await hf.featureExtraction({
+        const studentEmbedding = normalizeEmbedding(await hf.featureExtraction({
             model: 'sentence-transformers/all-MiniLM-L6-v2',
             inputs: studentText,
-        });
+        }));
 
         const jobs = openJobs
             .map(({ embeddings, __v, ...job }) => ({
@@ -165,16 +194,14 @@ const createJob = asyncHandler(async (req, res, next) => {
     }
 
     const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions } = req.body;
+    const normalizedLocation = normalizeLocation(location);
+    const normalizedSalary = normalizeSalary(salary);
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
         return next(createError(400, "Please provide all required fields"));
     }
 
-    if (location && (!location.city || !location.country)) {
-        return next(createError(400, 'location must include city and country'));
-    }
-
-    if (salary && salary.min && salary.max && salary.min > salary.max) {
+    if (normalizedSalary && normalizedSalary.min && normalizedSalary.max && normalizedSalary.min > normalizedSalary.max) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
@@ -199,8 +226,9 @@ const createJob = asyncHandler(async (req, res, next) => {
             },
         });
         // console.log('HF raw result:', JSON.stringify(result, null, 2));
-        category = result[0].label;
-        aiCategoryConfidence = result[0].score;
+        const classification = getTopClassification(result);
+        category = classification.label;
+        aiCategoryConfidence = classification.score;
     } catch (hfError) {
         console.error("AI classification failed:", hfError.message);
     }
@@ -208,17 +236,17 @@ const createJob = asyncHandler(async (req, res, next) => {
     let embeddings = [];
     try {
         const jobText = `${title} ${requirements.join(' ')}`;
-        const embedding = await hf.featureExtraction({
+        const embedding = normalizeEmbedding(await hf.featureExtraction({
             model: 'sentence-transformers/all-MiniLM-L6-v2',
             inputs: jobText,
-        });
+        }));
         embeddings = embedding;
     } catch (embErr) {
         console.error('Embedding computation failed:', embErr.message);
     }
 
     const job = await JobPost.create({
-        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
+        title, company, description, requirements, location: normalizedLocation, type, salary: normalizedSalary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, screeningQuestions, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
     });
 
     await AuditLog.record({
@@ -293,15 +321,15 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     for (const field of fields) {
         if (req.body[field] !== undefined) {
-            job[field] = req.body[field];
+            job[field] = field === "location"
+                ? normalizeLocation(req.body[field])
+                : field === "salary"
+                    ? normalizeSalary(req.body[field])
+                    : req.body[field];
         }
     }
 
-    if (req.body.location && (!req.body.location.city || !req.body.location.country)) {
-        return next(createError(400, 'location must include city and country'));
-    }
-
-    if (req.body.salary && req.body.salary.min && req.body.salary.max && req.body.salary.min > req.body.salary.max) {
+    if (job.salary && job.salary.min && job.salary.max && job.salary.min > job.salary.max) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
@@ -327,8 +355,9 @@ const updateJob = asyncHandler(async (req, res, next) => {
                     candidate_labels: ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"],
                 },
             });
-            job.category = result[0].label;
-            job.aiCategoryConfidence = result[0].score;
+            const classification = getTopClassification(result);
+            job.category = classification.label;
+            job.aiCategoryConfidence = classification.score;
         } catch (hfError) {
             console.error("AI classification failed:", hfError.message);
         }
@@ -341,10 +370,10 @@ const updateJob = asyncHandler(async (req, res, next) => {
     if (needsReembedding) {
         try {
             const jobText = `${job.title} ${job.requirements.join(' ')}`;
-            const embedding = await hf.featureExtraction({
+            const embedding = normalizeEmbedding(await hf.featureExtraction({
                 model: 'sentence-transformers/all-MiniLM-L6-v2',
                 inputs: jobText,
-            });
+            }));
             job.embeddings = embedding;
         } catch (embErr) {
             console.error('Embedding recomputation failed:', embErr.message);

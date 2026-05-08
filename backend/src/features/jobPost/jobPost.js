@@ -18,9 +18,9 @@ const {
 
 const LocationSchema = new mongoose.Schema(
   {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    country: { type: String, required: true },
+    street: { type: String },
+    city: { type: String },
+    country: { type: String },
     zipCode: { type: String },
   },
   { _id: false }
@@ -178,7 +178,7 @@ const JobPostSchema = new mongoose.Schema(
 
     requiresCv: {
       type: Boolean,
-      default: true,
+      default: false,
     },
 
     requiresCoverLetter: {
