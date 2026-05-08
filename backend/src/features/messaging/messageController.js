@@ -304,23 +304,12 @@ const getMessages = asyncHandler(async (req, res, next) => {
     ],
   };
 
-  const [total] = await Promise.all([
-    Message.countDocuments(messageFilter),
-    Message.updateMany(
-      {
-        job: jobId,
-        sender: otherUserId,
-        recipient: currentUserId,
-        readAt: null,
-      },
-      { $set: { readAt: new Date() } }
-    ),
-  ]);
+  const total = await Message.countDocuments(messageFilter);
 
   if (total === 0) {
     return res.status(200).json({
       success: true,
-      page: DEFAULT_MESSAGES_PAGE,
+      page,
       limit,
       total,
       totalPages: 0,
@@ -349,9 +338,20 @@ const getMessages = asyncHandler(async (req, res, next) => {
 
   const messages = await Message.find(messageFilter)
     .populate("sender", SAFE_USER_FIELDS)
+    .populate("recipient", SAFE_USER_FIELDS)
     .sort({ createdAt: 1 })
     .skip(skip)
     .limit(adjustedLimit);
+
+  await Message.updateMany(
+    {
+      job: jobId,
+      sender: otherUserId,
+      recipient: currentUserId,
+      readAt: null,
+    },
+    { $set: { readAt: new Date() } }
+  );
 
   return res.status(200).json({
     success: true,
