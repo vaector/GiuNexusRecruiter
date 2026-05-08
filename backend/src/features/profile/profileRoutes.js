@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getMyProfile, updateMyProfile, changeMyPassword, extractSkills } = require("./profileController");
+const { getMyProfile, updateMyProfile, changeMyPassword, extractSkills, toggleMfa } = require("./profileController");
 const { protect, authorize } = require("../../middleware/auth");
 const upload = require("../../middleware/upload");
 
@@ -105,5 +105,36 @@ router.patch("/change-password", protect, changeMyPassword);
  *         description: Forbidden
  */
 router.post("/extract-skills", protect, authorize("jobSeeker"), extractSkills);
+
+/**
+ * @swagger
+ * /profile/mfa:
+ *   patch:
+ *     summary: Enable or disable MFA and set the MFA method
+ *     tags: [Profile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [mfaEnabled, mfaMethod]
+ *             properties:
+ *               mfaEnabled:
+ *                 type: boolean
+ *               mfaMethod:
+ *                 type: string
+ *                 enum: [email_otp, totp]
+ *     responses:
+ *       200:
+ *         description: MFA settings updated
+ *       400:
+ *         description: Invalid method or TOTP not set up
+ *       401:
+ *         description: Not authorised
+ *       404:
+ *         description: User not found
+ */
+router.patch("/mfa", protect, toggleMfa);
 
 module.exports = router;

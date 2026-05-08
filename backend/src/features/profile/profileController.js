@@ -89,4 +89,26 @@ const extractSkills = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { getMyProfile, updateMyProfile, changeMyPassword, extractSkills };
+// PATCH /api/v1/profile/mfa — private
+const toggleMfa = asyncHandler(async (req, res, next) => {
+  const { mfaEnabled, mfaMethod } = req.body;
+
+  if (!['email_otp', 'totp'].includes(mfaMethod)) {
+    return next(createError(400, "mfaMethod must be 'email_otp' or 'totp'"));
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) return next(createError(404, 'User not found'));
+
+  if (mfaEnabled && mfaMethod === 'totp' && !user.totpSecret) {
+    return next(createError(400, 'Set up TOTP first via POST /auth/setup-totp'));
+  }
+
+  user.mfaEnabled = mfaEnabled;
+  user.mfaMethod = mfaMethod;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json({ success: true, mfaEnabled, mfaMethod });
+});
+
+module.exports = { getMyProfile, updateMyProfile, changeMyPassword, extractSkills, toggleMfa };

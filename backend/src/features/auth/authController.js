@@ -6,6 +6,7 @@ const asyncHandler = require("../../middleware/asyncHandler");
 const { addToBlacklist } = require('../../middleware/tokenBlacklist');
 const AuditLog = require("../auditLog/auditLog");
 const { AuditAction } = require("../../enums");
+const { generateSecret, verifyTotp, printQrToConsole } = require("../../middleware/totpService");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -90,6 +91,37 @@ const login = asyncHandler(async (req, res, next) => {
     return next(createError(403, "Your account has been rejected"));
   }
 
+  if (user.mfaEnabled) {
+    if (user.mfaMethod === 'email_otp') {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otpCode = crypto.createHash('sha256').update(otp).digest('hex');
+      user.otpExpire = Date.now() + 10 * 60 * 1000;
+      await user.save({ validateBeforeSave: false });
+
+      await sendEmail({
+        to: user.email,
+        subject: 'Your GIU Nexus verification code',
+        text: `Your login verification code is: ${otp}\n\nExpires in 10 minutes.`,
+      });
+
+      return res.status(200).json({
+        success: true,
+        mfaRequired: true,
+        mfaMethod: 'email_otp',
+        userId: user._id,
+      });
+    }
+
+    if (user.mfaMethod === 'totp') {
+      return res.status(200).json({
+        success: true,
+        mfaRequired: true,
+        mfaMethod: 'totp',
+        userId: user._id,
+      });
+    }
+  }
+
   return authResponse(res, 200, user);
 });
 
@@ -149,7 +181,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   return res.status(200).json(response);
 });
 
-// POST /api/v1/auth/verify-otp
+// POST /api/v1/auth/verify-otp — password reset OTP verification
 const verifyOtp = asyncHandler(async (req, res, next) => {
   const { email, otp } = req.body;
 
@@ -181,6 +213,53 @@ const verifyOtp = asyncHandler(async (req, res, next) => {
     success: true,
     message: "OTP verified",
     resetToken,
+  });
+});
+
+// POST /api/v1/auth/verify-mfa — MFA login verification
+const verifyMfaOtp = asyncHandler(async (req, res, next) => {
+  const { userId, otp, method } = req.body;
+
+  if (!userId || !otp || !method) {
+    return next(createError(400, "userId, otp, and method are required"));
+  }
+
+  if (method === 'email_otp') {
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+    const user = await User.findOne({
+      _id: userId,
+      otpCode: hashedOtp,
+      otpExpire: { $gt: Date.now() },
+    });
+    if (!user) return next(createError(400, 'Invalid or expired OTP'));
+    user.otpCode = undefined;
+    user.otpExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+    return authResponse(res, 200, user);
+  }
+
+  if (method === 'totp') {
+    const user = await User.findById(userId);
+    if (!user) return next(createError(404, 'User not found'));
+    if (!verifyTotp(user.totpSecret, otp)) return next(createError(400, 'Invalid authenticator code'));
+    return authResponse(res, 200, user);
+  }
+
+  return next(createError(400, 'Invalid MFA method'));
+});
+
+// POST /api/v1/auth/setup-totp — private
+const setupTotp = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  if (!user) return next(createError(404, 'User not found'));
+  const secret = generateSecret();
+  user.totpSecret = secret;
+  await user.save({ validateBeforeSave: false });
+  printQrToConsole(secret, user.email);
+  return res.status(200).json({
+    success: true,
+    secret,
+    message: 'Scan the QR URL printed in server console with your authenticator app',
   });
 });
 
@@ -225,4 +304,4 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   return authResponse(res, 200, user);
 });
 
-module.exports = { register, login, logout, forgotPassword, verifyOtp, resetPassword };
+module.exports = { register, login, logout, forgotPassword, verifyOtp, verifyMfaOtp, resetPassword, setupTotp };
