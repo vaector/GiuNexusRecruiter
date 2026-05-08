@@ -116,16 +116,16 @@ const applyToJob = async (req, res, next) => {
 
     const job = await JobPost.findById(jobId);
     if (!job) {
-      return res.status(404).json({ success: false, message: "Job not found" });
+      return next(createError(404, "Job not found"));
     }
 
     if (job.status !== "open") {
-      return res.status(400).json({ success: false, message: "Cannot apply to a closed job" });
+      return next(createError(400, "Cannot apply to a closed job"));
     }
 
     const existing = await Application.findOne({ user: req.user._id, job: jobId });
     if (existing) {
-      return res.status(400).json({ success: false, message: "You have already applied to this job" });
+      return next(createError(400, "You have already applied to this job"));
     }
 
     let application;
@@ -137,7 +137,7 @@ const applyToJob = async (req, res, next) => {
       });
     } catch (err) {
       if (err.code === 11000) {
-        return res.status(400).json({ success: false, message: "You have already applied to this job" });
+        return next(createError(400, "You have already applied to this job"));
       }
       return next(err);
     }

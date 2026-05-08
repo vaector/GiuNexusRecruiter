@@ -2,8 +2,14 @@ const asyncHandler = require("../../middleware/asyncHandler");
 const AuditLog = require('./AuditLog');
 const User = require("../user/User");
 
+const createError = (statusCode, message) => {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    return error;
+};
+
 // GET /api/v1/admin/audit-logs
-const getAuditLogs = asyncHandler(async (req, res) => {
+const getAuditLogs = asyncHandler(async (req, res, next) => {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const skip = (page - 1) * limit;
@@ -24,12 +30,12 @@ const getAuditLogs = asyncHandler(async (req, res) => {
         filter.performedAt = {};
         if (req.query.from) {
             const d = new Date(req.query.from);
-            if (isNaN(d)) return res.status(400).json({ success: false, message: 'Invalid from date' });
+            if (isNaN(d)) return next(createError(400, 'Invalid from date'));
             filter.performedAt.$gte = d;
         }
         if (req.query.to) {
             const d = new Date(req.query.to);
-            if (isNaN(d)) return res.status(400).json({ success: false, message: 'Invalid to date' });
+            if (isNaN(d)) return next(createError(400, 'Invalid to date'));
             filter.performedAt.$lte = d;
         }
     }

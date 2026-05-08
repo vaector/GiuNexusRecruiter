@@ -1,6 +1,12 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Notification = require('./Notification');
 
+const createError = (statusCode, message) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
 // GET /api/v1/notifications
 const getNotifications = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -23,14 +29,14 @@ const getNotifications = asyncHandler(async (req, res) => {
 });
 
 // PATCH /api/v1/notifications/:id/read
-const markAsRead = asyncHandler(async (req, res) => {
+const markAsRead = asyncHandler(async (req, res, next) => {
   const notification = await Notification.findOne({
     _id: req.params.id,
     recipient: req.user._id,
   });
 
   if (!notification) {
-    return res.status(404).json({ success: false, message: 'Notification not found' });
+    return next(createError(404, 'Notification not found'));
   }
 
   if (!notification.isRead) {
