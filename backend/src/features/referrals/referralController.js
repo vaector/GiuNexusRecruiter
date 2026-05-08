@@ -76,6 +76,15 @@ const requestReferral = asyncHandler(async (req, res, next) => {
     return next(createError(400, 'You already have a referral for this job'));
   }
 
+  const pendingCount = await Referral.countDocuments({
+    referred: req.user._id,
+    referrer: referrer._id,
+    status: 'pending',
+  });
+  if (pendingCount >= 3) {
+    return next(createError(400, 'You have too many pending referral requests with this user'));
+  }
+
   const referral = await Referral.create({
     referrer: referrer._id,
     referred: req.user._id,
