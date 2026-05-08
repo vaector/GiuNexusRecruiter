@@ -42,10 +42,6 @@ const ReferralSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: false,
@@ -53,8 +49,8 @@ const ReferralSchema = new mongoose.Schema(
   }
 );
 
-ReferralSchema.index({ referrer: 1, createdAt: -1 });
-ReferralSchema.index({ referred: 1, createdAt: -1 });
+ReferralSchema.index({ referrer: 1, requestedAt: -1 });
+ReferralSchema.index({ referred: 1, requestedAt: -1 });
 ReferralSchema.index({ job: 1, status: 1 });
 
 module.exports =
