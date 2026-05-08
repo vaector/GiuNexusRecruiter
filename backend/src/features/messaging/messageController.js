@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 
 const asyncHandler = require("../../middleware/asyncHandler");
+const { NotificationType } = require("../../enums");
 const Application = require("../application/Application");
 const JobPost = require("../job-posts/JobPost");
+const Notification = require("../notification/notification");
 const User = require("../user/User");
 const Message = require("./Message");
 
@@ -12,6 +14,8 @@ const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_MESSAGES_PAGE = 1;
 const DEFAULT_MESSAGES_LIMIT = 30;
 const MAX_MESSAGES_LIMIT = 100;
+const DEFAULT_CONVERSATIONS_LIMIT = 20;
+const MAX_CONVERSATIONS_LIMIT = 50;
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -20,10 +24,6 @@ const createError = (statusCode, message) => {
 };
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
-const normalizeObjectId = (value) =>
-  value instanceof mongoose.Types.ObjectId
-    ? value
-    : new mongoose.Types.ObjectId(value);
 
 const sameId = (left, right) =>
   left && right && left.toString() === right.toString();
@@ -87,6 +87,14 @@ const getMessagePagination = (query) => {
   return { page, limit };
 };
 
+const getConversationPagination = (query) => {
+  const page = parsePositiveInteger(query.page, 1);
+  const rawLimit = parsePositiveInteger(query.limit, DEFAULT_CONVERSATIONS_LIMIT);
+  const limit = Math.min(rawLimit, MAX_CONVERSATIONS_LIMIT);
+
+  return { page, limit };
+};
+
 const hasConversationRefs = (message) =>
   Boolean(message && message.job && message.sender && message.recipient);
 
@@ -104,25 +112,22 @@ const findJob = async (jobId) =>
 const findJobSeekerApplication = async (jobId, userId) =>
   Application.findOne({ job: jobId, user: userId });
 
+// currentUserId must be a Mongoose ObjectId (i.e. req.user._id)
 const listConversationSummaries = async ({ currentUserId, jobIds }) => {
   if (!Array.isArray(jobIds) || !jobIds.length) return [];
-  const normalizedCurrentUserId = normalizeObjectId(currentUserId);
 
   return Message.aggregate([
     {
       $match: {
         job: { $in: jobIds },
-        $or: [
-          { sender: normalizedCurrentUserId },
-          { recipient: normalizedCurrentUserId },
-        ],
+        $or: [{ sender: currentUserId }, { recipient: currentUserId }],
       },
     },
     {
       $addFields: {
         otherUser: {
           $cond: [
-            { $eq: ["$sender", normalizedCurrentUserId] },
+            { $eq: ["$sender", currentUserId] },
             "$recipient",
             "$sender",
           ],
@@ -131,7 +136,7 @@ const listConversationSummaries = async ({ currentUserId, jobIds }) => {
           $cond: [
             {
               $and: [
-                { $eq: ["$recipient", normalizedCurrentUserId] },
+                { $eq: ["$recipient", currentUserId] },
                 { $eq: ["$readAt", null] },
               ],
             },
@@ -197,12 +202,11 @@ const hydrateConversations = async ({
   }, []);
 };
 
+// userId must already be validated; returns the application or null
 const requireJobSeekerApplicant = async (jobId, userId) => {
-  const normalizedUserId = normalizeObjectId(userId);
-
   const [recipient, application] = await Promise.all([
-    User.findById(normalizedUserId).select("_id role"),
-    findJobSeekerApplication(jobId, normalizedUserId),
+    User.findById(userId).select("_id role"),
+    findJobSeekerApplication(jobId, userId),
   ]);
 
   if (!recipient || recipient.role !== "jobSeeker" || !application) return null;
@@ -217,7 +221,7 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 
   const job = await findJob(jobId);
   if (!job) {
-    return res.status(404).json({ success: false, message: "Job not found" });
+    return next(createError(404, "Job not found"));
   }
 
   const trimmedBody = normalizeBody(req.body && req.body.body);
@@ -234,10 +238,7 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 
   if (req.user.role === "recruiter") {
     if (!sameId(job.createdBy, req.user._id)) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorised to message applicants for this job",
-      });
+      return next(createError(403, "Not authorised to message applicants for this job"));
     }
 
     const recipientId = req.body && req.body.recipientId;
@@ -251,19 +252,13 @@ const sendMessage = asyncHandler(async (req, res, next) => {
     );
     if (invalidRecipientId) return next(invalidRecipientId);
 
-    const recipientObjectId = normalizeObjectId(recipientId);
+    const recipientObjectId = new mongoose.Types.ObjectId(recipientId);
     const application = await requireJobSeekerApplicant(jobId, recipientObjectId);
     if (!application) {
-      return res.status(403).json({
-        success: false,
-        message: "Recipient has not applied to this job",
-      });
+      return next(createError(403, "Recipient has not applied to this job"));
     }
     if (application.status === "rejected") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot message a rejected applicant",
-      });
+      return next(createError(400, "Cannot message a rejected applicant"));
     }
 
     recipient = recipientObjectId;
@@ -272,16 +267,10 @@ const sendMessage = asyncHandler(async (req, res, next) => {
   if (req.user.role === "jobSeeker") {
     const application = await findJobSeekerApplication(jobId, req.user._id);
     if (!application) {
-      return res.status(403).json({
-        success: false,
-        message: "You cannot message about a job you have not applied to",
-      });
+      return next(createError(403, "You cannot message about a job you have not applied to"));
     }
     if (application.status === "rejected") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot message after application rejection",
-      });
+      return next(createError(400, "Cannot message after application rejection"));
     }
 
     recipient = job.createdBy;
@@ -299,6 +288,14 @@ const sendMessage = asyncHandler(async (req, res, next) => {
     { path: "recipient", select: SAFE_USER_FIELDS },
   ]);
 
+  await Notification.send({
+    recipient,
+    type: NotificationType.NEW_MESSAGE,
+    title: "New Message",
+    message: `${req.user.name} sent you a message about ${job.title}`,
+    relatedJob: job._id,
+  });
+
   return res.status(201).json({ success: true, message });
 });
 
@@ -310,7 +307,58 @@ const getMessages = asyncHandler(async (req, res, next) => {
 
   const job = await findJob(jobId);
   if (!job) {
-    return res.status(404).json({ success: false, message: "Job not found" });
+    return next(createError(404, "Job not found"));
+  }
+
+  // Admin: view any thread by specifying sender + recipient query params
+  if (req.user.role === "admin") {
+    const senderId = req.query.sender;
+    const recipientId = req.query.recipient;
+
+    if (!senderId || !recipientId) {
+      return next(createError(400, "sender and recipient query parameters are required"));
+    }
+
+    const invalidSenderId = requireValidObjectId(senderId, "Invalid sender id");
+    if (invalidSenderId) return next(invalidSenderId);
+
+    const invalidRecipientId = requireValidObjectId(recipientId, "Invalid recipient id");
+    if (invalidRecipientId) return next(invalidRecipientId);
+
+    const senderObjectId = new mongoose.Types.ObjectId(senderId);
+    const recipientObjectId = new mongoose.Types.ObjectId(recipientId);
+
+    const messageFilter = {
+      job: jobId,
+      $or: [
+        { sender: senderObjectId, recipient: recipientObjectId },
+        { sender: recipientObjectId, recipient: senderObjectId },
+      ],
+    };
+
+    const { page, limit } = getMessagePagination(req.query);
+    const total = await Message.countDocuments(messageFilter);
+
+    if (total === 0) {
+      return res.status(200).json({ success: true, page, limit, total, totalPages: 0, hasMore: false, messages: [] });
+    }
+
+    const totalPages = Math.ceil(total / limit);
+    if (page > totalPages) {
+      return res.status(200).json({ success: true, page, limit, total, totalPages, hasMore: false, messages: [] });
+    }
+
+    const skip = Math.max(total - page * limit, 0);
+    const adjustedLimit = total - (page - 1) * limit - skip;
+
+    const messages = await Message.find(messageFilter)
+      .populate("sender", SAFE_USER_FIELDS)
+      .populate("recipient", SAFE_USER_FIELDS)
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(adjustedLimit);
+
+    return res.status(200).json({ success: true, page, limit, total, totalPages, hasMore: page < totalPages, messages });
   }
 
   let otherUserId;
@@ -331,7 +379,7 @@ const getMessages = asyncHandler(async (req, res, next) => {
     );
     if (invalidApplicantId) return next(invalidApplicantId);
 
-    const applicantObjectId = normalizeObjectId(applicantId);
+    const applicantObjectId = new mongoose.Types.ObjectId(applicantId);
     const application = await requireJobSeekerApplicant(jobId, applicantObjectId);
     if (!application) {
       return next(createError(403, "Applicant has not applied to this job"));
@@ -422,10 +470,13 @@ const getMessages = asyncHandler(async (req, res, next) => {
 });
 
 // GET /api/v1/conversations
-const getConversations = asyncHandler(async (req, res) => {
+const getConversations = asyncHandler(async (req, res, next) => {
   const currentUserId = req.user._id.toString();
-  const currentUserObjectId = normalizeObjectId(req.user._id);
-  let conversations = [];
+  const { page, limit } = getConversationPagination(req.query);
+  const skip = (page - 1) * limit;
+
+  let allSummaries = [];
+  let isAllowedThread;
 
   if (req.user.role === "recruiter") {
     const jobs = await JobPost.find({ createdBy: req.user._id })
@@ -434,7 +485,7 @@ const getConversations = asyncHandler(async (req, res) => {
     const jobIds = jobs.map((job) => job._id);
 
     if (!jobIds.length) {
-      return res.status(200).json({ success: true, conversations: [] });
+      return res.status(200).json({ success: true, page, limit, total: 0, totalPages: 0, hasMore: false, conversations: [] });
     }
 
     const applications = await Application.find({ job: { $in: jobIds } })
@@ -444,25 +495,21 @@ const getConversations = asyncHandler(async (req, res) => {
       applications.map((application) => `${application.job}:${application.user}`)
     );
 
-    const summaries = await listConversationSummaries({
-      currentUserId: currentUserObjectId,
+    allSummaries = await listConversationSummaries({
+      currentUserId: req.user._id,
       jobIds,
     });
 
-    conversations = await hydrateConversations({
-      summaries,
-      currentUserId,
-      isAllowedThread: (message, otherUserId) => {
-        const jobId = getId(message.job);
-        const senderRole = message.sender && message.sender.role;
-        const recipientRole = message.recipient && message.recipient.role;
+    isAllowedThread = (message, otherUserId) => {
+      const jobId = getId(message.job);
+      const senderRole = message.sender && message.sender.role;
+      const recipientRole = message.recipient && message.recipient.role;
 
-        return (
-          (senderRole === "jobSeeker" || recipientRole === "jobSeeker") &&
-          applicantByJob.has(`${jobId}:${otherUserId}`)
-        );
-      },
-    });
+      return (
+        (senderRole === "jobSeeker" || recipientRole === "jobSeeker") &&
+        applicantByJob.has(`${jobId}:${otherUserId}`)
+      );
+    };
   }
 
   if (req.user.role === "jobSeeker") {
@@ -472,27 +519,118 @@ const getConversations = asyncHandler(async (req, res) => {
     const appliedJobIds = applications.map((application) => application.job);
 
     if (!appliedJobIds.length) {
-      return res.status(200).json({ success: true, conversations: [] });
+      return res.status(200).json({ success: true, page, limit, total: 0, totalPages: 0, hasMore: false, conversations: [] });
     }
 
-    const summaries = await listConversationSummaries({
-      currentUserId: currentUserObjectId,
+    allSummaries = await listConversationSummaries({
+      currentUserId: req.user._id,
       jobIds: appliedJobIds,
     });
 
-    conversations = await hydrateConversations({
-      summaries,
-      currentUserId,
-      isAllowedThread: (message, otherUserId) =>
-        sameId(message.job && message.job.createdBy, otherUserId),
-    });
+    isAllowedThread = (message, otherUserId) =>
+      sameId(message.job && message.job.createdBy, otherUserId);
   }
 
-  return res.status(200).json({ success: true, conversations });
+  const total = allSummaries.length;
+  const totalPages = Math.ceil(total / limit);
+  const paginatedSummaries = allSummaries.slice(skip, skip + limit);
+
+  const conversations = await hydrateConversations({
+    summaries: paginatedSummaries,
+    currentUserId,
+    isAllowedThread,
+  });
+
+  return res.status(200).json({
+    success: true,
+    page,
+    limit,
+    total,
+    totalPages,
+    hasMore: page < totalPages,
+    conversations,
+  });
+});
+
+// GET /api/v1/conversations/admin
+const getAdminConversations = asyncHandler(async (req, res) => {
+  const { page, limit } = getConversationPagination(req.query);
+  const skip = (page - 1) * limit;
+
+  const result = await Message.aggregate([
+    {
+      $addFields: {
+        userPair: {
+          $cond: [
+            { $lt: ["$sender", "$recipient"] },
+            { u1: "$sender", u2: "$recipient" },
+            { u1: "$recipient", u2: "$sender" },
+          ],
+        },
+      },
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: { job: "$job", userPair: "$userPair" },
+        latestMessageId: { $first: "$_id" },
+        latestMessageAt: { $first: "$createdAt" },
+      },
+    },
+    { $sort: { latestMessageAt: -1 } },
+    {
+      $facet: {
+        total: [{ $count: "count" }],
+        data: [{ $skip: skip }, { $limit: limit }],
+      },
+    },
+  ]);
+
+  const total = result[0]?.total[0]?.count ?? 0;
+  const summaries = result[0]?.data ?? [];
+
+  const latestMessageIds = summaries.map((s) => s.latestMessageId);
+  const latestMessages = await Message.find({ _id: { $in: latestMessageIds } })
+    .populate([
+      { path: "job", select: SAFE_JOB_FIELDS },
+      { path: "sender", select: SAFE_USER_FIELDS },
+      { path: "recipient", select: SAFE_USER_FIELDS },
+    ])
+    .lean();
+
+  const latestById = new Map(
+    latestMessages.map((m) => [getId(m._id), m])
+  );
+
+  const conversations = summaries.reduce((acc, summary) => {
+    const message = latestById.get(getId(summary.latestMessageId));
+    if (!hasConversationRefs(message)) return acc;
+
+    acc.push({
+      job: cleanJob(message.job),
+      sender: cleanUser(message.sender),
+      recipient: cleanUser(message.recipient),
+      latestMessage: cleanLatestMessage(message),
+      latestMessageAt: summary.latestMessageAt,
+    });
+
+    return acc;
+  }, []);
+
+  return res.status(200).json({
+    success: true,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    hasMore: page < Math.ceil(total / limit),
+    conversations,
+  });
 });
 
 module.exports = {
   getConversations,
+  getAdminConversations,
   sendMessage,
   getMessages,
 };

@@ -77,7 +77,8 @@ const NotificationType = Object.freeze({
   ACCOUNT_REJECTED: "account_rejected",
   NEW_JOB_MATCH: "new_job_match",
   APPLICATION_WITHDRAWN: "application_withdrawn",
-  REFERRAL_APPLIED: "referral_applied", 
+  REFERRAL_APPLIED: "referral_applied",
+  NEW_MESSAGE: "new_message",
 });
 
 const DocumentType = Object.freeze({

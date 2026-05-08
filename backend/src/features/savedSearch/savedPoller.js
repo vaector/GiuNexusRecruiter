@@ -117,6 +117,4 @@ const startSavedSearchPoller = () => {
   setInterval(runPollCycle, POLL_INTERVAL_MS);
 };
 
-runPollCycle();
-
 module.exports = { startSavedSearchPoller };
