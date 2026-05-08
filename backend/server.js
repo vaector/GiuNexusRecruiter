@@ -1,6 +1,10 @@
+
+
 const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+require("./src/features/referrals/userReferralExtension");
 
 const express = require("express");
 const cors = require("cors");
@@ -12,6 +16,7 @@ const applicationRoutes = require("./src/features/application/applicationRoutes"
 const messageRoutes = require("./src/features/messaging/messageRoutes");
 const profileRoutes = require("./src/features/profile/profileRoutes");
 const adminRoutes = require("./src/features/admin/adminRoutes");
+const referralRoutes = require("./src/features/referrals/referralRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const requestLogger = require("./src/middleware/requestLogger");
 const notificationRoutes = require("./src/features/notification/notificationRoutes");
@@ -45,6 +50,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use('/api/v1/saved-searches', savedSearchRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/documents', documentRoutes);
+app.use("/api/v1/referrals", referralRoutes);
 
 app.use(errorHandler);
 
