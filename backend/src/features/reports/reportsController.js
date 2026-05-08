@@ -1,5 +1,6 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Report = require('./reports');
+const { ReportReason, ReportStatus } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
