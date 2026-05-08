@@ -100,6 +100,89 @@ const findJob = async (jobId) =>
 const findJobSeekerApplication = async (jobId, userId) =>
   Application.findOne({ job: jobId, user: userId });
 
+const listConversationSummaries = async ({ currentUserId, jobIds }) => {
+  if (!jobIds.length) return [];
+
+  return Message.aggregate([
+    {
+      $match: {
+        job: { $in: jobIds },
+        $or: [{ sender: currentUserId }, { recipient: currentUserId }],
+      },
+    },
+    {
+      $addFields: {
+        otherUser: {
+          $cond: [{ $eq: ["$sender", currentUserId] }, "$recipient", "$sender"],
+        },
+        unreadForCurrentUser: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ["$recipient", currentUserId] },
+                { $eq: ["$readAt", null] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: { job: "$job", otherUser: "$otherUser" },
+        latestMessageId: { $first: "$_id" },
+        latestMessageAt: { $first: "$createdAt" },
+        unreadCount: { $sum: "$unreadForCurrentUser" },
+      },
+    },
+    { $sort: { latestMessageAt: -1 } },
+  ]);
+};
+
+const hydrateConversations = async ({
+  summaries,
+  currentUserId,
+  isAllowedThread,
+}) => {
+  if (!summaries.length) return [];
+
+  const latestMessageIds = summaries.map((summary) => summary.latestMessageId);
+  const latestMessages = await Message.find({ _id: { $in: latestMessageIds } })
+    .populate("job", `${SAFE_JOB_FIELDS} createdBy`)
+    .populate("sender", SAFE_USER_FIELDS)
+    .populate("recipient", SAFE_USER_FIELDS)
+    .lean();
+
+  const latestById = new Map(
+    latestMessages.map((message) => [getId(message._id), message])
+  );
+
+  return summaries.reduce((acc, summary) => {
+    const message = latestById.get(getId(summary.latestMessageId));
+    if (!hasConversationRefs(message)) return acc;
+
+    const senderId = getId(message.sender);
+    const otherUser =
+      senderId === currentUserId ? message.recipient : message.sender;
+    const otherUserId = getId(otherUser);
+
+    if (!otherUserId || !isAllowedThread(message, otherUserId)) return acc;
+
+    acc.push({
+      job: cleanJob(message.job),
+      otherUser: cleanUser(otherUser),
+      latestMessage: cleanLatestMessage(message),
+      latestMessageAt: summary.latestMessageAt,
+      unreadCount: summary.unreadCount,
+    });
+
+    return acc;
+  }, []);
+};
+
 const requireJobSeekerApplicant = async (jobId, userId) => {
   const [recipient, application] = await Promise.all([
     User.findOne({ _id: userId, role: "jobSeeker" }).select("_id role"),
@@ -108,50 +191,6 @@ const requireJobSeekerApplicant = async (jobId, userId) => {
 
   if (!recipient || !application) return null;
   return application;
-};
-
-const buildConversations = (messages, currentUserId, isAllowedThread) => {
-  const conversationsByKey = new Map();
-
-  messages.forEach((message) => {
-    if (!hasConversationRefs(message)) return;
-
-    const jobId = getId(message.job);
-    const senderId = getId(message.sender);
-    const recipientId = getId(message.recipient);
-
-    if (!jobId || !senderId || !recipientId) return;
-
-    const otherUser =
-      senderId === currentUserId ? message.recipient : message.sender;
-    const otherUserId = getId(otherUser);
-
-    if (!otherUserId || !isAllowedThread(message, otherUserId)) return;
-
-    const key = `${jobId}:${otherUserId}`;
-    const isUnreadForCurrentUser =
-      recipientId === currentUserId && senderId === otherUserId && !message.readAt;
-
-    if (!conversationsByKey.has(key)) {
-      conversationsByKey.set(key, {
-        job: cleanJob(message.job),
-        otherUser: cleanUser(otherUser),
-        latestMessage: cleanLatestMessage(message),
-        latestMessageAt: message.createdAt,
-        unreadCount: isUnreadForCurrentUser ? 1 : 0,
-      });
-      return;
-    }
-
-    if (isUnreadForCurrentUser) {
-      const conversation = conversationsByKey.get(key);
-      conversation.unreadCount += 1;
-    }
-  });
-
-  return Array.from(conversationsByKey.values()).sort(
-    (left, right) => new Date(right.latestMessageAt) - new Date(left.latestMessageAt)
-  );
 };
 
 // POST /api/v1/conversations/:jobId/messages
@@ -367,7 +406,7 @@ const getMessages = asyncHandler(async (req, res, next) => {
 // GET /api/v1/conversations
 const getConversations = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id.toString();
-  let messages = [];
+  const currentUserObjectId = new mongoose.Types.ObjectId(req.user._id);
   let conversations = [];
 
   if (req.user.role === "recruiter") {
@@ -387,25 +426,24 @@ const getConversations = asyncHandler(async (req, res) => {
       applications.map((application) => `${application.job}:${application.user}`)
     );
 
-    messages = await Message.find({
-      job: { $in: jobIds },
-      $or: [{ sender: req.user._id }, { recipient: req.user._id }],
-    })
-      .populate("job", SAFE_JOB_FIELDS)
-      .populate("sender", SAFE_USER_FIELDS)
-      .populate("recipient", SAFE_USER_FIELDS)
-      .sort({ createdAt: -1 })
-      .lean();
+    const summaries = await listConversationSummaries({
+      currentUserId: currentUserObjectId,
+      jobIds,
+    });
 
-    conversations = buildConversations(messages, currentUserId, (message, otherUserId) => {
-      const jobId = getId(message.job);
-      const senderRole = message.sender && message.sender.role;
-      const recipientRole = message.recipient && message.recipient.role;
+    conversations = await hydrateConversations({
+      summaries,
+      currentUserId,
+      isAllowedThread: (message, otherUserId) => {
+        const jobId = getId(message.job);
+        const senderRole = message.sender && message.sender.role;
+        const recipientRole = message.recipient && message.recipient.role;
 
-      return (
-        (senderRole === "jobSeeker" || recipientRole === "jobSeeker") &&
-        applicantByJob.has(`${jobId}:${otherUserId}`)
-      );
+        return (
+          (senderRole === "jobSeeker" || recipientRole === "jobSeeker") &&
+          applicantByJob.has(`${jobId}:${otherUserId}`)
+        );
+      },
     });
   }
 
@@ -419,19 +457,17 @@ const getConversations = asyncHandler(async (req, res) => {
       return res.status(200).json({ success: true, conversations: [] });
     }
 
-    messages = await Message.find({
-      job: { $in: appliedJobIds },
-      $or: [{ sender: req.user._id }, { recipient: req.user._id }],
-    })
-      .populate("job", `${SAFE_JOB_FIELDS} createdBy`)
-      .populate("sender", SAFE_USER_FIELDS)
-      .populate("recipient", SAFE_USER_FIELDS)
-      .sort({ createdAt: -1 })
-      .lean();
+    const summaries = await listConversationSummaries({
+      currentUserId: currentUserObjectId,
+      jobIds: appliedJobIds,
+    });
 
-    conversations = buildConversations(messages, currentUserId, (message, otherUserId) =>
-      sameId(message.job && message.job.createdBy, otherUserId)
-    );
+    conversations = await hydrateConversations({
+      summaries,
+      currentUserId,
+      isAllowedThread: (message, otherUserId) =>
+        sameId(message.job && message.job.createdBy, otherUserId),
+    });
   }
 
   return res.status(200).json({ success: true, conversations });

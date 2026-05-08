@@ -104,6 +104,18 @@ GIU Nexus uses the Hugging Face Inference API to power:
 
 ---
 
+## Messaging API
+
+- `POST /api/v1/conversations/:jobId/messages`
+  - Recruiters must provide `recipientId` in the request body.
+- `GET /api/v1/conversations/:jobId/messages`
+  - Supports `page` and `limit`.
+  - Recruiters must provide `with=<applicantId>` as a query parameter.
+- `GET /api/v1/conversations`
+  - Returns the current user's conversation threads.
+
+---
+
 ## Team Members
 
 - [youssefkhaleel0689](https://github.com/youssefkhaleel0689) **Youssef Hassan** — `16008386` — `T16`
