@@ -3,6 +3,7 @@ const hf = require("../../services/hfService");
 const JobPost = require("./JobPost");
 const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
+const Report = require("../reports/reports");
 const { AuditAction } = require("../../enums");
 
 function cosineSimilarity(vecA, vecB) {
@@ -302,6 +303,11 @@ const deleteJob = asyncHandler(async (req, res, next) => {
     }
 
     await job.deleteOne();
+
+    await Report.updateMany(
+        { targetModel: 'JobPost', targetId: job._id, status: 'open' },
+        { status: 'actioned', adminNote: 'Resolved via job deletion', reviewedBy: req.user._id, reviewedAt: new Date() }
+    );
 
     await AuditLog.record({
         actor: req.user,

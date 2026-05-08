@@ -4,6 +4,7 @@ const JobPost = require("../job-posts/JobPost");
 const Application = require("../application/Application");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
+const Report = require("../reports/reports");
 const { AuditAction, NotificationType } = require("../../enums");
 
 const createError = (statusCode, message) => {
@@ -69,6 +70,12 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
       title: "Account Update",
       message: `Your recruiter account has been ${status}`,
     });
+    if (status === "rejected") {
+      await Report.updateMany(
+        { targetModel: 'User', targetId: user._id, status: 'open' },
+        { status: 'actioned', adminNote: 'Resolved via account rejection', reviewedBy: req.user._id, reviewedAt: new Date() }
+      );
+    }
   }
   res.status(200).json({ success: true, user });
 });
@@ -87,6 +94,12 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
     await Application.deleteMany({ user: user._id });
   }
   await user.deleteOne();
+
+  await Report.updateMany(
+    { targetModel: 'User', targetId: user._id, status: 'open' },
+    { status: 'actioned', adminNote: 'Resolved via user deletion', reviewedBy: req.user._id, reviewedAt: new Date() }
+  );
+
   await AuditLog.record({
     actor: req.user,
     action: AuditAction.USER_DELETED,
