@@ -2,6 +2,41 @@ const mongoose = require("mongoose");
 
 const APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
 
+const {
+  HiringStage
+} = require("../../enums");
+
+const ScreeningAnswerSchema = new mongoose.Schema(
+  {
+    question: {
+      type: String,
+    },
+    answer: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
+
+const StageHistorySchema = new mongoose.Schema(
+  {
+    stage: {
+      type: String,
+      required: true,
+      enum: Object.values(HiringStage),
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  { _id: false }
+);
+
 const ApplicationSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -29,8 +64,57 @@ const ApplicationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+
+  cvUrl: {
+  type: String,
+},
+
+coverLetterUrl: {
+  type: String,
+},
+
+aiMatchScore: {
+  type: Number,
+  min: 0,
+  max: 100,
+},
+
+recruiterNotes: {
+  type: String,
+  maxlength: 1000,
+},
+
+withdrawnAt: {
+  type: Date,
+},
+
+applicationCode: {
+  type: String,
+  unique: true,
+  sparse: true,
+  trim: true,
+  uppercase: true,
+},
+
+stageHistory: [StageHistorySchema],
+
+screeningAnswers: [ScreeningAnswerSchema],
 }, {
   timestamps: { createdAt: true, updatedAt: false },
+});
+
+ApplicationSchema.pre('save', async function (next) {
+  if (this.isNew && !this.applicationCode) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code, exists, attempts = 0;
+    do {
+      code = 'APP-' + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      exists = await mongoose.models.Application.findOne({ applicationCode: code });
+      attempts++;
+    } while (exists && attempts < 10);
+    this.applicationCode = code;
+  }
+  next();
 });
 
 ApplicationSchema.index({ user: 1, job: 1 }, { unique: true });
@@ -48,31 +132,6 @@ module.exports =
 
 // --- FUTURE FIELDS (not needed for M2) ---
 /*
-const {
-  ApplicationStatus,
-  HiringStage,
-  InterviewType,
-} = require("../../enums");
-
-const StageHistorySchema = new mongoose.Schema(
-  {
-    stage: {
-      type: String,
-      required: true,
-      enum: Object.values(HiringStage),
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  },
-  { _id: false }
-);
-
 const InterviewScheduleSchema = new mongoose.Schema(
   {
     scheduledAt: {
@@ -99,62 +158,12 @@ const InterviewScheduleSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const ScreeningAnswerSchema = new mongoose.Schema(
-  {
-    question: {
-      type: String,
-    },
-    answer: {
-      type: String,
-    },
-  },
-  { _id: false }
-);
-
-applicationCode: {
-  type: String,
-  required: true,
-  unique: true,
-},
-
-cvUrl: {
-  type: String,
-},
-
-coverLetterUrl: {
-  type: String,
-},
-
-aiMatchScore: {
-  type: Number,
-  min: 0,
-  max: 100,
-},
-
-applicationStatus: {
-  type: String,
-  enum: Object.values(ApplicationStatus),
-  required: true,
-  default: ApplicationStatus.PENDING,
-},
-
-stageHistory: [StageHistorySchema],
-
 interviewSchedule: {
   type: InterviewScheduleSchema,
   default: undefined,
 },
 
-recruiterNotes: {
-  type: String,
-  maxlength: 1000,
-},
 
-screeningAnswers: [ScreeningAnswerSchema],
-
-withdrawnAt: {
-  type: Date,
-},
 
 Application.index({ applicationStatus: 1, createdAt: -1 });
 Application.index({ "interviewSchedule.scheduledAt": 1 });

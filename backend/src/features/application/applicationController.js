@@ -1,5 +1,6 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Application = require("./Application");
+const Document = require("../document/document");
 const JobPost = require("../jobPost/jobPost");
 const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
@@ -161,6 +162,17 @@ const applyToJob = async (req, res, next) => {
     if (job.status !== "open") {
       return next(createError(400, "Cannot apply to a closed job"));
     }
+
+    if (job.requiresCv) {
+      const hasCv = await Document.findOne({ uploadedBy: req.user._id, type: 'cv' });
+      if (!hasCv) return next(createError(400, 'This job requires a CV. Please upload your CV first via POST /api/v1/documents'));
+    }
+
+    if (job.requiresCoverLetter && !req.body.coverLetter) {
+      return next(createError(400, 'This job requires a cover letter. Please include coverLetter in your application'));
+    }
+
+    // TODO M3: Verify applicant meets minimum experience requirement via profile experience field
 
     const existing = await Application.findOne({ user: req.user._id, job: jobId });
     if (existing) {

@@ -27,38 +27,30 @@ const getRecommendedJobs = asyncHandler(async (req, res, next) => {
 
     const skills = Array.isArray(user.skills) ? user.skills : [];
     const studentText = skills.join(", ");
-    const openJobs = await JobPost.find({ status: "open" }).lean();
+    const openJobs = await JobPost.find({ status: 'open', 'embeddings.0': { $exists: true } }).lean();
 
     if (openJobs.length === 0) {
-        return res.status(200).json({ success: true, jobs: [] });
+        const fallbackJobs = await JobPost.find({ status: 'open' }).lean();
+        return res.status(200).json({ success: true, jobs: fallbackJobs });
     }
 
     try {
-        const jobTexts = openJobs.map((job) => {
-            const reqs = Array.isArray(job.requirements)
-                ? job.requirements.join(" ")
-                : job.requirements || "";
-            return [job.title, reqs].filter(Boolean).join(" ");
+        const studentEmbedding = await hf.featureExtraction({
+            model: 'sentence-transformers/all-MiniLM-L6-v2',
+            inputs: studentText,
         });
 
-        const embeddings = await hf.featureExtraction({
-            model: "sentence-transformers/all-MiniLM-L6-v2",
-            inputs: [studentText, ...jobTexts],
-        });
-
-        const studentVector = embeddings[0];
         const jobs = openJobs
-            .map((job, index) => ({
+            .map(({ embeddings, __v, ...job }) => ({
                 ...job,
-                score: cosineSimilarity(studentVector, embeddings[index + 1]),
+                score: cosineSimilarity(studentEmbedding, embeddings),
             }))
-            .map(({ __v, ...job }) => job)
             .sort((a, b) => b.score - a.score);
 
         return res.status(200).json({ success: true, jobs });
     } catch (hfError) {
         console.error("HuggingFace recommendations failed:", hfError.message);
-        return res.status(200).json({ success: true, jobs: openJobs });
+        return res.status(200).json({ success: true, jobs: openJobs.map(({ embeddings, __v, ...job }) => job) });
     }
 });
 
@@ -72,13 +64,20 @@ const getAllJobs = asyncHandler(async (req, res) => {
 
     if (status) filter.status = status;
     if (category) filter.category = category;
-    if (location) filter.location = location;
+    if (location) filter['location.city'] = { $regex: location, $options: 'i' };
     if (type) filter.type = type;
 
     if (keyword) filter.$or = [
         { title: { $regex: keyword, $options: "i" } },
         { description: { $regex: keyword, $options: "i" } },
     ];
+
+    if (req.query.isRemote !== undefined) filter.isRemote = req.query.isRemote === 'true';
+    if (req.query.workplaceType) filter.workplaceType = req.query.workplaceType;
+    if (req.query.requiredEducation) filter.requiredEducation = req.query.requiredEducation;
+    if (req.query.minExperience) filter['experience.minYears'] = { $lte: parseInt(req.query.minExperience) };
+    if (req.query.requiresCv !== undefined) filter.requiresCv = req.query.requiresCv === 'true';
+    if (req.query.salaryMin) filter['salary.normalizedUSD'] = { $gte: parseFloat(req.query.salaryMin) };
 
     const skip = (page - 1) * limit;
 
@@ -136,14 +135,13 @@ const getSavedJobs = asyncHandler(async (req, res, next) => {
 
 // GET /api/v1/jobs/:id
 const getJobById = asyncHandler(async (req, res, next) => {
-    const job = await JobPost.findById(req.params.id).populate(
-        "createdBy",
-        "name email"
-    );
+    const job = await JobPost.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { viewCount: 1 } },
+        { new: true }
+    ).populate('createdBy', 'name email');
 
-    if (!job) return next(createError(404, "Job not found"));
-
-    await JobPost.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
+    if (!job) return next(createError(404, 'Job not found'));
 
     res.status(200).json({ success: true, job });
 });
@@ -154,10 +152,22 @@ const createJob = asyncHandler(async (req, res, next) => {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
-    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline } = req.body;
+    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages } = req.body;
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
         return next(createError(400, "Please provide all required fields"));
+    }
+
+    if (location && (!location.city || !location.country)) {
+        return next(createError(400, 'location must include city and country'));
+    }
+
+    if (salary && salary.min && salary.max && salary.min > salary.max) {
+        return next(createError(400, 'salary.min cannot be greater than salary.max'));
+    }
+
+    if (experience && experience.minYears < 0) {
+        return next(createError(400, 'experience.minYears cannot be negative'));
     }
 
     let category = "Other";
@@ -178,8 +188,20 @@ const createJob = asyncHandler(async (req, res, next) => {
         console.error("AI classification failed:", hfError.message);
     }
 
+    let embeddings = [];
+    try {
+        const jobText = `${title} ${requirements.join(' ')}`;
+        const embedding = await hf.featureExtraction({
+            model: 'sentence-transformers/all-MiniLM-L6-v2',
+            inputs: jobText,
+        });
+        embeddings = embedding;
+    } catch (embErr) {
+        console.error('Embedding computation failed:', embErr.message);
+    }
+
     const job = await JobPost.create({
-        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, category, aiCategoryConfidence, createdBy: req.user._id,
+        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, requiresCv, requiresCoverLetter, experience, requiredEducation, requiredEducationField, workplaceType, perks, hiringStages, category, aiCategoryConfidence, embeddings, createdBy: req.user._id,
     });
 
     await AuditLog.record({
@@ -250,12 +272,24 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     const previousStatus = job.status;
 
-    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline"];
+    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline", "requiresCv", "requiresCoverLetter", "experience", "requiredEducation", "requiredEducationField", "workplaceType", "perks", "hiringStages"];
 
     for (const field of fields) {
         if (req.body[field] !== undefined) {
             job[field] = req.body[field];
         }
+    }
+
+    if (req.body.location && (!req.body.location.city || !req.body.location.country)) {
+        return next(createError(400, 'location must include city and country'));
+    }
+
+    if (req.body.salary && req.body.salary.min && req.body.salary.max && req.body.salary.min > req.body.salary.max) {
+        return next(createError(400, 'salary.min cannot be greater than salary.max'));
+    }
+
+    if (req.body.experience && req.body.experience.minYears < 0) {
+        return next(createError(400, 'experience.minYears cannot be negative'));
     }
 
     const descriptionChanged =
@@ -275,6 +309,23 @@ const updateJob = asyncHandler(async (req, res, next) => {
             job.aiCategoryConfidence = result[0].score;
         } catch (hfError) {
             console.error("AI classification failed:", hfError.message);
+        }
+    }
+
+    const needsReembedding = ['title', 'description', 'requirements'].some(
+        f => req.body[f] !== undefined
+    );
+
+    if (needsReembedding) {
+        try {
+            const jobText = `${job.title} ${job.requirements.join(' ')}`;
+            const embedding = await hf.featureExtraction({
+                model: 'sentence-transformers/all-MiniLM-L6-v2',
+                inputs: jobText,
+            });
+            job.embeddings = embedding;
+        } catch (embErr) {
+            console.error('Embedding recomputation failed:', embErr.message);
         }
     }
 

@@ -29,12 +29,6 @@ const JobStatus = Object.freeze({
   CLOSED: "closed",
 });
 
-const PublishStatus = Object.freeze({
-  PENDING: "pending",
-  APPROVED: "approved",
-  REJECTED: "rejected",
-});
-
 const Role = Object.freeze({
   JOB_SEEKER: "jobSeeker",
   ADMIN: "admin",
@@ -204,7 +198,6 @@ module.exports = {
   HiringStage,
   JobType,
   JobStatus,
-  PublishStatus,
   Role,
   RecruiterStatus,
   Availability,

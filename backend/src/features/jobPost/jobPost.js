@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const JOB_TYPES = ["full-time", "part-time", "internship"];
 const JOB_STATUSES = ["open", "closed"];
 
+const EXCHANGE_RATES_TO_USD = { USD: 1, EGP: 0.02, EUR: 1.08, GBP: 1.27 };
+
 const {
   JobType,
   JobStatus,
@@ -16,6 +18,64 @@ const {
   SupportedCurrency,
   HiringStage,
 } = require("../../enums");
+
+const LocationSchema = new mongoose.Schema(
+  {
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    country: { type: String, required: true },
+    zipCode: { type: String },
+  },
+  { _id: false }
+);
+
+const SalarySchema = new mongoose.Schema(
+  {
+    min: {
+      type: Number,
+    },
+    max: {
+      type: Number,
+    },
+    currency: {
+      type: String,
+      enum: Object.values(SupportedCurrency),
+      default: "USD",
+    },
+    period: {
+      type: String,
+      enum: Object.values(SalaryPeriod),
+    },
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    normalizedUSD: {
+      type: Number,
+    },
+  },
+  { _id: false }
+);
+
+const ScreeningQuestionSchema = new mongoose.Schema(
+  {
+    question: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(ScreeningQuestionType),
+      required: true,
+    },
+    options: [String],
+    required: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
 
 const JobPostSchema = new mongoose.Schema(
   {
@@ -39,10 +99,7 @@ const JobPostSchema = new mongoose.Schema(
       required: true,
     },
 
-    location: {
-      type: String,
-      required: true,
-    },
+    location: LocationSchema,
 
     type: {
       type: String,
@@ -50,9 +107,9 @@ const JobPostSchema = new mongoose.Schema(
       required: true,
     },
 
-    salary: {
-      type: Number,
-    },
+    salary: SalarySchema,
+
+    screeningQuestions: [ScreeningQuestionSchema],
 
     category: {
       type: String,
@@ -121,6 +178,29 @@ const JobPostSchema = new mongoose.Schema(
         HiringStage.ACCEPTED,
       ],
     },
+
+    requiresCv: {
+      type: Boolean,
+      default: true,
+    },
+
+    requiresCoverLetter: {
+      type: Boolean,
+      default: false,
+    },
+
+    experience: {
+      minYears: Number,
+    },
+
+    requiredEducation: {
+      type: String,
+      enum: ['none', 'high_school', 'bachelor', 'master', 'phd'],
+      default: 'none',
+    },
+    requiredEducationField: {
+      type: String, // e.g. "Computer Science", "Engineering"
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
@@ -135,6 +215,11 @@ JobPostSchema.pre("save", function (next) {
     this.workplaceType === WorkplaceType.HYBRID
   ) {
     this.isRemote = true;
+  }
+
+  if (this.salary && this.salary.min && this.salary.currency) {
+    const rate = EXCHANGE_RATES_TO_USD[this.salary.currency] || 1;
+    this.salary.normalizedUSD = Math.round(this.salary.min * rate * 100) / 100;
   }
 
   next();
@@ -153,108 +238,7 @@ JobPostSchema.set("toJSON", {
 module.exports =
   mongoose.models.JobPost || mongoose.model("JobPost", JobPostSchema);
 
-// --- FUTURE FIELDS (not needed for M2) ---
+// --- FUTURE FIELDS ---
 /*
-
-const LocationSchema = new mongoose.Schema(
-  {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    country: { type: String, required: true },
-    zipCode: { type: String },
-  },
-  { _id: false }
-);
-
-const SalarySchema = new mongoose.Schema(
-  {
-    min: {
-      type: Number,
-    },
-    max: {
-      type: Number,
-    },
-    currency: {
-      type: String,
-      enum: Object.values(SupportedCurrency),
-      default: "USD",
-    },
-    period: {
-      type: String,
-      enum: Object.values(SalaryPeriod),
-    },
-    isPublic: {
-      type: Boolean,
-      default: true,
-    },
-    normalizedUSD: {
-      type: Number,
-    },
-  },
-  { _id: false }
-);
-
-const ScreeningQuestionSchema = new mongoose.Schema(
-  {
-    question: {
-      type: String,
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: Object.values(ScreeningQuestionType),
-      required: true,
-    },
-    options: [String],
-    required: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { _id: false }
-);
-
-requirements: {
-  education: {
-    degree: {
-      type: String,
-      enum: EducationDegrees,
-    },
-    field: String,
-  },
-  experience: {
-    minYears: Number,
-  },
-  skills: [String],
-  certificates: [String],
-  other: [String],
-  requiresCv: {
-    type: Boolean,
-    default: true,
-  },
-  requiresCoverLetter: {
-    type: Boolean,
-    default: false,
-  },
-},
-
-location: LocationSchema,
-
-
-salary: SalarySchema,
-
-
-skills: [String],
-
-screeningQuestions: [ScreeningQuestionSchema],
-
-published: {
-  type: String,
-  enum: Object.values(PublishStatus),
-  default: PublishStatus.PENDING,
-},
-
-optimisticConcurrency: true,
-
-JobPostSchema.index({ "requirements.skills": 1 });
+  optimisticConcurrency: true,
 */
