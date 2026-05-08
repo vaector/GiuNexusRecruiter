@@ -78,6 +78,8 @@ const NotificationType = Object.freeze({
   NEW_JOB_MATCH: "new_job_match",
   APPLICATION_WITHDRAWN: "application_withdrawn",
   REFERRAL_APPLIED: "referral_applied",
+  REFERRAL_REQUESTED: "referral_requested",
+  REFERRAL_RESPONDED: "referral_responded",
   NEW_MESSAGE: "new_message",
 });
 
@@ -109,7 +111,8 @@ const OnboardingStatus = Object.freeze({
 
 const ReferralStatus = Object.freeze({
   PENDING: "pending",
-  HIRED: "hired",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
   EXPIRED: "expired",
 });
 

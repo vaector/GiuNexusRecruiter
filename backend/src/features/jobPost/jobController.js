@@ -4,6 +4,7 @@ const JobPost = require("./jobPost");
 const User = require("../user/User");
 const AuditLog = require("../auditLog/auditLog");
 const Report = require("../reports/reports");
+const Referral = require("../referrals/Referral");
 const { AuditAction } = require("../../enums");
 
 function cosineSimilarity(vecA, vecB) {
@@ -283,6 +284,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
             ipAddress: req.ip,
             userAgent: req.get("User-Agent"),
         });
+        await Referral.updateMany({ job: job._id, status: "pending" }, { status: "expired" });
     }
 
     return res.status(200).json({ success: true, job });

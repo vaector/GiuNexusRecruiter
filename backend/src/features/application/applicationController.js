@@ -3,6 +3,7 @@ const Application = require("./Application");
 const JobPost = require("../jobPost/jobPost");
 const AuditLog = require("../auditLog/auditLog");
 const Notification = require("../notification/notification");
+const Referral = require("../referrals/Referral");
 const { AuditAction, NotificationType } = require("../../enums");
 
 const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
@@ -104,6 +105,28 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     relatedJob: updatedApplication.job._id,
     relatedApplication: updatedApplication._id,
   });
+
+  if (status === "shortlisted" || status === "rejected") {
+    const referral = await Referral.findOne({
+      referred: updatedApplication.user._id,
+      job: updatedApplication.job._id,
+    });
+    if (referral) {
+      await Referral.updateOne(
+        { _id: referral._id },
+        { status: status === "shortlisted" ? "accepted" : "rejected" }
+      );
+      await Notification.send({
+        recipient: referral.referrer,
+        type: NotificationType.REFERRAL_APPLIED,
+        title: status === "shortlisted" ? "Referral Accepted" : "Referral Update",
+        message: status === "shortlisted"
+          ? `Your referral for ${updatedApplication.job.title} was accepted — ${updatedApplication.user.name} was shortlisted`
+          : `Your referral for ${updatedApplication.job.title} was not successful — ${updatedApplication.user.name} was rejected`,
+        relatedJob: updatedApplication.job._id,
+      });
+    }
+  }
 
   return res.status(200).json({ success: true, application: updatedApplication });
 });

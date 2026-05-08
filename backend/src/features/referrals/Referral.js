@@ -21,7 +21,6 @@ const ReferralSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: false,
       index: true,
       trim: true,
       uppercase: true,
@@ -30,6 +29,18 @@ const ReferralSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(ReferralStatus),
       default: ReferralStatus.PENDING,
+    },
+    message: {
+      type: String,
+      maxlength: 300,
+    },
+    requestedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    respondedAt: {
+      type: Date,
+      default: null,
     },
     createdAt: {
       type: Date,
