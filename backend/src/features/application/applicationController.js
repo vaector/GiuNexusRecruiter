@@ -1,6 +1,8 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Application = require("./Application");
 const JobPost = require("../job-posts/JobPost");
+const AuditLog = require("../auditLog/auditLog");
+const { AuditAction } = require("../../enums");
 
 const ALLOWED_APPLICATION_STATUSES = ["pending", "shortlisted", "rejected"];
 
@@ -73,8 +75,21 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
     return next(createError(403, "Not authorised to update this application"));
   }
 
+  const previousStatus = application.status;
   application.status = status;
   await application.save();
+
+  if (status === "shortlisted" || status === "rejected") {
+    await AuditLog.record({
+      actor: req.user,
+      action: status === "shortlisted" ? AuditAction.APPLICATION_SHORTLISTED : AuditAction.APPLICATION_REJECTED,
+      targetModel: "Application",
+      targetId: application._id,
+      metadata: { from: previousStatus, to: status },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+  }
 
   const updatedApplication = await Application.findById(application._id)
     .populate("user", "name email skills")
@@ -123,10 +138,30 @@ const applyToJob = async (req, res, next) => {
   }
 };
 
+// DELETE /api/v1/applications/:id/withdraw — jobSeeker only
+const withdrawApplication = asyncHandler(async (req, res, next) => {
+  const application = await Application.findOne({ _id: req.params.id, user: req.user._id });
+  if (!application) return next(createError(404, "Application not found"));
+
+  await application.deleteOne();
+
+  await AuditLog.record({
+    actor: req.user,
+    action: AuditAction.APPLICATION_WITHDRAWN,
+    targetModel: "Application",
+    targetId: application._id,
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
+
+  return res.status(200).json({ success: true, message: "Application withdrawn" });
+});
+
 module.exports = {
   listAllApplications,
   getJobApplicants,
   getMyApplications,
   updateApplicationStatus,
   applyToJob,
+  withdrawApplication,
 };

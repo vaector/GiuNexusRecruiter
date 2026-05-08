@@ -2,6 +2,8 @@ const asyncHandler = require("../../middleware/asyncHandler");
 const User = require("./User");
 const JobPost = require("../job-posts/JobPost");
 const Application = require("../application/Application");
+const AuditLog = require("../auditLog/auditLog");
+const { AuditAction } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -43,12 +45,24 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
   if (!status || !allowedStatuses.includes(status)) {
     return next(createError(400, `Status must be one of: ${allowedStatuses.join(", ")}`));
   }
+  const existingUser = await User.findById(req.params.id).select("status");
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { status },
     { new: true, runValidators: true }
   ).select("-password");
   if (!user) return next(createError(404, "User not found"));
+  if (status === "approved" || status === "rejected") {
+    await AuditLog.record({
+      actor: req.user,
+      action: status === "approved" ? AuditAction.RECRUITER_APPROVED : AuditAction.RECRUITER_REJECTED,
+      targetModel: "User",
+      targetId: user._id,
+      metadata: { from: existingUser?.status, to: status },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+  }
   res.status(200).json({ success: true, user });
 });
 
@@ -66,5 +80,14 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
     await Application.deleteMany({ user: user._id });
   }
   await user.deleteOne();
+  await AuditLog.record({
+    actor: req.user,
+    action: AuditAction.USER_DELETED,
+    targetModel: "User",
+    targetId: user._id,
+    metadata: { name: user.name, email: user.email, role: user.role, status: user.status },
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
   res.status(200).json({ success: true, message: "User deleted" });
 });

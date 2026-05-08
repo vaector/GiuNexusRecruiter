@@ -51,7 +51,7 @@ const RequestLogSchema = new mongoose.Schema(
   },
   {
     timestamps: false,
-    collection: "requestLog",
+    collection: "request_logs",
   }
 );
 

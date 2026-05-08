@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
-const enums = require("../enums");
+const enums = require("../../enums/index");
 
 const AuditLogSchema = new mongoose.Schema(
   {
     actor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: 'User',
+      default: null,
     },
     actorRole: {
       type: String,
@@ -16,6 +16,7 @@ const AuditLogSchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
+      enum: Object.values(enums.AuditAction),
     },
     targetModel: {
       type: String,
@@ -49,6 +50,23 @@ const AuditLogSchema = new mongoose.Schema(
 AuditLogSchema.index({ actor: 1 });
 AuditLogSchema.index({ targetModel: 1, targetId: 1 });
 AuditLogSchema.index({ action: 1, performedAt: -1 });
+
+AuditLogSchema.statics.record = async function ({ actor, action, targetModel, targetId, metadata = {}, ipAddress, userAgent }) {
+  try {
+    await this.create({
+      actor: actor?._id || null,
+      actorRole: actor?.role || 'system',
+      action,
+      targetModel,
+      targetId,
+      metadata,
+      ipAddress,
+      userAgent,
+    });
+  } catch (err) {
+    console.error('[AuditLog] Failed to write audit entry:', err.message);
+  }
+};
 
 module.exports =
   mongoose.models.AuditLog ||

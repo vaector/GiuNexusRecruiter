@@ -4,6 +4,8 @@ const User = require("../user/User");
 const sendEmail = require("../../services/emailService");
 const asyncHandler = require("../../middleware/asyncHandler");
 const { addToBlacklist } = require('../../middleware/tokenBlacklist');
+const AuditLog = require("../auditLog/auditLog");
+const { AuditAction } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -210,6 +212,15 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   user.resetPasswordExpire = undefined;
 
   await user.save();
+
+  await AuditLog.record({
+    actor: { _id: user._id, role: user.role },
+    action: AuditAction.USER_PASSWORD_RESET,
+    targetModel: "User",
+    targetId: user._id,
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
 
   return authResponse(res, 200, user);
 });
