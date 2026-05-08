@@ -81,6 +81,7 @@ const NotificationType = Object.freeze({
   REFERRAL_REQUESTED: "referral_requested",
   REFERRAL_RESPONDED: "referral_responded",
   NEW_MESSAGE: "new_message",
+  JOB_CLOSED: "job_closed",
 });
 
 const DocumentType = Object.freeze({

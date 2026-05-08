@@ -22,6 +22,7 @@ const requestLogger = require("./src/middleware/requestLogger.js");
 const notificationRoutes = require("./src/features/notification/notificationRoutes");
 const savedSearchRoutes = require("./src/features/savedSearch/savedRoutes");
 const { startSavedSearchPoller } = require("./src/features/savedSearch/savedPoller");
+const { startDeadlineAutoClose } = require("./src/features/jobPost/deadlineAutoClose");
 const reportRoutes = require("./src/features/reports/reportsRoutes");
 const documentRoutes = require("./src/features/document/documentRoutes");
 
@@ -61,6 +62,7 @@ connectDB()
     app.listen(PORT, () => {
       console.log(`Server started on http://localhost:${PORT}`);
       startSavedSearchPoller();
+      startDeadlineAutoClose();
     });
   })
   .catch((err) => {

@@ -5,6 +5,18 @@ const mongoose = require("mongoose");
 const JOB_TYPES = ["full-time", "part-time", "internship"];
 const JOB_STATUSES = ["open", "closed"];
 
+const {
+  JobType,
+  JobStatus,
+  PublishStatus,
+  EducationDegrees,
+  SalaryPeriod,
+  ScreeningQuestionType,
+  WorkplaceType,
+  SupportedCurrency,
+  HiringStage,
+} = require("../../enums");
+
 const JobPostSchema = new mongoose.Schema(
   {
     title: {
@@ -62,11 +74,71 @@ const JobPostSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    applicationDeadline: {
+      type: Date,
+    },
+
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
+
+    aiCategoryConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+
+    embeddings: [Number],
+
+    isRemote: {
+      type: Boolean,
+      default: false,
+    },
+
+    workplaceType: {
+      type: String,
+      enum: Object.values(WorkplaceType),
+      default: WorkplaceType.ON_SITE,
+    },
+
+    perks: [String],
+
+    hiringStages: {
+      type: [
+        {
+          type: String,
+          enum: Object.values(HiringStage),
+        },
+      ],
+      default: [
+        HiringStage.PENDING,
+        HiringStage.SCREENING,
+        HiringStage.INTERVIEW,
+        HiringStage.OFFER,
+        HiringStage.CONTRACT_SENT,
+        HiringStage.ACCEPTED,
+      ],
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
   }
 );
+
+JobPostSchema.pre("save", function (next) {
+  if (this.workplaceType === WorkplaceType.ON_SITE) {
+    this.isRemote = false;
+  } else if (
+    this.workplaceType === WorkplaceType.REMOTE ||
+    this.workplaceType === WorkplaceType.HYBRID
+  ) {
+    this.isRemote = true;
+  }
+
+  next();
+});
 
 JobPostSchema.index({ category: 1, status: 1 });
 JobPostSchema.index({ createdBy: 1 });
@@ -83,17 +155,6 @@ module.exports =
 
 // --- FUTURE FIELDS (not needed for M2) ---
 /*
-const {
-  JobType,
-  JobStatus,
-  PublishStatus,
-  EducationDegrees,
-  SalaryPeriod,
-  ScreeningQuestionType,
-  WorkplaceType,
-  SupportedCurrency,
-  HiringStage,
-} = require("../../enums");
 
 const LocationSchema = new mongoose.Schema(
   {
@@ -153,8 +214,6 @@ const ScreeningQuestionSchema = new mongoose.Schema(
   { _id: false }
 );
 
-embeddings: [Number],
-
 requirements: {
   education: {
     degree: {
@@ -181,57 +240,13 @@ requirements: {
 
 location: LocationSchema,
 
-isRemote: {
-  type: Boolean,
-  default: false,
-},
-
-workplaceType: {
-  type: String,
-  enum: Object.values(WorkplaceType),
-  required: true,
-  default: WorkplaceType.ON_SITE,
-},
 
 salary: SalarySchema,
 
-applicationDeadline: {
-  type: Date,
-},
-
-viewCount: {
-  type: Number,
-  default: 0,
-},
-
-perks: [String],
-
-hiringStages: {
-  type: [
-    {
-      type: String,
-      enum: Object.values(HiringStage),
-    },
-  ],
-  default: [
-    HiringStage.PENDING,
-    HiringStage.SCREENING,
-    HiringStage.INTERVIEW,
-    HiringStage.OFFER,
-    HiringStage.CONTRACT_SENT,
-    HiringStage.ACCEPTED,
-  ],
-},
 
 skills: [String],
 
 screeningQuestions: [ScreeningQuestionSchema],
-
-aiCategoryConfidence: {
-  type: Number,
-  min: 0,
-  max: 1,
-},
 
 published: {
   type: String,
@@ -240,19 +255,6 @@ published: {
 },
 
 optimisticConcurrency: true,
-
-JobPostSchema.pre("save", function (next) {
-  if (this.workplaceType === WorkplaceType.ON_SITE) {
-    this.isRemote = false;
-  } else if (
-    this.workplaceType === WorkplaceType.REMOTE ||
-    this.workplaceType === WorkplaceType.HYBRID
-  ) {
-    this.isRemote = true;
-  }
-
-  next();
-});
 
 JobPostSchema.index({ "requirements.skills": 1 });
 */

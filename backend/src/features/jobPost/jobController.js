@@ -143,6 +143,8 @@ const getJobById = asyncHandler(async (req, res, next) => {
 
     if (!job) return next(createError(404, "Job not found"));
 
+    await JobPost.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
+
     res.status(200).json({ success: true, job });
 });
 
@@ -152,29 +154,32 @@ const createJob = asyncHandler(async (req, res, next) => {
         return next(createError(403, "Your account is pending approval. Wait for admin approval before posting jobs."));
     }
 
-    const { title, company, description, requirements, location, type, salary, totalSlots } = req.body;
+    const { title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline } = req.body;
 
     if (!title || !company || !description || !requirements || requirements.length === 0 || !location || !type) {
         return next(createError(400, "Please provide all required fields"));
     }
 
     let category = "Other";
+    let aiCategoryConfidence = null;
 
     try {
         const result = await hf.zeroShotClassification({
             model: "facebook/bart-large-mnli",
-            inputs: [description],
+            inputs: description,
             parameters: {
                 candidate_labels: ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"],
             },
         });
-        category = result[0].labels[0];
+        // console.log('HF raw result:', JSON.stringify(result, null, 2));
+        category = result[0].label;
+        aiCategoryConfidence = result[0].score;
     } catch (hfError) {
         console.error("AI classification failed:", hfError.message);
     }
 
     const job = await JobPost.create({
-        title, company, description, requirements, location, type, salary, totalSlots, category, createdBy: req.user._id,
+        title, company, description, requirements, location, type, salary, totalSlots, applicationDeadline, category, aiCategoryConfidence, createdBy: req.user._id,
     });
 
     await AuditLog.record({
@@ -245,7 +250,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
 
     const previousStatus = job.status;
 
-    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status"];
+    const fields = ["title", "company", "description", "requirements", "location", "type", "salary", "totalSlots", "status", "applicationDeadline"];
 
     for (const field of fields) {
         if (req.body[field] !== undefined) {
@@ -261,12 +266,13 @@ const updateJob = asyncHandler(async (req, res, next) => {
         try {
             const result = await hf.zeroShotClassification({
                 model: "facebook/bart-large-mnli",
-                inputs: [req.body.description],
+                inputs: req.body.description,
                 parameters: {
                     candidate_labels: ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"],
                 },
             });
-            job.category = result[0].labels[0];
+            job.category = result[0].label;
+            job.aiCategoryConfidence = result[0].score;
         } catch (hfError) {
             console.error("AI classification failed:", hfError.message);
         }
