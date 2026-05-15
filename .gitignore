@@ -422,3 +422,5 @@ FodyWeavers.xsd
 # Ignore node modules and environment files
 node_modules/
 .env
+dist/
+
