@@ -1,0 +1,1 @@
+// Simple footer with project name and team info
