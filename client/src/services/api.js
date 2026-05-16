@@ -68,13 +68,6 @@ export const applicationsAPI = {
   getAllApplications: (params) => api.get("/applications", { params }),
   updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
   withdrawApplication: (id) => api.delete(`/applications/${id}/withdraw`),
-};
-
-export const applicationsAPI = {
-  getMyApplications: () => api.get("/applications/my"),
-  getAllApplications: (params) => api.get("/applications", { params }),
-  updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
-  withdrawApplication: (id) => api.delete(`/applications/${id}/withdraw`),
   getApplicationById: (id) => api.get(`/applications/${id}`),
 };
 
