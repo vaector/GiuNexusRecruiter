@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #ff4f00;
+  --color-on-primary: #fffefb;
+  --color-ink: #201515;
+  --color-ink-soft: #2f2a26;
+  --color-ink-mid: #36342e;
+  --color-body: #605d52;
+  --color-body-mid: #939084;
+  --color-mute: #c5c0b1;
+  --color-canvas: #fffefb;
+  --color-canvas-soft: #f8f4f0;
+
+  --color-bg: #fffefb;
+  --color-surface: #fffefb;
+  --color-surface-alt: #f8f4f0;
+  --color-border: #c5c0b1;
+  --color-text: #201515;
+  --color-text-muted: #605d52;
+  --color-accent: #ff4f00;
+  --color-accent-subtle: #fff3ee;
+  --color-accent-border: #ffcbb5;
+
+  --font-display: Inter, system-ui, -apple-system, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  --rounded-none: 0px;
+  --rounded-sm: 6px;
+  --rounded-md: 12px;
+  --rounded-pill: 9999px;
+  --rounded-full: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, textarea, select, button {
+  font-family: var(--font-body);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* ─── Buttons ─────────────────────────────────────── */
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--rounded-md);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 27px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-secondary {
+  background: var(--color-ink);
+  color: var(--color-on-primary);
+  border: none;
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--rounded-md);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 27px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-secondary:hover { opacity: 0.85; }
+
+.btn-tertiary {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--rounded-md);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 27px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-tertiary:hover { background: var(--color-canvas-soft); }
+
+/* ─── Cards ───────────────────────────────────────── */
+
+.card {
+  background: var(--color-canvas-soft);
+  color: var(--color-ink);
+  border-radius: var(--rounded-md);
+  padding: var(--space-xl);
+}
+
+.card-dark {
+  background: var(--color-ink);
+  color: var(--color-on-primary);
+  border-radius: var(--rounded-md);
+  padding: var(--space-xl);
+}
+
+.card-outline {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--rounded-md);
+  padding: var(--space-xl);
+}
+
+/* ─── Inputs ──────────────────────────────────────── */
+
+.input {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--rounded-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-size: 18px;
+  line-height: 27px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.input::placeholder {
+  color: var(--color-body-mid);
+}
+
+/* ─── Badge pill ──────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  background: var(--color-canvas-soft);
+  color: var(--color-ink);
+  font-size: 16px;
+  line-height: 24px;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--rounded-pill);
+}
+
+/* ─── Typography helpers ──────────────────────────── */
+
+.display-xl {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 56px;
+  color: var(--color-ink);
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 48px;
+  color: var(--color-ink);
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 36px;
+  letter-spacing: 1px;
+  color: var(--color-ink);
+}
+
+.display-sm {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.6px;
+  color: var(--color-ink);
+}
+
+.body-lg {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: -0.2px;
+  color: var(--color-body);
+}
+
+.body-md {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 27px;
+  color: var(--color-body);
+}
+
+.body-sm {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--color-body);
+}
+
+.caption {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  color: var(--color-body-mid);
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* ─── Layout helpers ──────────────────────────────── */
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+.section {
+  padding: var(--space-4xl) var(--space-xl);
+}
