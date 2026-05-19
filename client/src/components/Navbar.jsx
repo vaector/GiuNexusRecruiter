@@ -4,7 +4,7 @@
 // recruiter: Dashboard, Post Job, Profile
 // admin: Dashboard, Users, Jobs
 // unauthenticated: Login, Register
-import { useContext } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -64,6 +64,13 @@ const Navbar = () => {
     cursor: "pointer",
   };
 
+  const [dark, setDark] = useState(false);
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+  };
+
   const renderLinks = () => {
     if (!isAuthenticated) {
       return (
@@ -121,7 +128,23 @@ const Navbar = () => {
 
   return (
     <nav style={navStyle}>
-      <Link style={logoStyle} to="/">GIU Nexus</Link>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <Link style={logoStyle} to="/">GIU Nexus</Link>
+        <button
+          onClick={toggleTheme}
+          style={{
+            background: "none",
+            border: "1px solid var(--color-border)",
+            borderRadius: "6px",
+            padding: "0.4rem 0.75rem",
+            cursor: "pointer",
+            fontSize: "1rem",
+            color: "var(--color-text)",
+          }}
+        >
+          {dark ? "☀️" : "🌙"}
+        </button>
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         {renderLinks()}
       </div>
