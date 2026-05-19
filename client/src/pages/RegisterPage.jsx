@@ -71,15 +71,86 @@ const RegisterPage = () => {
 
   if (pending) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-canvas)", padding: "2rem" }}>
-        <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#fff3ee", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "2rem" }}>⏳</div>
-          <h1 style={{ fontSize: "1.8rem", fontWeight: 500, color: "var(--color-ink)", marginBottom: "1rem" }}>Account pending approval</h1>
-          <p style={{ color: "var(--color-body)", lineHeight: 1.6, marginBottom: "2rem" }}>
-            Your recruiter account has been created and is awaiting admin approval. You'll be able to post jobs once approved.
+      <div style={{ 
+        minHeight: "calc(100vh - 90px)", 
+        width: "100%",
+        display: "flex", 
+        alignItems: "center",
+        justifyContent: "center",
+        background: "radial-gradient(circle at 50% -20%, #1e1324 0%, #0b0f19 40%, #05070a 100%)", 
+        position: "relative",
+        overflow: "hidden", 
+        boxSizing: "border-box",
+        padding: "2rem"
+      }}>
+
+        <div style={{
+          position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+          background: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          opacity: 0.15, pointerEvents: "none", zIndex: 1
+        }} />
+
+        <div style={{
+          position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+          backgroundImage: "linear-gradient(rgba(255, 79, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 79, 0, 0.05) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          pointerEvents: "none", zIndex: 1
+        }} />
+
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(255,79,0,0.05) 0%, transparent 70%)", pointerEvents: "none", zIndex: 1 }} />
+
+        <div style={{ 
+          position: "relative",
+          zIndex: 2,
+          maxWidth: 480, 
+          width: "100%", 
+          textAlign: "center",
+          background: "rgba(25, 30, 45, 0.5)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          padding: "4rem 3rem",
+          borderRadius: "24px",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+        }}>
+
+          <div style={{ 
+            width: 80, 
+            height: 80, 
+            borderRadius: "50%", 
+            background: "radial-gradient(circle, rgba(255,79,0,0.15) 0%, rgba(255,79,0,0.05) 100%)", 
+            border: "1px solid rgba(255, 79, 0, 0.3)",
+            boxShadow: "0 0 40px rgba(255, 79, 0, 0.2), inset 0 0 20px rgba(255, 79, 0, 0.1)",
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            margin: "0 auto 2rem", 
+            fontSize: "2.5rem" 
+          }}>
+            <span style={{ transform: "translateY(-2px)" }}>⏳</span>
+          </div>
+          
+          <h1 style={{ fontSize: "2rem", fontWeight: 600, color: "white", marginBottom: "1rem", letterSpacing: "-0.5px" }}>
+            Account Pending
+          </h1>
+          
+          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "16px", lineHeight: 1.6, marginBottom: "2.5rem" }}>
+            Your recruiter account has been successfully created. Our team is currently reviewing your details. You will be able to post jobs as soon as you are approved.
           </p>
-          <Link to="/login" style={{ background: "var(--color-primary)", color: "var(--color-on-primary)", padding: "0.75rem 2rem", borderRadius: "var(--rounded-md)", textDecoration: "none", fontWeight: 600, fontSize: "16px" }}>
-            Go to login
+          
+          <Link to="/login" style={{ 
+            display: "inline-block",
+            background: "var(--color-primary)", 
+            color: "white", 
+            padding: "1rem 2.5rem", 
+            borderRadius: "var(--rounded-md)", 
+            textDecoration: "none", 
+            fontWeight: 600, 
+            fontSize: "16px",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 15px rgba(255, 79, 0, 0.3)"
+          }}>
+            Return to Login
           </Link>
         </div>
       </div>
@@ -134,7 +205,6 @@ const RegisterPage = () => {
         }} />
 
         <div style={{ position: "relative", zIndex: 2 }}>
-            <span style={{ color: "var(--color-primary)", fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.5px", textShadow: "0 0 20px rgba(255,79,0,0.4)" }}>GIU Nexus</span>
         </div>
 
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "start" }}>
