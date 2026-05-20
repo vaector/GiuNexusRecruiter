@@ -66,14 +66,14 @@ const ProfilePage = () => {
 				setUser?.({ ...profile, skills });
 			}
 
-			setStatusMessage("Skills updated from your bio.");
+			setStatusMessage("Skills updated from your bio. ✅");
 		} catch (error) {
 			if (error.response?.status === 400) {
-				setExtractError(error.response?.data?.message || "Bio is empty. Add a bio before extracting skills.");
+				setExtractError(error.response?.data?.message || "Bio is empty. Add a bio before extracting skills. 😕");
 				return;
 			}
 
-			setExtractError(error.response?.data?.message || "Unable to extract skills right now.");
+			setExtractError(error.response?.data?.message || "Unable to extract skills right now. 😕");
 		} finally {
 			setIsExtracting(false);
 		}
@@ -138,7 +138,7 @@ const ProfilePage = () => {
 	if (loading) {
 		return (
 			<div style={containerStyle}>
-				<div style={contentCardStyle}>Loading your profile...</div>
+				<div style={contentCardStyle}>Loading your profile... 👏🏻</div>
 			</div>
 		);
 	}
@@ -206,7 +206,7 @@ const ProfilePage = () => {
 					<h2 style={{ fontSize: "1.6rem", lineHeight: 1.1, marginBottom: "0.4rem" }}>
 						{profile?.name || "Unnamed profile"}
 					</h2>
-					<p style={mutedTextStyle}>{profile?.bio?.trim() ? profile.bio : "No bio added yet."}</p>
+					<p style={mutedTextStyle}>{profile?.bio?.trim() ? profile.bio : "No bio added yet. 😕"}</p>
 
 					<button
 						type="button"
@@ -259,12 +259,12 @@ const ProfilePage = () => {
 					<div style={{ marginBottom: "1.75rem" }}>
 						<div style={sectionTitleStyle}>Bio</div>
 						<p style={{ ...mutedTextStyle, whiteSpace: "pre-wrap" }}>
-							{profile?.bio?.trim() ? profile.bio : "No bio available."}
+							{profile?.bio?.trim() ? profile.bio : "No bio available. 😕"}
 						</p>
 					</div>
 
 					<div>
-						<div style={sectionTitleStyle}>Skill Chips</div>
+						<div style={sectionTitleStyle}>Skill Chips 🏆</div>
 						{skills.length > 0 ? (
 							<div style={{ display: "flex", flexWrap: "wrap", gap: "0.65rem" }}>
 								{skills.map((skill) => (
@@ -272,7 +272,7 @@ const ProfilePage = () => {
 								))}
 							</div>
 						) : (
-							<p style={mutedTextStyle}>No skills extracted yet.</p>
+							<p style={mutedTextStyle}>No skills extracted yet. 😕</p>
 						)}
 					</div>
 				</section>
