@@ -43,7 +43,7 @@ const NotificationBell = () => {
       }}
       title="Notifications"
     >
-      🔔
+      🕭
       {unreadCount > 0 && (
         <span style={{
           position: "absolute",
