@@ -69,7 +69,7 @@ const RecommendedJobsPage = () => {
 		return (
 			<div style={containerStyle}>
 				<div style={cardStyle} className="card">
-					Loading recommended jobs...
+					Loading recommended jobs... 🔃💪🏻💪🏿
 				</div>
 			</div>
 		);
@@ -94,18 +94,18 @@ const RecommendedJobsPage = () => {
 			<div style={{ marginBottom: "1.5rem" }}>
 				<div className="eyebrow" style={{ marginBottom: "0.5rem" }}>Job Seeker</div>
 				<h1 style={{ fontSize: "2.5rem", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-					Recommended jobs for you
+					Recommended jobs for you 🤔💭
 				</h1>
 				<p style={mutedTextStyle}>
-					These jobs are ranked by AI similarity score using your profile skills.
+					These jobs are ranked by AI similarity score using your profile skills. 🏆
 				</p>
 			</div>
 
 			{jobs.length === 0 ? (
 				<div style={{ ...cardStyle, padding: "1.5rem" }}>
-					<h2 style={{ marginBottom: "0.5rem" }}>No recommendations yet</h2>
+					<h2 style={{ marginBottom: "0.5rem" }}>No recommendations yet 🤔</h2>
 					<p style={mutedTextStyle}>
-						We could not rank any jobs for your profile. Try adding skills to your profile and come back again.
+						We could not rank any jobs for your profile. Try adding skills to your profile and come back again. 😕
 					</p>
 					<Link to="/profile" className="btn-primary" style={{ display: "inline-flex", marginTop: "1rem" }}>
 						View profile
@@ -168,7 +168,7 @@ const RecommendedJobsPage = () => {
 								</div>
 
 								<Link to={`/jobs/${job._id}`} className="btn-tertiary" style={{ alignSelf: "flex-start" }}>
-									View job
+									View job 🔍
 								</Link>
 							</article>
 						);
