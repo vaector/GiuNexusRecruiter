@@ -10,7 +10,7 @@ import HomePage from "./pages/HomePage";
 // import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 // import VerifyOtpPage from "./pages/VerifyOtpPage";
 // import ResetPasswordPage from "./pages/ResetPasswordPage";
-// import ProfilePage from "./pages/ProfilePage";
+import ProfilePage from "./pages/ProfilePage";
 // import EditProfilePage from "./pages/EditProfilePage";
 // import ChangePasswordPage from "./pages/ChangePasswordPage";
 // import JobListPage from "./pages/JobListPage";
@@ -55,7 +55,7 @@ const App = () => {
             {/* <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/jobs/:id" element={<JobDetailPage />} /> */}
-            {/* <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} /> */}
+            <Route path="/profile" element={<RoleRoute allowedRoles={["jobSeeker"]}><ProfilePage /></RoleRoute>} />
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
             {/* <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} /> */}
