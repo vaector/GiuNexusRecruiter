@@ -259,16 +259,3 @@ a {
 .section {
   padding: var(--space-4xl) var(--space-xl);
 }
-
-/* ─── Dark mode ──────────────────────────────── */
-[data-theme="dark"] {
-  --color-bg: #1a1614;
-  --color-surface: #241f1c;
-  --color-surface-alt: #2e2825;
-  --color-border: #3d3530;
-  --color-text: #fffefb;
-  --color-text-muted: #939084;
-  --color-accent: #ff4f00;
-  --color-accent-subtle: #2a1a0e;
-  --color-accent-border: #7a2d00;
-}
