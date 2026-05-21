@@ -7,6 +7,22 @@ const RecommendedJobsPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 
+	const formatLocation = (location) => {
+		if (!location) {
+			return "";
+		}
+
+		if (typeof location === "string") {
+			return location;
+		}
+
+		if (typeof location === "object") {
+			return [location.city, location.country].filter(Boolean).join(", ");
+		}
+
+		return String(location);
+	};
+
 	useEffect(() => {
 		let isMounted = true;
 
@@ -162,7 +178,7 @@ const RecommendedJobsPage = () => {
 								</p>
 
 								<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-									{job.location ? <span className="badge">{job.location}</span> : null}
+									{formatLocation(job.location) ? <span className="badge">{formatLocation(job.location)}</span> : null}
 									{job.type ? <span className="badge">{job.type}</span> : null}
 									{job.category ? <span className="badge">{job.category}</span> : null}
 								</div>
