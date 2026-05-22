@@ -124,12 +124,12 @@ router.get('/request-logs', protect, authorize('admin'), getRequestLogs);
  *         name: action
  *         schema:
  *           type: string
- *           enum: [USER_CREATED, USER_DELETED, USER_BANNED, USER_PASSWORD_RESET, JOB_CREATED, JOB_DELETED, JOB_CLOSED, JOB_AUTO_CLOSED, APPLICATION_CREATED, APPLICATION_SHORTLISTED, APPLICATION_REJECTED, APPLICATION_WITHDRAWN, RECRUITER_APPROVED, RECRUITER_REJECTED]
+*         enum: [USER_CREATED, USER_BANNED, USER_DELETED, USER_PASSWORD_RESET, JOB_CREATED, JOB_APPROVED, JOB_REJECTED, JOB_CLOSED, JOB_DELETED, JOB_AUTO_CLOSED, APPLICATION_CREATED, APPLICATION_SHORTLISTED, APPLICATION_REJECTED, APPLICATION_WITHDRAWN, RECRUITER_APPROVED, RECRUITER_REJECTED, REPORT_REVIEWED, REPORT_DISMISSED, REPORT_ACTIONED, ADMIN_PASSWORD_RESET]
  *       - in: query
  *         name: targetModel
  *         schema:
  *           type: string
- *           enum: [User, JobPost, Application]
+*         enum: [User, JobPost, Application, Report]
  *       - in: query
  *         name: from
  *         schema:

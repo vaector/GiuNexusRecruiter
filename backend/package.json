@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "backend/server.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -11,10 +11,10 @@
   "jest": {
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
-      "<rootDir>/backend/src/tests/setup.js"
+      "<rootDir>/src/tests/setup.js"
     ],
     "testMatch": [
-      "<rootDir>/backend/src/tests/**/*.test.js"
+      "<rootDir>/src/tests/**/*.test.js"
     ]
   },
   "keywords": [],
@@ -32,7 +32,7 @@
     "express-rate-limit": "^8.5.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.2.0",
-    "mongoose": "^9.6.2",
+    "mongoose": "^6.13.0",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
     "swagger-jsdoc": "^6.2.8",

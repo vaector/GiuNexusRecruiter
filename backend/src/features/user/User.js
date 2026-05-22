@@ -176,17 +176,16 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function () {
   // Admin accounts always have MFA enforced via email OTP
   if (this.isNew && this.role === 'admin') {
     this.mfaEnabled = true;
     this.mfaMethod = 'email_otp';
   }
 
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) return;
 
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 UserSchema.methods.comparePassword = function (candidatePassword) {
