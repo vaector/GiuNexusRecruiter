@@ -101,7 +101,9 @@ const RecommendedJobsPage = () => {
       ) : (
         <div className="recommended-grid">
           {jobs.map((job) => {
-            const score = typeof job.score === "number" ? Math.round(job.score * 100) : null;
+            const score = typeof job.score === "number" && isFinite(job.score)
+              ? Math.round(Math.max(0, Math.min(1, job.score)) * 100)
+              : null;
             const location = formatLocation(job.location);
 
             return (
