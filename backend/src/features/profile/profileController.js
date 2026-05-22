@@ -68,31 +68,45 @@ const extractSkills = asyncHandler(async (req, res, next) => {
   if (!user.bio || !user.bio.trim()) {
     return next(createError(400, "Bio is empty. Update your profile first."));
   }
+  let skills = [];
+
   try {
+    // Capitalize bio so NER model recognises tech names (e.g. "node.js" → "Node.Js")
+    const capitalizedBio = user.bio.replace(/\b\w/g, (c) => c.toUpperCase());
     const result = await hf.tokenClassification({
       model: "dslim/bert-base-NER",
-      inputs: user.bio,
+      inputs: capitalizedBio,
     });
     let extractedWords = result
       .filter((entity) => ["MISC", "ORG"].includes(entity.entity_group))
       .map((entity) => entity.word.replace(/\.\s+/g, ".").replace(/\s+\./g, ".").replace(/##/g, ""));
 
-    // Fix common tokenization splits
+    // Fix common tokenization splits (e.g. "No" + "de.js" → "Node.js")
     for (let i = 0; i < extractedWords.length - 1; i++) {
       if (extractedWords[i] === "No" && extractedWords[i + 1] === "de.js") {
         extractedWords.splice(i, 2, "Node.js");
-        i--; // Adjust index after splice
+        i--;
       }
     }
 
-    const skills = [...new Set(extractedWords)];
-    user.skills = skills;
-    await user.save();
-    return res.status(200).json({ success: true, skills, extracted: skills });
+    skills = [...new Set(extractedWords)];
   } catch (hfError) {
     console.error("HuggingFace NER failed:", hfError.message);
-    return res.status(200).json({ success: true, skills: user.skills, extracted: user.skills });
   }
+
+  // Fallback: if NER extracted nothing, treat bio as a plain comma/space-separated skill list
+  if (skills.length === 0) {
+    skills = [...new Set(
+      user.bio
+        .split(/[\s,;|\/\n]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2)
+    )];
+  }
+
+  user.skills = skills;
+  await user.save();
+  return res.status(200).json({ success: true, skills, extracted: skills });
 });
 
 // PATCH /api/v1/profile/mfa — private
