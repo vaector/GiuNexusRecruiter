@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { profileAPI } from "../services/api";
 
@@ -10,6 +11,7 @@ const ProfilePage = () => {
   const [extractError, setExtractError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
+  const [showEditLink, setShowEditLink] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,8 +71,10 @@ const ProfilePage = () => {
     } catch (error) {
       if (error.response?.status === 400) {
         setExtractError(error.response?.data?.message || "Bio is empty. Add a bio before extracting skills.");
+        setShowEditLink(true);
         return;
       }
+      setShowEditLink(false);
       setExtractError(error.response?.data?.message || "Unable to extract skills right now.");
     } finally {
       setIsExtracting(false);
@@ -149,6 +153,9 @@ const ProfilePage = () => {
           {extractError ? (
             <div className="profile-alert error" role="alert" aria-live="assertive">
               {extractError}
+              {showEditLink && (
+                <> &mdash; <Link to="/profile/edit" style={{ color: "#00e5cc", textDecoration: "underline" }}>Edit your profile</Link></>
+              )}
             </div>
           ) : null}
 
