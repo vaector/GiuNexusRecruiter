@@ -495,9 +495,17 @@ export default function FluidBackground() {
       );
     }
 
+    let glResources = [];
+
+    function trackResource(createFn) {
+      const resource = createFn();
+      glResources.push(resource);
+      return resource;
+    }
+
     function createFBO(texId, w, h, internalFormat, format, type, param) {
       gl.activeTexture(gl.TEXTURE0 + texId);
-      let texture = gl.createTexture();
+      let texture = trackResource(() => gl.createTexture());
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param);
@@ -515,7 +523,7 @@ export default function FluidBackground() {
         null
       );
 
-      let fbo = gl.createFramebuffer();
+      let fbo = trackResource(() => gl.createFramebuffer());
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
       gl.framebufferTexture2D(
         gl.FRAMEBUFFER,
@@ -859,6 +867,17 @@ export default function FluidBackground() {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchend", onTouchEnd);
+      glResources.forEach((r) => {
+        if (r instanceof WebGLTexture) gl.deleteTexture(r);
+        else if (r instanceof WebGLFramebuffer) gl.deleteFramebuffer(r);
+      });
+      [baseVertexShader, clearShader, displayShader, splatShader,
+       advectionManualFilteringShader, advectionShader, divergenceShader,
+       curlShader, vorticityShader, pressureShader, gradientSubtractShader
+      ].forEach((s) => { if (s) gl.deleteShader(s); });
+      [clearProgram, displayProgram, splatProgram, advectionProgram,
+       divergenceProgram, curlProgram, vorticityProgram, pressureProgram, gradienSubtractProgram
+      ].forEach((p) => { if (p?.program) gl.deleteProgram(p.program); });
     };
   }, []);
 

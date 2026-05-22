@@ -159,6 +159,13 @@ export default function ApplicantsPage() {
                         ))}
                         {(candidate.skills || []).length === 0 && <span>No skills listed</span>}
                       </div>
+                      {application.coverLetter && (
+                        <div className="applicant-meta" style={{ marginTop: "0.5rem" }}>
+                          <span title={application.coverLetter} style={{ cursor: "help" }}>
+                            {application.coverLetter.slice(0, 60)}…
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -1,0 +1,214 @@
+.not-found-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg-base);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.not-found__grain {
+  position: absolute;
+  inset: 0;
+  background-size: 200px 200px;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.not-found__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.6) 120%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.not-found__content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-3xl) 0;
+  text-align: center;
+  animation: notFoundEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.not-found__face {
+  display: block;
+  width: 12em;
+  height: auto;
+  color: var(--accent);
+}
+
+.not-found__title {
+  margin-top: var(--space-md);
+}
+
+.not-found__subtitle {
+  max-width: 28em;
+  color: var(--text-secondary);
+}
+
+.not-found__btn {
+  margin-top: var(--space-md);
+}
+
+@keyframes notFoundEntry {
+  from {
+    transform: translateY(6px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.face__eyes,
+.face__eye-lid,
+.face__mouth-left,
+.face__mouth-right,
+.face__nose,
+.face__pupil {
+  animation: face-eyes 1s 0.3s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.face__eye-lid,
+.face__pupil {
+  animation-duration: 4s;
+  animation-delay: 1.3s;
+  animation-iteration-count: infinite;
+}
+
+.face__eye-lid {
+  animation-name: face-eye-lid;
+}
+
+.face__mouth-left,
+.face__mouth-right {
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.face__mouth-left {
+  animation-name: face-mouth-left;
+}
+
+.face__mouth-right {
+  animation-name: face-mouth-right;
+}
+
+.face__nose {
+  animation-name: face-nose;
+}
+
+.face__pupil {
+  animation-name: face-pupil;
+}
+
+@keyframes face-eye-lid {
+  from,
+  40%,
+  45%,
+  to {
+    transform: translateY(0);
+  }
+  42.5% {
+    transform: translateY(17.5px);
+  }
+}
+
+@keyframes face-eyes {
+  from {
+    transform: translateY(112.5px);
+  }
+  to {
+    transform: translateY(15px);
+  }
+}
+
+@keyframes face-pupil {
+  from,
+  37.5%,
+  40%,
+  45%,
+  87.5%,
+  to {
+    stroke-dashoffset: 0;
+    transform: translate(0, 0);
+  }
+  12.5%,
+  25%,
+  62.5%,
+  75% {
+    stroke-dashoffset: 0;
+    transform: translate(-35px, 0);
+  }
+  42.5% {
+    stroke-dashoffset: 35;
+    transform: translate(0, 17.5px);
+  }
+}
+
+@keyframes face-mouth-left {
+  from,
+  50% {
+    stroke-dashoffset: -102;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes face-mouth-right {
+  from,
+  50% {
+    stroke-dashoffset: 102;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes face-nose {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0, 22.5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found__content {
+    animation: none;
+  }
+  .face__eyes,
+  .face__eye-lid,
+  .face__mouth-left,
+  .face__mouth-right,
+  .face__nose,
+  .face__pupil {
+    animation: none;
+  }
+  .face__eyes {
+    transform: translateY(15px);
+  }
+  .face__nose {
+    transform: translate(0, 22.5px);
+  }
+  .face__mouth-left {
+    stroke-dashoffset: 0;
+  }
+  .face__mouth-right {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .not-found__face {
+    width: 8em;
+  }
+}

@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useCallback } from "react";
+import { createContext, useState, useContext, useCallback, useEffect } from "react";
 import { authAPI } from "../services/api";
 
 export const AuthContext = createContext(null);
@@ -46,8 +46,14 @@ export const AuthProvider = ({ children }) => {
     setUser(nextUser);
   }, []);
 
+  useEffect(() => {
+    const onApiLogout = () => logout();
+    window.addEventListener("auth:logout", onApiLogout);
+    return () => window.removeEventListener("auth:logout", onApiLogout);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, setUser, isAuthenticated: Boolean(token) }}>
+    <AuthContext.Provider value={{ user, token, login, logout, setUser, updateUser, isAuthenticated: Boolean(token) }}>
       {children}
     </AuthContext.Provider>
   );

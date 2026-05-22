@@ -296,7 +296,7 @@ const toggleSaveJob = asyncHandler(async (req, res, next) => {
         return next(createError(404, "User not found"));
     }
 
-    const alreadySaved = user.savedJobs.some((id) => id.equals(jobId));
+    const alreadySaved = user.savedJobs.some((id) => id.toString() === jobId.toString());
 
     if (alreadySaved) {
         await User.findByIdAndUpdate(userId, { $pull: { savedJobs: job._id } });

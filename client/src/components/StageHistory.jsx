@@ -1,12 +1,9 @@
-// Timeline of application status changes
-// Shows each stage, who changed it, and when
-// Used on ApplicationDetailPage
 import ApplicationStatusBadge from "./ApplicationStatusBadge";
 
 const StageHistory = ({ history = [] }) => {
   if (!history.length) {
     return (
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
+      <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
         No stage history yet.
       </p>
     );
@@ -21,7 +18,7 @@ const StageHistory = ({ history = [] }) => {
               width: 12,
               height: 12,
               borderRadius: "50%",
-              background: "var(--color-accent)",
+              background: "var(--accent)",
               flexShrink: 0,
               marginTop: "0.3rem",
               position: "relative",
@@ -34,13 +31,13 @@ const StageHistory = ({ history = [] }) => {
                 top: 16,
                 bottom: 0,
                 width: 2,
-                background: "var(--color-border)",
+                background: "var(--border-glass)",
               }} />
             )}
           </div>
           <div>
             <ApplicationStatusBadge status={entry.status} />
-            <p style={{ fontSize: "0.78rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
               {new Date(entry.changedAt).toLocaleString()}
               {entry.changedBy?.name && ` · by ${entry.changedBy.name}`}
             </p>

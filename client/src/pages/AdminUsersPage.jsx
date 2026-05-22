@@ -2,12 +2,12 @@
 // GET /api/v1/users  — list
 // GET /api/v1/users/:id — single user detail (modal)
 // Admin only
-import { useState, useEffect, useRef } from "react";
-import Lenis from "lenis";
+import React, { useState, useEffect } from "react";
 import { usersAPI } from "../services/api";
 import { Spinner } from "../components/Spinner";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
+import useAdminEffects from "../utils/useAdminEffects";
 
 const ROLES = ["all", "jobSeeker", "recruiter", "admin"];
 const STATUSES = ["all", "active", "pending", "suspended"];
@@ -24,11 +24,8 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const lenisRef = useRef(null);
-  const scrollbarRef = useRef(null);
-  const scrollbarTrackRef = useRef(null);
-  const pctRef = useRef(null);
+
+  const { coords, scrollbarRef, scrollbarTrackRef, pctRef } = useAdminEffects();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -49,35 +46,6 @@ export default function AdminUsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [roleFilter, statusFilter]);
-
-  useEffect(() => {
-    if (typeof history !== "undefined") history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
-    const lenis = new Lenis({ lerp: 0.07, smoothWheel: true });
-    lenisRef.current = lenis;
-    let raf;
-    function tick(time) {
-      lenis.raf(time);
-      const scrollY = window.scrollY;
-      const totalH = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = totalH > 0 ? Math.min(Math.max(scrollY / totalH, 0), 1) : 0;
-      if (pctRef.current) pctRef.current.textContent = (pct * 100).toFixed(1) + "%";
-      if (scrollbarRef.current && scrollbarTrackRef.current) {
-        const trackH = scrollbarTrackRef.current.offsetHeight - scrollbarRef.current.offsetHeight;
-        scrollbarRef.current.style.transform = `translateY(${pct * Math.max(trackH, 0)}px)`;
-        scrollbarTrackRef.current.style.opacity = totalH > 50 ? "1" : "0";
-      }
-      raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-    const trackMouse = (e) => setCoords({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", trackMouse);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", trackMouse);
-    };
-  }, []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });

@@ -14,8 +14,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
-import { jobsAPI } from "../services/api";
-import api from "../services/api";
+import { jobsAPI, applicationsAPI } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { CATEGORY_COLORS } from "../components/JobCard";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
@@ -257,12 +256,27 @@ const JobDetailPage = () => {
       .then(res => {
         const data = res.data.job || res.data;
         setJob(data);
-        setIsSaved(Boolean(data.isSaved));
-        if (data.myApplication) setMyApplication(data.myApplication);
       })
       .catch(err => setError(err.response?.data?.message || "Failed to load job."))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated && isJobSeeker) {
+      jobsAPI.getSavedJobs()
+        .then(res => {
+          const savedList = res.data.jobs || [];
+          setIsSaved(savedList.some(j => (typeof j === 'string' ? j : j._id) === id));
+        }).catch(() => {});
+
+      applicationsAPI.getMyApplications()
+        .then(res => {
+          const apps = res.data.applications || res.data || [];
+          const myApp = apps.find(a => (a.job?._id || a.job) === id);
+          if (myApp) setMyApplication(myApp);
+        }).catch(() => {});
+    }
+  }, [id, isAuthenticated, isJobSeeker]);
 
   // ── Apply ──────────────────────────────────────────────────────────────────
   const handleApply = async () => {
@@ -286,7 +300,7 @@ const JobDetailPage = () => {
     if (saveLoading || (job?.status !== "open" && !isSaved)) return;
     setSaveLoading(true);
     try {
-      const res = await api.post(`/jobs/${id}/save`);
+      const res = await jobsAPI.saveJob(id);
       setIsSaved(res.data.saved);
     } catch { /* silent */ }
     finally { setSaveLoading(false); }
@@ -299,7 +313,7 @@ const JobDetailPage = () => {
     setAiText("");
     setAiOpen(true);
     try {
-      const res = await api.post(`/jobs/${id}/cover-letter-suggestion`);
+      const res = await jobsAPI.coverLetterSuggestion(id);
       setAiText(res.data.suggestion || "");
     } catch (err) {
       setAiError(err.response?.data?.message || "AI service unavailable.");

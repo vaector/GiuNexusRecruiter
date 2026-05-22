@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../services/api";
+import { jobsAPI } from "../services/api";
 
 const HIRING_STAGES = ["pending", "screening", "interview", "offer", "contract_sent", "accepted", "rejected"];
 const QUESTION_TYPES = ["text", "multiple_choice", "yes_no"];
@@ -88,7 +88,7 @@ const CreateJobPage = () => {
         experience: { minYears: form.experience.minYears === "" ? undefined : Number(form.experience.minYears) },
         requiredEducationField: form.requiredEducationField || undefined,
       };
-      const res = await api.post("/jobs", payload);
+      const res = await jobsAPI.createJob(payload);
       setCreatedJob(res.data.job);
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
@@ -181,6 +181,7 @@ const CreateJobPage = () => {
                   <option value="full-time">Full-time</option>
                   <option value="part-time">Part-time</option>
                   <option value="internship">Internship</option>
+                  <option value="contract">Contract</option>
                 </select>
               </div>
               <div className="cj-field">
@@ -242,7 +243,7 @@ const CreateJobPage = () => {
                   {form.requirements.map((req, i) => (
                     <span key={i} className="cj-chip">
                       {req}
-                      <button type="button" className="cj-chip-remove" onClick={() => set("requirements", form.requirements.filter((_, j) => j !== i))}>×</button>
+                      <button type="button" className="cj-chip-remove" onClick={() => set("requirements", form.requirements.filter((_, j) => j !== i))}>x</button>
                     </span>
                   ))}
                 </div>
@@ -307,7 +308,7 @@ const CreateJobPage = () => {
                   {form.perks.map((perk, i) => (
                     <span key={i} className="cj-chip">
                       {perk}
-                      <button type="button" className="cj-chip-remove" onClick={() => set("perks", form.perks.filter((_, j) => j !== i))}>×</button>
+                      <button type="button" className="cj-chip-remove" onClick={() => set("perks", form.perks.filter((_, j) => j !== i))}>x</button>
                     </span>
                   ))}
                 </div>
@@ -365,7 +366,7 @@ const CreateJobPage = () => {
                   <div key={i} className="cj-question-row">
                     <div>
                       <span className="cj-question-text">{q.question}</span>
-                      <span className="cj-question-meta">{formatLabel(q.type)}{q.required ? " · Required" : ""}</span>
+                      <span className="cj-question-meta">{formatLabel(q.type)}{q.required ? " - Required" : ""}</span>
                     </div>
                     <button type="button" className="cj-btn-remove" onClick={() => set("screeningQuestions", form.screeningQuestions.filter((_, j) => j !== i))}>Remove</button>
                   </div>

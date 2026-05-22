@@ -1,35 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { savedSearchesAPI } from "../services/api";
+import relativeTime from "../utils/relativeTime";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
 
-const JOB_TYPES = ["full-time", "part-time", "internship"];
+const JOB_TYPES = ["full-time", "part-time", "internship", "contract"];
 const CATEGORIES = ["Frontend", "Backend", "AI/ML", "DevOps", "Data Engineering", "Other"];
 
 const FILTER_KEYS = [
-  { key: "keywords", label: "KEYWORDS", type: "text", placeholder: "e.g. React, Node.js" },
+  { key: "keyword", label: "KEYWORDS", type: "text", placeholder: "e.g. React, Node.js" },
   { key: "location", label: "LOCATION", type: "text", placeholder: "e.g. Cairo" },
   { key: "type", label: "JOB TYPE", type: "select", options: JOB_TYPES },
   { key: "category", label: "CATEGORY", type: "select", options: CATEGORIES },
   { key: "isRemote", label: "REMOTE ONLY", type: "checkbox" },
   { key: "salaryMin", label: "MIN SALARY", type: "number", placeholder: "e.g. 50000" },
 ];
-
-const relativeTime = (dateStr) => {
-  if (!dateStr) return "";
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
-};
 
 export default function SavedSearchesPage() {
   const [searches, setSearches] = useState([]);
