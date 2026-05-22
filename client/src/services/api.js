@@ -31,14 +31,18 @@ export const authAPI = {
   forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
   verifyOtp: (data) => api.post("/auth/verify-otp", data),
   resetPassword: (token, password) => api.patch(`/auth/reset-password/${token}`, { password }),
+  setupTotp: () => api.post("/auth/setup-totp"),
+  verifyMfaOtp: (data) => api.post("/auth/verify-mfa", data),
 };
 
 // Profile
 export const profileAPI = {
   getMyProfile: () => api.get("/profile"),
-  updateMyProfile: (data) => api.patch("/profile", data),
+  updateMyProfile: (data) =>
+    api.patch("/profile", data, data instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined),
   changePassword: (data) => api.patch("/profile/change-password", data),
   extractSkills: () => api.post("/profile/extract-skills"),
+  toggleMfa: (data) => api.patch("/profile/mfa", data),
 };
 
 // Jobs
@@ -61,10 +65,8 @@ export const applicationsAPI = {
   getMyApplications: () => api.get("/applications/my"),
   getAllApplications: (params) => api.get("/applications", { params }),
   updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
-  updateRecruiterNotes: (id, recruiterNotes) =>
-    api.patch(`/applications/${id}/notes`, { recruiterNotes }),
+  updateRecruiterNotes: (id, recruiterNotes) => api.patch(`/applications/${id}/notes`, { recruiterNotes }),
   withdrawApplication: (id) => api.delete(`/applications/${id}/withdraw`),
-  getApplicationById: (id) => api.get(`/applications/${id}`),
 };
 
 // Users (Admin)
