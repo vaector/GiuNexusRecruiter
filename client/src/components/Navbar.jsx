@@ -48,6 +48,27 @@ const ADMIN_DROPDOWNS = [
   },
 ];
 
+const RECRUITER_DROPDOWNS = [
+  {
+    label: "Hiring",
+    items: [
+      { label: "Dashboard", to: "/recruiter/dashboard", icon: "clipboard" },
+      { label: "Post Job", to: "/recruiter/jobs/create", icon: "sparkles" },
+      { label: "My Jobs", to: "/recruiter/jobs", icon: "search" },
+      { label: "Applicants", to: "/recruiter/applicants", icon: "users" },
+    ],
+  },
+  {
+    label: "Manage",
+    items: [
+      { label: "Messages", to: "/conversations", icon: "user" },
+      { label: "Analytics", to: "/recruiter/job-analytics", icon: "filter" },
+      { label: "Documents", to: "/documents", icon: "file" },
+      { label: "Profile", to: "/profile", icon: "user" },
+    ],
+  },
+];
+
 const NAV_ICONS = {
   search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   sparkles: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l1 3 3 1-3 1-1 3-1-3-3 1 3-1 1-3z"/></svg>,
@@ -416,14 +437,37 @@ const Navbar = () => {
     );
     if (user?.role === "recruiter") return (
       <>
-        <NavLink to="/recruiter/dashboard" active={isActive("/recruiter/dashboard")}>Dashboard</NavLink>
-        <NavLink to="/recruiter/jobs/create" active={isActive("/recruiter/jobs/create")}>Post Job</NavLink>
-        <NavLink to="/recruiter/jobs" active={isActive("/recruiter/jobs")}>My Jobs</NavLink>
-        <NavLink to="/recruiter/applicants" active={isActive("/recruiter/applicants")}>Applicants</NavLink>
-        <NavLink to="/conversations" active={isActive("/conversations")}>Messages</NavLink>
-        <NavLink to="/recruiter/job-analytics" active={isActive("/recruiter/job-analytics")}>Analytics</NavLink>
-        <NavLink to="/documents" active={isActive("/documents")}>Documents</NavLink>
-        <NavLink to="/profile" active={isActive("/profile")}>Profile</NavLink>
+        {RECRUITER_DROPDOWNS.map((dropdown) => (
+          <div
+            key={dropdown.label}
+            className="nav-dropdown-wrapper"
+            onMouseEnter={() => handleDropdownEnter(dropdown.label)}
+            onMouseLeave={handleDropdownLeave}
+          >
+            <button
+              className={`nav-dropdown-trigger ${activeDropdown === dropdown.label ? "active" : ""}`}
+              onClick={() => setActiveDropdown(activeDropdown === dropdown.label ? null : dropdown.label)}
+            >
+              {dropdown.label}
+              <svg className="nav-dropdown-arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <div className={`nav-dropdown-menu ${activeDropdown === dropdown.label ? "open" : ""}`}>
+              {dropdown.items.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="nav-dropdown-item"
+                  onClick={() => setActiveDropdown(null)}
+                >
+                  <span className="nav-dropdown-item-icon">{NAV_ICONS[item.icon]}</span>
+                  <span className="nav-dropdown-item-label">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </>
     );
     if (user?.role === "admin") return (

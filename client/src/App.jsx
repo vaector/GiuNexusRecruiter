@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import RoleRoute from "./components/RoleRoute";
+import ChatWidget from "./components/ChatWidget";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -32,8 +33,8 @@ import JobListPage from "./pages/JobListPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
 import NotificationsPage from "./pages/NotificationsPage";
-// import ConversationsPage from "./pages/ConversationsPage";
-// import MessagesPage from "./pages/MessagesPage";
+import ConversationsPage from "./pages/ConversationsPage";
+import MessagesPage from "./pages/MessagesPage";
 // import ReferralsPage from "./pages/ReferralsPage";
 // import DocumentsPage from "./pages/DocumentsPage";
 // import SavedSearchesPage from "./pages/SavedSearchesPage";
@@ -60,8 +61,8 @@ const App = () => {
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
             <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
             {/* <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} /> */}
-            {/* <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} /> */}
-            {/* <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} /> */}
+            <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
+            <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
             {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
             {/* <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} /> */}
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
@@ -80,6 +81,7 @@ const App = () => {
             <Route path="/admin/request-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminRequestLogsPage /></RoleRoute>} />
           </Routes>
         </main>
+        <ChatWidget />
         <Footer />
       </div>
     </BrowserRouter>
