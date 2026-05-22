@@ -796,7 +796,6 @@ export default function FluidBackground() {
     }
 
     function onTouchMove(e) {
-      e.preventDefault();
       const touches = e.targetTouches;
       for (let i = 0; i < touches.length; i++) {
         let pointer = pointers[i];
@@ -818,7 +817,6 @@ export default function FluidBackground() {
     }
 
     function onTouchStart(e) {
-      e.preventDefault();
       const touches = e.targetTouches;
       for (let i = 0; i < touches.length; i++) {
         if (i >= pointers.length) pointers.push(new pointerPrototype());
@@ -847,9 +845,9 @@ export default function FluidBackground() {
     }
 
     window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("touchstart", onTouchStart, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("touchend", onTouchEnd);
 

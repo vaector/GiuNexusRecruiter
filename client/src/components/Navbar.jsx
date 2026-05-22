@@ -608,7 +608,7 @@ const Navbar = () => {
         {NAV_COLORS.map((c, i) => <div key={i} className="nav-prelayer" style={{ background: c }} />)}
       </div>
 
-      <aside ref={panelRef} className="nav-mobile-panel" aria-hidden={!menuOpen}>
+      <aside ref={panelRef} className={`nav-mobile-panel${menuOpen ? " open" : ""}`} aria-hidden={!menuOpen}>
         <div className="nav-smoke" aria-hidden="true">
           {smokeCircles.map((c, i) => (
             <div
@@ -830,8 +830,12 @@ const Navbar = () => {
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           z-index: 200;
-          pointer-events: auto;
+          pointer-events: none;
           overflow: hidden;
+        }
+
+        .nav-mobile-panel.open {
+          pointer-events: auto;
         }
 
         .nav-panel-inner {
