@@ -26,7 +26,7 @@ import JobListPage from "./pages/JobListPage";
 // import JobAnalyticsPage from "./pages/JobAnalyticsPage";
 // import AdminDashboard from "./pages/AdminDashboard";
 // import PendingRecruitersPage from "./pages/PendingRecruitersPage";
-// import AdminJobsPage from "./pages/AdminJobsPage";
+import AdminJobsPage from "./pages/AdminJobsPage";
 // import AdminUsersPage from "./pages/AdminUsersPage";
 // import AdminReportsPage from "./pages/AdminReportsPage";
 // import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
@@ -73,7 +73,7 @@ const App = () => {
             {/* <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/dashboard" element={<RoleRoute allowedRoles={["admin"]}><AdminDashboard /></RoleRoute>} /> */}
             {/* <Route path="/admin/recruiters" element={<RoleRoute allowedRoles={["admin"]}><PendingRecruitersPage /></RoleRoute>} /> */}
-            {/* <Route path="/admin/jobs" element={<RoleRoute allowedRoles={["admin"]}><AdminJobsPage /></RoleRoute>} /> */}
+            <Route path="/admin/jobs" element={<RoleRoute allowedRoles={["admin"]}><AdminJobsPage /></RoleRoute>} />
             {/* <Route path="/admin/users" element={<RoleRoute allowedRoles={["admin"]}><AdminUsersPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/reports" element={<RoleRoute allowedRoles={["admin"]}><AdminReportsPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/audit-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminAuditLogsPage /></RoleRoute>} /> */}
