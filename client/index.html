@@ -6,6 +6,35 @@
     <title>AI-Powered Career Platform</title>
   </head>
   <body>
+    <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+      <filter id="nav-spotlight" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+        <feSpecularLighting result="lighting" in="blur" surfaceScale="5"
+          specularConstant="1.2" specularExponent="200" lighting-color="#ffffff">
+          <fePointLight id="nav-spotlight-light" x="460" y="26" z="150" />
+        </feSpecularLighting>
+        <feComposite in="lighting" in2="SourceAlpha" operator="in" result="composite" />
+        <feComposite in="SourceGraphic" in2="composite" operator="arithmetic"
+          k1="0" k2="1" k3="1.5" k4="0" />
+      </filter>
+      <filter id="nav-ambience" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+        <feSpecularLighting result="lighting" in="blur" surfaceScale="5"
+          specularConstant="1" specularExponent="200" lighting-color="#ffffff">
+          <fePointLight x="120" y="-80" z="200" />
+        </feSpecularLighting>
+        <feComposite in="lighting" in2="SourceAlpha" operator="in" result="composite" />
+        <feComposite in="SourceGraphic" in2="composite" operator="arithmetic"
+          k1="0" k2="1" k3="1" k4="0" />
+      </filter>
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+        <feColorMatrix in="blur" mode="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 35 -15" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </svg>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
