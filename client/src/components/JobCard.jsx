@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import SaveJobButton from "./SaveJobButton";
+import SkillChip from "./SkillChip";
 
 export const CATEGORY_COLORS = {
   Frontend: { bg: "#dcfce7", color: "#166534" },
@@ -90,15 +91,25 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
       </div>
 
       <div style={metaStyle}>
-        <span> {job.location}</span>
+        <span> {job.location?.city || job.location?.country || "—"}</span>
         <span> {job.type}</span>
-        {job.salary && <span> {job.salary?.toLocaleString()} EGP</span>}
+        {(job.salary?.min != null || job.salary?.amount != null) && (
+          <span> {(job.salary?.min ?? job.salary?.amount)?.toLocaleString?.() ?? "—"} {job.salary?.currency || ""}</span>
+        )}
         {job.score !== undefined && (
           <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>
              {Math.round(job.score * 100)}% match
           </span>
         )}
       </div>
+
+      {job.requirements?.length > 0 && (
+        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+          {job.requirements.slice(0, 3).map(req => (
+            <SkillChip key={req} skill={req} />
+          ))}
+        </div>
+      )}
 
       <div style={footerStyle}>
         <span style={{
