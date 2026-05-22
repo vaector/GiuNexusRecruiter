@@ -1,27 +1,21 @@
-// Axios instance configured with base URL
-// Request interceptor: attaches Bearer token to every request
-// Response interceptor: detects 401, calls logout(), redirects to /login
 import axios from "axios";
-import { getToken, removeToken } from "../utils/token";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      removeToken();
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
@@ -87,11 +81,6 @@ export const adminAPI = {
   getRequestLogStats: () => api.get("/admin/request-logs/stats"),
 };
 
-// AI Features (Need to update the backend to use this)
-// export const aiAPI = {
-//   generateCoverLetter: (jobId) => api.post(`/jobs/${jobId}/cover-letter`),
-// };
-
 // Notifications
 export const notificationsAPI = {
   getNotifications: (params) => api.get("/notifications", { params }),
@@ -126,9 +115,8 @@ export const reportsAPI = {
 
 // Documents
 export const documentsAPI = {
-  uploadDocument: (data) => api.post("/documents", data, {
-    headers: { "Content-Type": "multipart/form-data" },
-  }),
+  uploadDocument: (data) =>
+    api.post("/documents", data, { headers: { "Content-Type": "multipart/form-data" } }),
   getDocuments: (applicationId) => api.get(`/documents/${applicationId}`),
   signDocument: (id) => api.patch(`/documents/${id}/sign`),
   verifyDocument: (id) => api.get(`/documents/${id}/verify`),
