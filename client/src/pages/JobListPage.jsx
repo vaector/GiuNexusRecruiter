@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Lenis from "lenis";
 import { AuthContext } from "../context/AuthContext";
 import { jobsAPI } from "../services/api";
@@ -83,19 +83,15 @@ function DarkJobCard({ job, initialSaved }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Link
-            to={`/jobs/${job._id}`}
-            style={{
+          <span style={{
               color: hovered ? "#fff" : "rgba(255,255,255,0.85)",
               fontFamily: "'Inter',sans-serif",
               fontSize: "1rem", fontWeight: 700,
-              textDecoration: "none", lineHeight: 1.3,
+              lineHeight: 1.3, display: "block",
               transition: "color 0.2s",
-              display: "block",
-            }}
-          >
+            }}>
             {job.title}
-          </Link>
+          </span>
           <p style={{ fontFamily: MONO, fontSize: "10px", letterSpacing: "1px", color: "rgba(255,255,255,0.35)", marginTop: "4px", textTransform: "uppercase" }}>
             {job.company}
           </p>
