@@ -11,10 +11,10 @@
   "jest": {
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
-      "<rootDir>/backend/src/tests/setup.js"
+      "<rootDir>/src/tests/setup.js"
     ],
     "testMatch": [
-      "<rootDir>/backend/src/tests/**/*.test.js"
+      "<rootDir>/src/tests/**/*.test.js"
     ]
   },
   "keywords": [],

@@ -204,7 +204,7 @@ const JobPostSchema = new mongoose.Schema(
   }
 );
 
-JobPostSchema.pre("save", function (next) {
+JobPostSchema.pre("save", async function () {
   if (this.workplaceType === WorkplaceType.ON_SITE) {
     this.isRemote = false;
   } else if (
@@ -218,8 +218,6 @@ JobPostSchema.pre("save", function (next) {
     const rate = EXCHANGE_RATES_TO_USD[this.salary.currency] || 1;
     this.salary.normalizedUSD = Math.round(this.salary.min * rate * 100) / 100;
   }
-
-  next();
 });
 
 JobPostSchema.index({ category: 1, status: 1 });

@@ -90,7 +90,8 @@ export const notificationsAPI = {
 
 // Messages
 export const messagesAPI = {
-  getConversations: () => api.get("/conversations"),
+  getConversations: (params) => api.get("/conversations", { params }),
+  getAdminConversations: (params) => api.get("/conversations/admin", { params }),
   getMessages: (jobId, params) => api.get(`/conversations/${jobId}/messages`, { params }),
   sendMessage: (jobId, data) => api.post(`/conversations/${jobId}/messages`, data),
 };

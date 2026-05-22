@@ -1,31 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Syncopate:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-primary: #ff4f00;
-  --color-on-primary: #fffefb;
-  --color-ink: #201515;
-  --color-ink-soft: #2f2a26;
-  --color-ink-mid: #36342e;
-  --color-body: #605d52;
-  --color-body-mid: #939084;
-  --color-mute: #c5c0b1;
-  --color-canvas: #fffefb;
-  --color-canvas-soft: #f8f4f0;
+  /* ─── Color System ────────────────────────────────────────────── */
+  
+  /* Accent: The single chromatic accent */
+  --accent: #00e5cc;
+  --accent-dim: rgba(0, 229, 204, 0.12);
+  --accent-mid: rgba(0, 229, 204, 0.4);
+  --accent-glow: rgba(0, 229, 204, 0.25);
 
-  --color-bg: #fffefb;
-  --color-surface: #fffefb;
-  --color-surface-alt: #f8f4f0;
-  --color-border: #c5c0b1;
-  --color-text: #201515;
-  --color-text-muted: #605d52;
-  --color-accent: #ff4f00;
-  --color-accent-subtle: #fff3ee;
-  --color-accent-border: #ffcbb5;
+  /* Canvas & Surfaces */
+  --bg-base: #030303;
+  --bg-surface: rgba(8, 12, 24, 0.4);
+  --bg-surface-solid: rgba(6, 12, 24, 0.92);
+  --bg-surface-raised: rgba(8, 12, 24, 0.88);
 
-  --font-display: Inter, system-ui, -apple-system, sans-serif;
-  --font-body: Inter, system-ui, -apple-system, sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  /* Text Hierarchy */
+  --text-primary: #eaf2ff;
+  --text-secondary: rgba(234, 242, 255, 0.45);
+  --text-tertiary: rgba(234, 242, 255, 0.3);
+  --text-muted: rgba(234, 242, 255, 0.6);
+  --text-accent: #00e5cc;
 
+  /* Glass Borders */
+  --border-glass: rgba(255, 255, 255, 0.06);
+  --border-glass-hover: rgba(0, 229, 204, 0.5);
+  --border-glow: rgba(0, 229, 204, 0.12);
+
+  /* ─── Typography Stack ────────────────────────────────────────── */
+  --font-display: 'Syncopate', Inter, system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ─── Spacing & Radii ─────────────────────────────────────────── */
   --space-xxs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
@@ -36,13 +43,14 @@
   --space-3xl: 48px;
   --space-4xl: 64px;
 
+  /* NEXUS relies on sharp, tech-forward corners */
   --rounded-none: 0px;
-  --rounded-sm: 6px;
-  --rounded-md: 12px;
+  --rounded-sm: 2px;
+  --rounded-md: 4px; 
   --rounded-pill: 9999px;
-  --rounded-full: 9999px;
 }
 
+/* ─── Reset & Base ───────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -51,211 +59,307 @@
 
 body {
   font-family: var(--font-body);
-  background: var(--color-canvas);
-  color: var(--color-ink);
+  background: var(--bg-base);
+  color: var(--text-primary);
   font-size: 16px;
-  line-height: 24px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 input, textarea, select, button {
-  font-family: var(--font-body);
+  font-family: inherit;
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--accent);
   text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-/* ─── Buttons ─────────────────────────────────────── */
+a:hover {
+  text-shadow: 0 0 8px var(--accent-glow);
+}
 
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+/* ─── Typography Classes ─────────────────────────────────────────── */
+
+.nexus-display-hero {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 6vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.nexus-display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 4vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.nexus-display-md {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.nexus-body-lg {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.nexus-body-sm {
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.nexus-caption {
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+}
+
+.nexus-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.nexus-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+/* ─── HUD Telemetry ──────────────────────────────────────────────── */
+
+.nexus-hud {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(140, 230, 240, 0.38);
+}
+.nexus-hud.top-left { top: 1.5rem; left: 1.5rem; }
+.nexus-hud.top-right { top: 1.5rem; right: 1.5rem; text-align: right; }
+@media (max-width: 768px) { .nexus-hud { display: none; } }
+
+
+/* ─── Glass Panels / Cards ───────────────────────────────────────── */
+
+.nexus-glass-panel {
+  background: var(--bg-surface-solid);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--rounded-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 229, 204, 0.2);
+  padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nexus-glass-panel:hover {
+  transform: scale(1.02);
+  box-shadow: inset 2px 0 0 var(--border-glass-hover), 
+              0 12px 40px rgba(0, 0, 0, 0.6), 
+              0 0 12px var(--accent-glow);
+}
+
+/* Keep internal content above the spotlight effect */
+.nexus-glass-panel > * { position: relative; z-index: 1; }
+
+
+/* ─── Buttons ────────────────────────────────────────────────────── */
+
+.nexus-btn {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--rounded-md);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--rounded-md);
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 27px;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
+  outline: none;
 }
 
-.btn-primary:hover { opacity: 0.9; }
-
-.btn-secondary {
-  background: var(--color-ink);
-  color: var(--color-on-primary);
-  border: none;
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--rounded-md);
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 27px;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
+.nexus-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 229, 204, 0.5);
 }
 
-.btn-secondary:hover { opacity: 0.85; }
-
-.btn-tertiary {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--rounded-md);
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 27px;
-  cursor: pointer;
-  transition: background 0.15s ease;
+.nexus-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-.btn-tertiary:hover { background: var(--color-canvas-soft); }
-
-/* ─── Cards ───────────────────────────────────────── */
-
-.card {
-  background: var(--color-canvas-soft);
-  color: var(--color-ink);
-  border-radius: var(--rounded-md);
-  padding: var(--space-xl);
+.nexus-btn.primary {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent-mid);
 }
 
-.card-dark {
-  background: var(--color-ink);
-  color: var(--color-on-primary);
-  border-radius: var(--rounded-md);
-  padding: var(--space-xl);
+.nexus-btn.primary:hover:not(:disabled) {
+  background: rgba(0, 229, 204, 0.15);
+  box-shadow: 0 0 8px var(--accent-glow);
+  transform: scale(1.05);
 }
 
-.card-outline {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-  border-radius: var(--rounded-md);
-  padding: var(--space-xl);
+.nexus-btn.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-glass);
 }
 
-/* ─── Inputs ──────────────────────────────────────── */
+.nexus-btn.secondary:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
 
-.input {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-  border-radius: var(--rounded-sm);
+/* ─── Inputs ─────────────────────────────────────────────────────── */
+
+.nexus-input {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--rounded-md);
   padding: var(--space-md) var(--space-lg);
-  font-size: 18px;
-  line-height: 27px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
   width: 100%;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.input:focus {
-  border-color: var(--color-primary);
+.nexus-input::placeholder { color: var(--text-tertiary); }
+
+.nexus-input:focus {
+  border-color: var(--accent-mid);
+  box-shadow: 0 0 8px var(--accent-glow);
+  background: rgba(0, 229, 204, 0.02);
 }
 
-.input::placeholder {
-  color: var(--color-body-mid);
+/* ─── Filter / Tab Bar Pattern ───────────────────────────────────── */
+
+.nexus-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-/* ─── Badge pill ──────────────────────────────────── */
-
-.badge {
-  display: inline-block;
-  background: var(--color-canvas-soft);
-  color: var(--color-ink);
-  font-size: 16px;
-  line-height: 24px;
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--rounded-pill);
-}
-
-/* ─── Typography helpers ──────────────────────────── */
-
-.display-xl {
-  font-family: var(--font-display);
-  font-size: 56px;
-  font-weight: 500;
-  line-height: 56px;
-  color: var(--color-ink);
-}
-
-.display-lg {
-  font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 500;
-  line-height: 48px;
-  color: var(--color-ink);
-}
-
-.display-md {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 36px;
-  letter-spacing: 1px;
-  color: var(--color-ink);
-}
-
-.display-sm {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 30px;
-  letter-spacing: -0.6px;
-  color: var(--color-ink);
-}
-
-.body-lg {
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 30px;
-  letter-spacing: -0.2px;
-  color: var(--color-body);
-}
-
-.body-md {
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 27px;
-  color: var(--color-body);
-}
-
-.body-sm {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 24px;
-  color: var(--color-body);
-}
-
-.caption {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 21px;
-  color: var(--color-body-mid);
-}
-
-.eyebrow {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 14px;
-  letter-spacing: 1px;
+.nexus-filter-pill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-ink);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--border-glass);
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.18s ease;
+  cursor: pointer;
 }
 
-/* ─── Layout helpers ──────────────────────────────── */
+.nexus-filter-pill:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
 
-.container {
+.nexus-filter-pill.active {
+  background: var(--accent-dim);
+  border-color: rgba(0, 229, 204, 0.3);
+  color: var(--accent);
+  box-shadow: 0 0 6px rgba(0, 229, 204, 0.1);
+}
+
+/* ─── Badges ─────────────────────────────────────────────────────── */
+
+.nexus-badge {
+  background: var(--accent);
+  color: #050a14;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  font-weight: 700;
+  border-radius: 2px;
+  padding: 0.1rem 0.25rem;
+  min-width: 14px;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(0, 229, 204, 0.4);
+  animation: bellPulse 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes bellPulse {
+  0%, 100% { box-shadow: 0 0 3px rgba(0, 229, 204, 0.3); }
+  50% { box-shadow: 0 0 8px rgba(0, 229, 204, 0.6); }
+}
+
+/* ─── Layout Helpers ─────────────────────────────────────────────── */
+
+.nexus-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 var(--space-xl);
+  padding: 0 clamp(1.5rem, 4vw, 2rem);
+  position: relative;
+  z-index: 10;
 }
 
-.section {
-  padding: var(--space-4xl) var(--space-xl);
+/* ─── Custom Scrollbar (Effects & Motion) ────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  background: var(--bg-base);
 }
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  width: 3px;
+  margin: 12% 0; /* Creates the padding at top and bottom of screen */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 204, 0.5);
+  box-shadow: 0 0 8px var(--accent-glow);
+  border-radius: var(--rounded-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 204, 0.8);
+}
+
+/* Lenis overrides */
+html.lenis { height: auto; }
+html.lenis body { height: auto; }
