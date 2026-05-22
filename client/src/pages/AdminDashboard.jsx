@@ -13,7 +13,7 @@ const TEAL = "#00e5cc";
 
 const cardGroups = [
   {
-    title: "Users by role",
+    title: "Users",
     code: "USR",
     key: "usersByRole",
     items: [
@@ -23,7 +23,7 @@ const cardGroups = [
     ],
   },
   {
-    title: "Jobs by status",
+    title: "Jobs",
     code: "JOB",
     key: "jobsByStatus",
     items: [
@@ -32,7 +32,7 @@ const cardGroups = [
     ],
   },
   {
-    title: "Applications by status",
+    title: "Applications",
     code: "APP",
     key: "appsByStatus",
     items: [
