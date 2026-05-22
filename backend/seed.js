@@ -40,6 +40,8 @@ async function seed() {
     },
   ]);
 
+  await User.updateOne({ email: "admin@giunexus.com" }, { $set: { mfaEnabled: false } });
+
   console.log("Seeded users:");
   console.log("  Admin       — admin@giunexus.com / adminpassword123");
   console.log("  Job Seeker  — seeker@test.com / seeker123");

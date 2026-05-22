@@ -28,6 +28,26 @@ const JOB_SEEKER_DROPDOWNS = [
   },
 ];
 
+const ADMIN_DROPDOWNS = [
+  {
+    label: "Management",
+    items: [
+      { label: "Dashboard", to: "/admin/dashboard", icon: "clipboard" },
+      { label: "Users", to: "/admin/users", icon: "user" },
+      { label: "Recruiters", to: "/admin/recruiters", icon: "users" },
+      { label: "Jobs", to: "/admin/jobs", icon: "search" },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { label: "Reports", to: "/admin/reports", icon: "file" },
+      { label: "Audit Logs", to: "/admin/audit-logs", icon: "bookmark" },
+      { label: "Request Logs", to: "/admin/request-logs", icon: "filter" },
+    ],
+  },
+];
+
 const NAV_ICONS = {
   search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   sparkles: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l1 3 3 1-3 1-1 3-1-3-3 1 3-1 1-3z"/></svg>,
@@ -408,13 +428,37 @@ const Navbar = () => {
     );
     if (user?.role === "admin") return (
       <>
-        <NavLink to="/admin/dashboard" active={isActive("/admin/dashboard")}>Dashboard</NavLink>
-        <NavLink to="/admin/users" active={isActive("/admin/users")}>Users</NavLink>
-        <NavLink to="/admin/recruiters" active={isActive("/admin/recruiters")}>Recruiters</NavLink>
-        <NavLink to="/admin/jobs" active={isActive("/admin/jobs")}>Jobs</NavLink>
-        <NavLink to="/admin/reports" active={isActive("/admin/reports")}>Reports</NavLink>
-        <NavLink to="/admin/audit-logs" active={isActive("/admin/audit-logs")}>Audit Logs</NavLink>
-        <NavLink to="/admin/request-logs" active={isActive("/admin/request-logs")}>Request Logs</NavLink>
+        {ADMIN_DROPDOWNS.map((dropdown) => (
+          <div
+            key={dropdown.label}
+            className="nav-dropdown-wrapper"
+            onMouseEnter={() => handleDropdownEnter(dropdown.label)}
+            onMouseLeave={handleDropdownLeave}
+          >
+            <button
+              className={`nav-dropdown-trigger ${activeDropdown === dropdown.label ? "active" : ""}`}
+              onClick={() => setActiveDropdown(activeDropdown === dropdown.label ? null : dropdown.label)}
+            >
+              {dropdown.label}
+              <svg className="nav-dropdown-arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <div className={`nav-dropdown-menu ${activeDropdown === dropdown.label ? "open" : ""}`}>
+              {dropdown.items.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="nav-dropdown-item"
+                  onClick={() => setActiveDropdown(null)}
+                >
+                  <span className="nav-dropdown-item-icon">{NAV_ICONS[item.icon]}</span>
+                  <span className="nav-dropdown-item-label">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </>
     );
   };
@@ -434,7 +478,7 @@ const Navbar = () => {
 
     return (
       <>
-        {user?.role === "jobSeeker" && (
+        {(user?.role === "jobSeeker" || user?.role === "admin") && (
           <div className="nav-right-actions" ref={notifPanelRef}>
             <button
               className="nav-notif-bell"
@@ -637,7 +681,7 @@ const Navbar = () => {
               </li>
             ))}
           </ul>
-          {isAuthenticated && user?.role === "jobSeeker" && unreadCount > 0 && (
+          {isAuthenticated && (user?.role === "jobSeeker" || user?.role === "admin") && unreadCount > 0 && (
             <div className="nav-panel-notif-row">
               <Link to="/notifications" className="nav-panel-notif-link" onClick={() => setMenuOpen(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
