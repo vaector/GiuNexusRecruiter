@@ -3,27 +3,30 @@
 // Delete via DELETE /api/v1/users/:id
 // Status change via PATCH /api/v1/users/:id/status
 // Admin only
-import { useState, useEffect, useCallback } from "react";
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Lenis from "lenis";
 import { usersAPI } from "../services/api";
 import { Spinner } from "../components/Spinner";
 import Modal from "../components/Modal";
+import GooeyCursor from "../components/GooeyCursor";
+import Navbar from "../components/Navbar";
 
 const ROLES = ["", "jobSeeker", "recruiter", "admin"];
 const STATUSES = ["", "approved", "pending", "rejected"];
 
-const STATUS_STYLES = {
-  approved: { bg: "#dcfce7", color: "#166534" },
-  pending: { bg: "#fef9c3", color: "#854d0e" },
-  rejected: { bg: "#fee2e2", color: "#991b1b" },
+// Brighter, balanced theme for the badges
+const BADGE_STYLES = {
+  approved:  { bg: "transparent", color: "#00e5cc", border: "1px solid rgba(0, 229, 204, 0.4)" },
+  pending:   { bg: "transparent", color: "rgba(234, 242, 255, 0.6)", border: "1px dashed rgba(234, 242, 255, 0.3)" },
+  rejected:  { bg: "transparent", color: "rgba(234, 242, 255, 0.3)", border: "1px solid rgba(255, 255, 255, 0.06)", textDecoration: "line-through" },
+  
+  admin:     { bg: "rgba(0, 229, 204, 0.1)", color: "#00e5cc", border: "1px solid rgba(0, 229, 204, 0.3)" },
+  recruiter: { bg: "transparent", color: "#eaf2ff", border: "1px solid rgba(255, 255, 255, 0.3)" }, 
+  jobSeeker: { bg: "transparent", color: "rgba(234, 242, 255, 0.8)", border: "1px solid rgba(255, 255, 255, 0.15)" }, // Brightened to not look grayed out
 };
 
-const ROLE_STYLES = {
-  admin: { bg: "#ede9fe", color: "#5b21b6" },
-  recruiter: { bg: "#dbeafe", color: "#1e40af" },
-  jobSeeker: { bg: "#f1f5f9", color: "#475569" },
-};
-
-const AdminUsersPage = () => {
+export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,6 +39,12 @@ const AdminUsersPage = () => {
   const [deleteModal, setDeleteModal] = useState(null);
   const [statusModal, setStatusModal] = useState(null);
   const LIMIT = 20;
+
+  // HUD & Scroll tracking
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const scrollbarRef = useRef(null);
+  const scrollbarTrackRef = useRef(null);
+  const pctRef = useRef(null);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -54,13 +63,50 @@ const AdminUsersPage = () => {
       setTotal(res.data.total || 0);
       setPages(res.data.pages || 1);
     } catch (err) {
-      setError("Failed to load users");
+      setError("SYS.ERR: FAILED_TO_LOAD_USERS");
     } finally {
       setLoading(false);
     }
   }, [page, filters]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  // Robust Scroll Engine
+  useEffect(() => {
+    if (typeof history !== "undefined") history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+
+    const lenis = new Lenis({ lerp: 0.07, smoothWheel: true });
+    
+    lenis.on('scroll', (e) => {
+      const pct = e.progress;
+      if (pctRef.current) {
+        pctRef.current.textContent = (pct * 100).toFixed(1) + "%";
+      }
+      if (scrollbarRef.current && scrollbarTrackRef.current) {
+        const trackH = scrollbarTrackRef.current.offsetHeight - scrollbarRef.current.offsetHeight;
+        scrollbarRef.current.style.transform = `translateY(${pct * Math.max(trackH, 0)}px)`;
+        const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
+        scrollbarTrackRef.current.style.opacity = isScrollable ? "1" : "0";
+      }
+    });
+
+    let raf;
+    function tick(time) {
+      lenis.raf(time);
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+
+    const trackMouse = (e) => setCoords({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", trackMouse);
+
+    return () => {
+      lenis.destroy();
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", trackMouse);
+    };
+  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -74,9 +120,9 @@ const AdminUsersPage = () => {
       await usersAPI.deleteUser(id);
       setUsers((prev) => prev.filter((u) => u._id !== id));
       setTotal((prev) => prev - 1);
-      showToast(`${name} has been deleted`);
+      showToast(`SYS.UPDATE: ${name}_TERMINATED`);
     } catch {
-      showToast("Failed to delete user", "error");
+      showToast("SYS.ERR: DELETION_FAILED", "error");
     } finally {
       setActionLoading((prev) => ({ ...prev, [id]: null }));
       setDeleteModal(null);
@@ -89,9 +135,9 @@ const AdminUsersPage = () => {
     try {
       await usersAPI.updateUserStatus(id, status);
       setUsers((prev) => prev.map((u) => u._id === id ? { ...u, status } : u));
-      showToast(`${name}'s status updated to ${status}`);
+      showToast(`SYS.UPDATE: ${name}_STATUS_${status.toUpperCase()}`);
     } catch {
-      showToast("Failed to update status", "error");
+      showToast("SYS.ERR: STATUS_UPDATE_FAILED", "error");
     } finally {
       setActionLoading((prev) => ({ ...prev, [id]: null }));
       setStatusModal(null);
@@ -99,279 +145,253 @@ const AdminUsersPage = () => {
   };
 
   const getInitials = (name) =>
-    name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+    name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "??";
 
   const selectStyle = {
     padding: "0.5rem 0.75rem",
-    borderRadius: "var(--rounded-sm)",
-    border: "1px solid var(--color-border)",
-    background: "var(--color-canvas)",
-    color: "var(--color-ink)",
-    fontSize: "clamp(12px, 1vw, 14px)",
+    borderRadius: "2px",
+    border: "1px solid rgba(255, 255, 255, 0.06)",
+    background: "rgba(6, 12, 24, 0.92)",
+    color: "#eaf2ff",
+    fontSize: "11px",
     cursor: "pointer",
-    fontFamily: "inherit",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
     outline: "none",
+    textTransform: "uppercase"
   };
 
-  const badgeStyle = (styles) => ({
-    display: "inline-block",
-    padding: "0.2rem 0.6rem",
-    borderRadius: "var(--rounded-pill)",
-    fontSize: "clamp(10px, 0.85vw, 12px)",
-    fontWeight: 600,
-    background: styles.bg,
-    color: styles.color,
-  });
-
-  const actionBtnStyle = (color, disabled) => ({
+  const actionBtnStyle = (disabled, isDanger = false) => ({
     padding: "0.35rem 0.85rem",
-    borderRadius: "var(--rounded-sm)",
-    border: `1px solid ${color}`,
-    background: "transparent",
-    color: disabled ? "var(--color-mute)" : color,
-    fontSize: "clamp(11px, 0.9vw, 13px)",
+    borderRadius: "2px",
+    border: `1px solid ${disabled ? "rgba(255,255,255,0.06)" : isDanger ? "rgba(239, 68, 68, 0.4)" : "rgba(255,255,255,0.2)"}`,
+    background: disabled ? "transparent" : isDanger ? "rgba(239, 68, 68, 0.05)" : "transparent",
+    color: disabled ? "rgba(234, 242, 255, 0.3)" : isDanger ? "#ef4444" : "#eaf2ff",
+    fontSize: "10px",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
     fontWeight: 600,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "all 0.15s",
     whiteSpace: "nowrap",
   });
 
-  return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)" }}>
+  // Strict Grid Layout: Fixed widths for the end columns guarantees nothing shifts
+  const gridTemplate = "minmax(150px, 1fr) minmax(180px, 1.5fr) 110px 110px 160px";
 
-      {/* toast */}
+  return (
+    <>
+      {/* STATIC DARK BACKGROUND */}
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, background: "#030303", pointerEvents: "none" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.7) 120%)" }}></div>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.05, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}></div>
+      </div>
+
+      <GooeyCursor />
+      <Navbar />
+
+      {/* --- HUD Elements --- */}
+      <div style={{ position: "fixed", top: "1.5rem", left: "1.5rem", zIndex: 60, pointerEvents: "none", fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: "0.14em", color: "rgba(140,230,240,0.38)" }}>
+        SYS.READY // COORD: {coords.x}, {coords.y}
+      </div>
+      
+      <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", zIndex: 60, pointerEvents: "none", fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: "0.14em", color: "rgba(140,230,240,0.38)", textAlign: "right" }}>
+        PROGRESS: <strong ref={pctRef} style={{ color: "#00e5cc" }}>0.0%</strong>
+      </div>
+
+      {/* --- Custom Scrollbar --- */}
+      <div ref={scrollbarTrackRef} style={{ position: "fixed", right: "6px", top: "12%", bottom: "12%", width: "3px", zIndex: 60, pointerEvents: "none", background: "rgba(255,255,255,0.04)", borderRadius: "2px", transition: "opacity 0.6s ease", opacity: 0 }}>
+        <div ref={scrollbarRef} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "36px", background: "rgba(0,229,204,0.5)", borderRadius: "2px", boxShadow: "0 0 8px rgba(0,229,204,0.25)", willChange: "transform" }} />
+      </div>
+
+      {/* --- Toasts --- */}
       {toast && (
-        <div style={{
-          position: "fixed", bottom: "2rem", right: "2rem",
-          background: toast.type === "success" ? "var(--color-ink)" : "#dc2626",
-          color: "var(--color-on-primary)",
-          padding: "0.85rem 1.5rem", borderRadius: "var(--rounded-md)",
-          fontSize: "14px", fontWeight: 500, zIndex: 1000,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-          animation: "fadeIn 0.2s ease",
-        }}>
+        <div style={{ position: "fixed", bottom: "2rem", right: "2rem", background: "rgba(6, 12, 24, 0.92)", color: toast.type === "error" ? "#ef4444" : "#00e5cc", border: `1px solid ${toast.type === "error" ? "#ef4444" : "#00e5cc"}`, padding: "1rem 1.5rem", borderRadius: "2px", fontSize: "11px", fontFamily: "'JetBrains Mono', monospace", zIndex: 1000, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", animation: "fadeIn 0.2s ease" }}>
           {toast.message}
         </div>
       )}
 
-      {/* delete modal */}
-      <Modal
-        isOpen={!!deleteModal}
-        onClose={() => setDeleteModal(null)}
-        onConfirm={handleDelete}
-        title="Delete User"
-        confirmText="Delete"
-        confirmDanger
-      >
-        <p>Are you sure you want to permanently delete <strong>{deleteModal?.name}</strong>? This action cannot be undone.</p>
+      {/* --- Modals --- */}
+      <Modal isOpen={!!deleteModal} onClose={() => setDeleteModal(null)} onConfirm={handleDelete} title="TERMINATE USER" confirmText="CONFIRM" confirmDanger>
+        <p style={{ color: "rgba(234, 242, 255, 0.45)" }}>Permanently delete <strong style={{ color: "#eaf2ff" }}>{deleteModal?.name}</strong>? This cannot be reversed.</p>
       </Modal>
 
-      {/* status modal */}
-      <Modal
-        isOpen={!!statusModal}
-        onClose={() => setStatusModal(null)}
-        onConfirm={handleStatusChange}
-        title="Update User Status"
-        confirmText="Confirm"
-      >
-        <p>Change <strong>{statusModal?.name}</strong>'s status to <strong>{statusModal?.status}</strong>?</p>
+      <Modal isOpen={!!statusModal} onClose={() => setStatusModal(null)} onConfirm={handleStatusChange} title="MODIFY ACCESS" confirmText="AUTHORIZE">
+        <p style={{ color: "rgba(234, 242, 255, 0.45)" }}>Change <strong style={{ color: "#eaf2ff" }}>{statusModal?.name}</strong>'s status to <strong style={{ color: "#00e5cc" }}>{statusModal?.status?.toUpperCase()}</strong>?</p>
       </Modal>
 
-      {/* header */}
-      <div style={{ marginBottom: "clamp(1.5rem, 3vw, 2.5rem)" }}>
-        <p style={{ fontSize: "clamp(10px, 0.9vw, 12px)", fontWeight: 500, letterSpacing: "1px", textTransform: "uppercase", color: "var(--color-body-mid)", marginBottom: "0.5rem" }}>
-          Admin Panel
-        </p>
-        <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2.2rem)", fontWeight: 500, color: "var(--color-ink)", marginBottom: "0.5rem" }}>
-          User Management
-        </h1>
-        <p style={{ color: "var(--color-body)", fontSize: "clamp(13px, 1.1vw, 15px)" }}>
-          {total} total users on the platform
-        </p>
-      </div>
+      {/* --- Main View Container --- */}
+      <div style={{ position: "relative", zIndex: 10, maxWidth: 1100, margin: "0 auto", padding: "clamp(6rem, 8vw, 8rem) clamp(1.5rem, 4vw, 2rem)", minHeight: "100vh" }}>
+        
+        {/* header */}
+        <div style={{ marginBottom: "clamp(1.5rem, 3vw, 2.5rem)" }}>
+          <p style={{ fontSize: "10px", fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "2px", color: "#00e5cc", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+            Admin Subsystem // Level 4
+          </p>
+          <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2.2rem)", fontWeight: 600, fontFamily: "'Syncopate', sans-serif", color: "#eaf2ff", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+            User Management
+          </h1>
+          <p style={{ color: "rgba(234, 242, 255, 0.45)", fontSize: "14px" }}>
+            {total} total records in the database
+          </p>
+        </div>
 
-      {/* filters */}
-      <div style={{
-        display: "flex", gap: "0.75rem", flexWrap: "wrap",
-        marginBottom: "clamp(1.25rem, 2vw, 2rem)",
-        background: "var(--color-canvas-soft)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--rounded-md)",
-        padding: "1rem 1.25rem",
-        alignItems: "center",
-      }}>
-        <span style={{ fontSize: "clamp(12px, 1vw, 14px)", fontWeight: 500, color: "var(--color-body)", marginRight: "0.25rem" }}>Filter:</span>
+        {/* filters */}
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "clamp(1.25rem, 2vw, 2rem)", background: "rgba(6, 12, 24, 0.92)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "4px", padding: "1rem 1.25rem", alignItems: "center" }}>
+          
+          {/* REMOVED THE UNDERSCORE HERE */}
+          <span style={{ fontSize: "11px", fontFamily: "'JetBrains Mono', monospace", color: "rgba(234, 242, 255, 0.45)", marginRight: "0.25rem" }}>
+            FILTER BY:
+          </span>
 
-        <select style={selectStyle} value={filters.role} onChange={(e) => handleFilterChange("role", e.target.value)}>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>{r ? r.replace("jobSeeker", "Job Seeker").replace("recruiter", "Recruiter").replace("admin", "Admin") : "All roles"}</option>
-          ))}
-        </select>
+          <select style={selectStyle} value={filters.role} onChange={(e) => handleFilterChange("role", e.target.value)}>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r ? r.replace("jobSeeker", "JOB SEEKER").toUpperCase() : "ALL ROLES"}</option>
+            ))}
+          </select>
 
-        <select style={selectStyle} value={filters.status} onChange={(e) => handleFilterChange("status", e.target.value)}>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s ? s.charAt(0).toUpperCase() + s.slice(1) : "All statuses"}</option>
-          ))}
-        </select>
+          <select style={selectStyle} value={filters.status} onChange={(e) => handleFilterChange("status", e.target.value)}>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{s ? s.toUpperCase() : "ALL STATUSES"}</option>
+            ))}
+          </select>
 
-        {(filters.role || filters.status) && (
-          <button
-            onClick={() => { setFilters({ role: "", status: "" }); setPage(1); }}
-            style={{ background: "none", border: "none", color: "var(--color-primary)", fontSize: "clamp(12px, 1vw, 14px)", fontWeight: 600, cursor: "pointer" }}
-          >
-            Clear filters
-          </button>
+          {(filters.role || filters.status) && (
+            <button onClick={() => { setFilters({ role: "", status: "" }); setPage(1); }} style={{ background: "none", border: "none", color: "#00e5cc", fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", cursor: "pointer", padding: "0.5rem" }}>
+              RESET FILTERS {/* REMOVED THE UNDERSCORE HERE */}
+            </button>
+          )}
+        </div>
+
+        {/* content */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "4rem" }}>
+            <Spinner />
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "rgba(234,242,255,0.3)", marginTop: "1rem" }}>FETCHING_RECORDS...</p>
+          </div>
+        ) : error ? (
+          <div style={{ background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "4px", padding: "1.5rem", color: "#eaf2ff", textAlign: "center" }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "12px", marginBottom: "1rem" }}>{error}</p>
+            <button onClick={fetchUsers} style={actionBtnStyle(false)}>RETRY</button>
+          </div>
+        ) : users.length === 0 ? (
+          <div style={{ background: "rgba(6, 12, 24, 0.92)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "4px", padding: "4rem", textAlign: "center" }}>
+            <div style={{ fontSize: "1.5rem", marginBottom: "1rem", color: "rgba(234, 242, 255, 0.3)", fontFamily: "'Syncopate', sans-serif" }}>// NULL</div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 500, color: "#eaf2ff", marginBottom: "0.5rem" }}>No users found</h2>
+            <p style={{ color: "rgba(234, 242, 255, 0.45)", fontSize: "14px" }}>Adjust active filters to continue.</p>
+          </div>
+        ) : (
+          <>
+            {/* table */}
+            <div style={{ background: "rgba(6, 12, 24, 0.92)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "4px", overflow: "hidden" }}>
+              
+              {/* table header */}
+              <div className="admin-table-row header" style={{ display: "grid", gridTemplateColumns: gridTemplate, gap: "1rem", padding: "0.75rem 1.25rem", background: "rgba(8, 12, 24, 0.4)", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                {["USER_DATA", "EMAIL", "ROLE", "STATUS", "ACTIONS"].map((h) => (
+                  <span key={h} style={{ fontSize: "10px", fontWeight: 500, fontFamily: "'JetBrains Mono', monospace", color: "rgba(234, 242, 255, 0.3)", letterSpacing: "1px" }}>
+                    {h}
+                  </span>
+                ))}
+              </div>
+
+              {/* rows */}
+              {users.map((user, i) => {
+                const isBusy = !!actionLoading[user._id];
+                const roleStyle = BADGE_STYLES[user.role] || BADGE_STYLES.jobSeeker;
+                const statusStyle = BADGE_STYLES[user.status] || BADGE_STYLES.pending;
+                const nextStatuses = ["approved", "pending", "rejected"].filter((s) => s !== user.status);
+
+                return (
+                  <div key={user._id} className="admin-table-row body-row" style={{ display: "grid", gridTemplateColumns: gridTemplate, gap: "1rem", padding: "1rem 1.25rem", borderBottom: i < users.length - 1 ? "1px solid rgba(255, 255, 255, 0.06)" : "none", alignItems: "center" }}>
+                    
+                    {/* name + avatar */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "2px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "#00e5cc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
+                        {getInitials(user.name)}
+                      </div>
+                      <span style={{ fontWeight: 400, color: "#eaf2ff", fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {user.name}
+                      </span>
+                    </div>
+
+                    {/* email (Forced left-align) */}
+                    <span className="email-cell" style={{ textAlign: "left", width: "100%", color: "rgba(234, 242, 255, 0.45)", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {user.email}
+                    </span>
+
+                    {/* role badge */}
+                    <div>
+                      <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "2px", fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", background: roleStyle.bg, color: roleStyle.color, border: roleStyle.border }}>
+                        {user.role === "jobSeeker" ? "JOB SEEKER" : user.role.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* status badge */}
+                    <div>
+                      <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "2px", fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", background: statusStyle.bg, color: statusStyle.color, border: statusStyle.border, textDecoration: statusStyle.textDecoration || "none" }}>
+                        {user.status?.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* actions */}
+                    <div className="action-cell" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-start" }}>
+                      {user.role !== "admin" ? (
+                        <>
+                          {nextStatuses.map((s) => (
+                            <button key={s} disabled={isBusy} onClick={() => setStatusModal({ id: user._id, status: s, name: user.name })} style={actionBtnStyle(isBusy)}>
+                              {s.substring(0,3).toUpperCase()}
+                            </button>
+                          ))}
+                          <button disabled={isBusy} onClick={() => setDeleteModal({ id: user._id, name: user.name })} style={actionBtnStyle(isBusy, true)}>
+                            {actionLoading[user._id] === "deleting" ? "..." : "DEL"}
+                          </button>
+                        </>
+                      ) : (
+                        /* ADDED FALLBACK TEXT SO THE ADMIN ROW DOESN'T COLLAPSE */
+                        <span style={{ fontSize: "10px", color: "rgba(234,242,255,0.3)", fontFamily: "'JetBrains Mono', monospace" }}>SYS_ADMIN</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* pagination */}
+            {pages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2rem" }}>
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} style={actionBtnStyle(page === 1)}>
+                  {"< PREV"}
+                </button>
+                <span style={{ fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", color: "rgba(234,242,255,0.45)" }}>
+                  PAGE {page} OF {pages}
+                </span>
+                <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages} style={actionBtnStyle(page === pages)}>
+                  {"NEXT >"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* content */}
-      {loading ? (
-        <Spinner />
-      ) : error ? (
-        <div style={{ background: "var(--color-accent-subtle)", border: "1px solid var(--color-accent-border)", borderRadius: "var(--rounded-md)", padding: "1.5rem", color: "var(--color-body)", textAlign: "center" }}>
-          {error}
-          <button onClick={fetchUsers} style={{ display: "block", margin: "1rem auto 0", background: "var(--color-primary)", color: "var(--color-on-primary)", border: "none", padding: "0.5rem 1.25rem", borderRadius: "var(--rounded-md)", cursor: "pointer", fontWeight: 600 }}>
-            Retry
-          </button>
-        </div>
-      ) : users.length === 0 ? (
-        <div style={{ background: "var(--color-canvas-soft)", border: "1px solid var(--color-border)", borderRadius: "var(--rounded-md)", padding: "4rem", textAlign: "center" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>👥</div>
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 500, color: "var(--color-ink)", marginBottom: "0.5rem" }}>No users found</h2>
-          <p style={{ color: "var(--color-body-mid)", fontSize: "14px" }}>Try adjusting your filters</p>
-        </div>
-      ) : (
-        <>
-          {/* table */}
-          <div style={{ background: "var(--color-canvas)", border: "1px solid var(--color-border)", borderRadius: "var(--rounded-md)", overflow: "hidden" }}>
-            {/* table header */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1.5fr auto auto auto",
-              gap: "1rem",
-              padding: "0.75rem 1.25rem",
-              background: "var(--color-canvas-soft)",
-              borderBottom: "1px solid var(--color-border)",
-            }}>
-              {["User", "Email", "Role", "Status", "Actions"].map((h) => (
-                <span key={h} style={{ fontSize: "clamp(10px, 0.85vw, 12px)", fontWeight: 500, color: "var(--color-body-mid)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  {h}
-                </span>
-              ))}
-            </div>
-
-            {/* rows */}
-            {users.map((user, i) => {
-              const isBusy = !!actionLoading[user._id];
-              const roleStyle = ROLE_STYLES[user.role] || ROLE_STYLES.jobSeeker;
-              const statusStyle = STATUS_STYLES[user.status] || STATUS_STYLES.pending;
-              const nextStatuses = ["approved", "pending", "rejected"].filter((s) => s !== user.status);
-
-              return (
-                <div
-                  key={user._id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1.5fr auto auto auto",
-                    gap: "1rem",
-                    padding: "1rem 1.25rem",
-                    borderBottom: i < users.length - 1 ? "1px solid var(--color-border)" : "none",
-                    alignItems: "center",
-                    transition: "background 0.1s",
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-canvas-soft)"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                >
-                  {/* name + avatar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      background: "var(--color-ink)", color: "var(--color-on-primary)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "12px", fontWeight: 700, flexShrink: 0,
-                    }}>
-                      {getInitials(user.name)}
-                    </div>
-                    <span style={{ fontWeight: 600, color: "var(--color-ink)", fontSize: "clamp(13px, 1.1vw, 15px)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {user.name}
-                    </span>
-                  </div>
-
-                  {/* email */}
-                  <span style={{ color: "var(--color-body)", fontSize: "clamp(12px, 1vw, 14px)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {user.email}
-                  </span>
-
-                  {/* role badge */}
-                  <span style={badgeStyle(roleStyle)}>
-                    {user.role === "jobSeeker" ? "Job Seeker" : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </span>
-
-                  {/* status badge */}
-                  <span style={badgeStyle(statusStyle)}>
-                    {user.status?.charAt(0).toUpperCase() + user.status?.slice(1)}
-                  </span>
-
-                  {/* actions */}
-                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    {user.role !== "admin" && nextStatuses.map((s) => (
-                      <button
-                        key={s}
-                        disabled={isBusy}
-                        onClick={() => setStatusModal({ id: user._id, status: s, name: user.name })}
-                        style={actionBtnStyle("var(--color-ink)", isBusy)}
-                      >
-                        {s.charAt(0).toUpperCase() + s.slice(1)}
-                      </button>
-                    ))}
-                    {user.role !== "admin" && (
-                      <button
-                        disabled={isBusy}
-                        onClick={() => setDeleteModal({ id: user._id, name: user.name })}
-                        style={actionBtnStyle("#dc2626", isBusy)}
-                      >
-                        {actionLoading[user._id] === "deleting" ? "Deleting..." : "Delete"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* pagination */}
-          {pages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", marginTop: "1.5rem" }}>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                style={{ ...actionBtnStyle("var(--color-ink)", page === 1), padding: "0.5rem 1rem" }}
-              >
-                ← Prev
-              </button>
-              <span style={{ fontSize: "14px", color: "var(--color-body)" }}>
-                Page {page} of {pages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                disabled={page === pages}
-                style={{ ...actionBtnStyle("var(--color-ink)", page === pages), padding: "0.5rem 1rem" }}
-              >
-                Next →
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) {
-          .users-grid { grid-template-columns: 1fr 1fr auto !important; }
+        
+        .body-row:hover { background: rgba(255, 255, 255, 0.02); }
+
+        @media (max-width: 900px) {
+          .admin-table-row { grid-template-columns: 1.5fr 110px 110px 160px !important; }
+          .email-cell { display: none !important; }
+        }
+        @media (max-width: 600px) {
+          .admin-table-row.header { display: none !important; }
+          .admin-table-row.body-row {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem !important;
+          }
+          .action-cell { width: 100%; justify-content: flex-start; margin-top: 0.5rem; }
         }
       `}</style>
-    </div>
+    </>
   );
-};
-
-export default AdminUsersPage;
+}
