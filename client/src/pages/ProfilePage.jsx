@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { profileAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const ProfilePage = () => {
   const { updateUser } = useContext(AuthContext);
@@ -88,15 +89,7 @@ const ProfilePage = () => {
   const skills = Array.isArray(profile?.skills) ? profile.skills : [];
 
   if (loading) {
-    return (
-      <ProfileShell>
-        <section className="profile-state-card">
-          <p className="nexus-eyebrow">Job Seeker Profile</p>
-          <h1>Loading profile</h1>
-          <p>Your profile data is being synced.</p>
-        </section>
-      </ProfileShell>
-    );
+    return <PageLoader />;
   }
 
   if (pageError) {

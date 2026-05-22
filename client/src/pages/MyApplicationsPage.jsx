@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { applicationsAPI } from "../services/api";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
+import PageLoader from "../components/PageLoader";
 
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -49,13 +50,7 @@ export default function MyApplicationsPage() {
 
       {error && <div className="ma-error">{error}</div>}
 
-      {loading ? (
-        <section className="ma-state-card">
-          <p className="nexus-eyebrow">Loading</p>
-          <h2>Syncing applications</h2>
-          <p>Your application records are being retrieved.</p>
-        </section>
-      ) : applications.length === 0 ? (
+      {loading ? <PageLoader /> : applications.length === 0 ? (
         <section className="ma-state-card">
           <p className="nexus-eyebrow">No Applications</p>
           <h2>No applications yet</h2>
