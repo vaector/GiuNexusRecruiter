@@ -47,35 +47,72 @@ exports.updateUserStatus = asyncHandler(async (req, res, next) => {
   if (!status || !allowedStatuses.includes(status)) {
     return next(createError(400, `Status must be one of: ${allowedStatuses.join(", ")}`));
   }
-  const existingUser = await User.findById(req.params.id).select("status");
+  const existingUser = await User.findById(req.params.id).select("status role");
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { status },
     { new: true, runValidators: true }
   ).select("-password");
   if (!user) return next(createError(404, "User not found"));
-  if (status === UserStatus.APPROVED || status === UserStatus.REJECTED) {
-    await AuditLog.record({
-      actor: req.user,
-      action: status === UserStatus.APPROVED ? AuditAction.RECRUITER_APPROVED : AuditAction.RECRUITER_REJECTED,
-      targetModel: "User",
-      targetId: user._id,
-      metadata: { from: existingUser?.status, to: status },
-      ipAddress: req.ip,
-      userAgent: req.get("User-Agent"),
-    });
+
+  const isRecruiter = existingUser?.role === "recruiter";
+
+  if (status === UserStatus.APPROVED) {
+    if (isRecruiter) {
+      await AuditLog.record({
+        actor: req.user,
+        action: AuditAction.RECRUITER_APPROVED,
+        targetModel: "User",
+        targetId: user._id,
+        metadata: { from: existingUser?.status, to: status, role: existingUser?.role },
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
+    }
     await Notification.send({
       recipient: user._id,
-      type: status === UserStatus.APPROVED ? NotificationType.ACCOUNT_APPROVED : NotificationType.ACCOUNT_REJECTED,
+      type: NotificationType.ACCOUNT_APPROVED,
       title: "Account Update",
-      message: `Your recruiter account has been ${status}`,
+      message: isRecruiter
+        ? "Your recruiter account has been approved"
+        : "Your account has been approved",
     });
-    if (status === UserStatus.REJECTED) {
-      await Report.updateMany(
-        { targetModel: 'User', targetId: user._id, status: 'open' },
-        { status: 'actioned', adminNote: 'Resolved via account rejection', reviewedBy: req.user._id, reviewedAt: new Date() }
-      );
+  }
+
+  if (status === UserStatus.REJECTED) {
+    if (isRecruiter) {
+      await AuditLog.record({
+        actor: req.user,
+        action: AuditAction.RECRUITER_REJECTED,
+        targetModel: "User",
+        targetId: user._id,
+        metadata: { from: existingUser?.status, to: status, role: existingUser?.role },
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
+    } else {
+      await AuditLog.record({
+        actor: req.user,
+        action: AuditAction.USER_BANNED,
+        targetModel: "User",
+        targetId: user._id,
+        metadata: { from: existingUser?.status, to: status, role: existingUser?.role },
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
     }
+    await Notification.send({
+      recipient: user._id,
+      type: NotificationType.ACCOUNT_REJECTED,
+      title: "Account Update",
+      message: isRecruiter
+        ? "Your recruiter account has been rejected"
+        : "Your account has been rejected",
+    });
+    await Report.updateMany(
+      { targetModel: 'User', targetId: user._id, status: 'open' },
+      { status: 'actioned', adminNote: 'Resolved via account rejection', reviewedBy: req.user._id, reviewedAt: new Date() }
+    );
   }
   res.status(200).json({ success: true, user });
 });
