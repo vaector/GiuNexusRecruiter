@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { applicationsAPI } from "../services/api";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
+import PageLoader from "../components/PageLoader";
 
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -39,6 +40,14 @@ export default function MyApplicationsPage() {
     }
   };
 
+  const buildMessageUrl = (application) => {
+    const job = application.job || {};
+    const params = new URLSearchParams();
+    params.set("role", "recruiter");
+    if (job.title) params.set("job", job.title);
+    return `/conversations/${job._id}?${params.toString()}`;
+  };
+
   return (
     <ApplicationsShell>
       <div className="ma-header">
@@ -49,13 +58,7 @@ export default function MyApplicationsPage() {
 
       {error && <div className="ma-error">{error}</div>}
 
-      {loading ? (
-        <section className="ma-state-card">
-          <p className="nexus-eyebrow">Loading</p>
-          <h2>Syncing applications</h2>
-          <p>Your application records are being retrieved.</p>
-        </section>
-      ) : applications.length === 0 ? (
+      {loading ? <PageLoader /> : applications.length === 0 ? (
         <section className="ma-state-card">
           <p className="nexus-eyebrow">No Applications</p>
           <h2>No applications yet</h2>
@@ -82,6 +85,11 @@ export default function MyApplicationsPage() {
                 </div>
                 <div className="ma-actions">
                   {job._id && <Link className="nexus-btn secondary" to={`/jobs/${job._id}`}>View job</Link>}
+                  {job._id && application.status !== "rejected" && (
+                    <Link className="nexus-btn secondary" to={buildMessageUrl(application)}>
+                      Message recruiter
+                    </Link>
+                  )}
                   <Link className="nexus-btn secondary" to={`/documents/${application._id}`}>Documents</Link>
                   <button
                     className="nexus-btn danger"

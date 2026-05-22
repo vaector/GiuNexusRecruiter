@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { savedSearchesAPI } from "../services/api";
 import relativeTime from "../utils/relativeTime";
+import PageLoader from "../components/PageLoader";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -292,15 +293,7 @@ export default function SavedSearchesPage() {
         )}
 
         {/* List */}
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
-            <div style={{ width: "24px", height: "24px", border: "2px solid rgba(0,229,204,0.2)", borderTopColor: TEAL, borderRadius: "50%", animation: "savedSpin 0.8s linear infinite" }} />
-            <div style={{ fontFamily: MONO, fontSize: "0.68rem", letterSpacing: "0.14em", color: "rgba(234,242,255,0.3)", textTransform: "uppercase" }}>
-              LOADING...
-            </div>
-            <style>{`@keyframes savedSpin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        ) : searches.length === 0 ? (
+        {loading ? <PageLoader /> : searches.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(234,242,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>

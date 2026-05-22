@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { reportsAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -237,15 +238,7 @@ export default function AdminReportsPage() {
         )}
 
         {/* Loading */}
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
-            <div style={{ width: "24px", height: "24px", border: "2px solid rgba(0,229,204,0.2)", borderTopColor: TEAL, borderRadius: "50%", animation: "reportSpin 0.8s linear infinite" }} />
-            <div style={{ fontFamily: MONO, fontSize: "0.68rem", letterSpacing: "0.14em", color: "rgba(234,242,255,0.3)", textTransform: "uppercase" }}>
-              LOADING...
-            </div>
-            <style>{`@keyframes reportSpin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        ) : reports.length === 0 ? (
+        {loading ? <PageLoader /> : reports.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(234,242,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 15s1 1 3 1 3-2 5-2 3 2 5 2 3-1 3-1V3s-1 1-3 1-3-2-5-2-3 2-5 2-3-1-3-1z" /><line x1="4" y1="22" x2="4" y2="15" />

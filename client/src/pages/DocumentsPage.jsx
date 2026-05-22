@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { documentsAPI } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import PageLoader from "../components/PageLoader";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -318,13 +319,7 @@ export default function DocumentsPage() {
         )}
 
         {/* Document list */}
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
-            <div style={{ width: "24px", height: "24px", border: "2px solid rgba(0,229,204,0.2)", borderTopColor: TEAL, borderRadius: "50%", animation: "docSpin 0.8s linear infinite" }} />
-            <div style={{ fontFamily: MONO, fontSize: "0.68rem", letterSpacing: "0.14em", color: "rgba(234,242,255,0.3)", textTransform: "uppercase" }}>LOADING...</div>
-            <style>{`@keyframes docSpin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        ) : documents.length === 0 ? (
+        {loading ? <PageLoader /> : documents.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 0", gap: "1rem" }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(234,242,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div style={{ fontFamily: MONO, fontSize: "0.72rem", letterSpacing: "0.1em", color: "rgba(234,242,255,0.3)", textTransform: "uppercase" }}>NO DOCUMENTS</div>

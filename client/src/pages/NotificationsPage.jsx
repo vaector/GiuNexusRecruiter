@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { notificationsAPI } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import PageLoader from "../components/PageLoader";
 
 const CATEGORIES = [
   { key: "all", label: "ALL" },
@@ -479,45 +480,7 @@ export default function NotificationsPage() {
               .notif-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,229,204,0.4); }
             `}</style>
 
-            {loading ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "4rem 0",
-                  gap: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    border: "2px solid rgba(0,229,204,0.2)",
-                    borderTopColor: "#00e5cc",
-                    borderRadius: "50%",
-                    animation: "notifSpin 0.8s linear infinite",
-                  }}
-                />
-                <div
-                  style={{
-                    fontFamily: "'JetBrains Mono','Fira Code',monospace",
-                    fontSize: "0.68rem",
-                    letterSpacing: "0.14em",
-                    color: "rgba(234,242,255,0.3)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  LOADING...
-                </div>
-                <style>{`
-                  @keyframes notifSpin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-              </div>
-            ) : filteredNotifications.length === 0 ? (
+            {loading ? <PageLoader /> : filteredNotifications.length === 0 ? (
               <div
                 style={{
                   display: "flex",

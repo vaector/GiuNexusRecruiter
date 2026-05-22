@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { adminAPI } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
+import PageLoader from "../components/PageLoader";
 
 const ACTION_GROUPS = [
   { key: "all", label: "ALL" },
@@ -697,40 +698,7 @@ export default function AdminAuditLogsPage() {
               overscrollBehavior: "contain",
             }}
           >
-            {loading ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "4rem 0",
-                  gap: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    border: "2px solid rgba(0,229,204,0.2)",
-                    borderTopColor: "#00e5cc",
-                    borderRadius: "50%",
-                    animation: "auditSpin 0.8s linear infinite",
-                  }}
-                />
-                <div
-                  style={{
-                    fontFamily: "'JetBrains Mono','Fira Code',monospace",
-                    fontSize: "0.68rem",
-                    letterSpacing: "0.14em",
-                    color: "rgba(234,242,255,0.3)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  LOADING...
-                </div>
-              </div>
-            ) : error ? (
+            {loading ? <PageLoader /> : error ? (
               <div
                 style={{
                   display: "flex",

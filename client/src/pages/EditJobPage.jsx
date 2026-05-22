@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Lenis from "lenis";
 import { jobsAPI } from "../services/api";
-import { Spinner } from "../components/Spinner";
+import PageLoader from "../components/PageLoader";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
 
@@ -206,12 +206,7 @@ export default function EditJobPage() {
       <main className="nexus-page-wrapper">
         <div className="nexus-container" style={{ maxWidth: 800 }}>
           
-          {loading ? (
-            <div className="state-panel">
-              <Spinner />
-              <p className="nexus-mono-sm text-tertiary" style={{ marginTop: '1.5rem' }}>FETCHING_RECORD...</p>
-            </div>
-          ) : success && updatedJob ? (
+          {loading ? <PageLoader /> : success && updatedJob ? (
             /* --- SUCCESS SCREEN --- */
             <div className="nexus-glass-panel" style={{ padding: "4rem 2rem", textAlign: "center", animation: "panelEntry 0.6s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: "2rem", color: "#00e5cc", marginBottom: "1rem", fontFamily: "'Syncopate', sans-serif" }}>// SUCCESS</div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { jobsAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -156,15 +157,7 @@ export default function JobAnalyticsPage() {
   };
 
   if (loading) {
-    return (
-      <div ref={spotlightRef} style={{ minHeight: "100vh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-          <div style={{ width: "24px", height: "24px", border: "2px solid rgba(0,229,204,0.2)", borderTopColor: TEAL, borderRadius: "50%", animation: "jaSpin 0.8s linear infinite" }} />
-          <div style={{ fontFamily: MONO, fontSize: "0.68rem", letterSpacing: "0.14em", color: "rgba(234,242,255,0.3)", textTransform: "uppercase" }}>LOADING ANALYTICS...</div>
-          <style>{`@keyframes jaSpin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (error) {

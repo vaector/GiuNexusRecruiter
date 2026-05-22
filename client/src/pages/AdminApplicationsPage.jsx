@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import Lenis from "lenis";
 import { applicationsAPI } from "../services/api";
-import { Spinner } from "../components/Spinner";
+import PageLoader from "../components/PageLoader";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
 
@@ -142,9 +142,7 @@ export default function AdminApplicationsPage() {
             </div>
           )}
 
-          {loading ? (
-            <div className="nexus-state-container"><Spinner /></div>
-          ) : applications.length === 0 ? (
+          {loading ? <PageLoader /> : applications.length === 0 ? (
             <div className="nexus-glass-panel empty-state">
               <p className="nexus-body-lg text-primary">No applications match this filter.</p>
             </div>

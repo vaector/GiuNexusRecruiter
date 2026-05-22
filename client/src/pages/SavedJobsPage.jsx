@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { jobsAPI } from "../services/api";
 import { formatLocation, formatSalary } from "../utils/formatters";
+import PageLoader from "../components/PageLoader";
 
 const SavedJobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -47,15 +48,7 @@ const SavedJobsPage = () => {
   };
 
   if (loading) {
-    return (
-      <SavedJobsShell>
-        <section className="saved-state-card">
-          <p className="nexus-eyebrow">Job Seeker</p>
-          <h1>Loading saved jobs</h1>
-          <p>Your bookmarked opportunities are being synced.</p>
-        </section>
-      </SavedJobsShell>
-    );
+    return <PageLoader />;
   }
 
   if (error && jobs.length === 0) {

@@ -4,7 +4,7 @@
 // Admin only
 import React, { useState, useEffect } from "react";
 import { usersAPI } from "../services/api";
-import { Spinner } from "../components/Spinner";
+import PageLoader from "../components/PageLoader";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
 import useAdminEffects from "../utils/useAdminEffects";
@@ -201,7 +201,7 @@ export default function AdminUsersPage() {
 
       {detailLoading && (
         <div className="detail-overlay">
-          <Spinner />
+          <div style={{ width: 24, height: 24, border: "2px solid rgba(0,229,204,0.2)", borderTopColor: "#00e5cc", borderRadius: "50%", animation: "overlaySpin 0.7s linear infinite" }} />
         </div>
       )}
 
@@ -247,9 +247,7 @@ export default function AdminUsersPage() {
             </div>
           )}
 
-          {loading ? (
-            <div className="nexus-state-container"><Spinner /></div>
-          ) : users.length === 0 ? (
+          {loading ? <PageLoader /> : users.length === 0 ? (
             <div className="nexus-glass-panel empty-state">
               <div className="nexus-display-md text-secondary" style={{ marginBottom: "0.5rem" }}>// NULL</div>
               <p className="nexus-body-lg text-primary">No users match the current filters.</p>

@@ -3,8 +3,9 @@
 // Approve/Reject buttons call PATCH /api/v1/users/:id/status
 // Admin only
 import React, { useState, useEffect } from "react";
-import { usersAPI } from "../services/api";
-import { Spinner } from "../components/Spinner";
+import { useNavigate } from "react-router-dom";
+import { adminAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
 import useAdminEffects from "../utils/useAdminEffects";
@@ -125,12 +126,7 @@ export default function PendingRecruitersPage() {
           </div>
 
           <section>
-            {loading ? (
-              <div className="nexus-state-container">
-                <Spinner />
-                <p className="nexus-mono-sm text-tertiary" style={{ marginTop: '1.5rem' }}>FETCHING_RECORDS...</p>
-              </div>
-            ) : error ? (
+            {loading ? <PageLoader /> : error ? (
               <div className="nexus-glass-panel error-panel">
                 <p className="nexus-mono-sm text-primary">{error}</p>
                 <button className="nexus-btn primary" onClick={fetchPending} style={{ marginTop: '1rem' }}>

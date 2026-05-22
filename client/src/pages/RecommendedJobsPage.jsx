@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { jobsAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const RecommendedJobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -52,15 +53,7 @@ const RecommendedJobsPage = () => {
   }, []);
 
   if (loading) {
-    return (
-      <RecommendedShell>
-        <section className="recommended-state-card">
-          <p className="nexus-eyebrow">Job Seeker</p>
-          <h1>Loading matches</h1>
-          <p>Your recommended jobs are being ranked by profile similarity.</p>
-        </section>
-      </RecommendedShell>
-    );
+    return <PageLoader />;
   }
 
   if (error) {
