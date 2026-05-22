@@ -61,6 +61,8 @@ export const applicationsAPI = {
   getMyApplications: () => api.get("/applications/my"),
   getAllApplications: (params) => api.get("/applications", { params }),
   updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
+  updateRecruiterNotes: (id, recruiterNotes) =>
+    api.patch(`/applications/${id}/notes`, { recruiterNotes }),
   withdrawApplication: (id) => api.delete(`/applications/${id}/withdraw`),
   getApplicationById: (id) => api.get(`/applications/${id}`),
 };

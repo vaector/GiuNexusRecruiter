@@ -40,13 +40,16 @@ export default function ConversationsPage() {
     (sum, c) => sum + (c.unreadCount || 0),
     0
   );
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     if (!isAuthenticated) return;
     let mounted = true;
     const fetch = async () => {
       try {
-        const res = await messagesAPI.getConversations();
+        const res = isAdmin
+          ? await messagesAPI.getAdminConversations()
+          : await messagesAPI.getConversations();
         if (mounted) {
           setConversations(res.data.conversations || []);
           setLoading(false);
@@ -59,7 +62,7 @@ export default function ConversationsPage() {
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAdmin]);
 
   useEffect(() => {
     document.body.style.background = "#030303";
@@ -90,6 +93,12 @@ export default function ConversationsPage() {
 
   const handleConvClick = (conv) => {
     const jobId = conv.job._id;
+    if (isAdmin) {
+      navigate(
+        `/conversations/${jobId}?sender=${conv.sender._id}&recipient=${conv.recipient._id}`
+      );
+      return;
+    }
     const otherId = conv.otherUser._id;
     if (user?.role === "recruiter") {
       navigate(`/conversations/${jobId}?with=${otherId}`);
@@ -199,7 +208,7 @@ export default function ConversationsPage() {
                 marginBottom: "0.5rem",
               }}
             >
-              MESSAGING
+              {isAdmin ? "ADMIN MESSAGING" : "MESSAGING"}
             </div>
             <h1
               style={{
@@ -212,7 +221,7 @@ export default function ConversationsPage() {
                 margin: 0,
               }}
             >
-              CONVERSATIONS
+              {isAdmin ? "ALL CONVERSATIONS" : "CONVERSATIONS"}
             </h1>
           </div>
           {totalUnread > 0 && (
@@ -307,14 +316,20 @@ export default function ConversationsPage() {
                 color: "rgba(234,242,255,0.2)",
               }}
             >
-              Start by applying to jobs or connecting with recruiters.
+              {isAdmin
+                ? "No platform conversation threads have been created yet."
+                : "Start by applying to jobs or connecting with recruiters."}
             </div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             {conversations.map((conv) => {
               const isUnread = (conv.unreadCount || 0) > 0;
-              const key = `${conv.job?._id}-${conv.otherUser?._id}`;
+              const participant = isAdmin ? conv.sender : conv.otherUser;
+              const secondaryParticipant = isAdmin ? conv.recipient : null;
+              const key = isAdmin
+                ? `${conv.job?._id}-${conv.sender?._id}-${conv.recipient?._id}`
+                : `${conv.job?._id}-${conv.otherUser?._id}`;
               const isHovered = hoveredId === key;
               return (
                 <button
@@ -351,7 +366,7 @@ export default function ConversationsPage() {
                   }}
                 >
                   <div className="conv-avatar">
-                    {(conv.otherUser?.name || "?").charAt(0).toUpperCase()}
+                    {(participant?.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
@@ -376,7 +391,9 @@ export default function ConversationsPage() {
                           color: "rgba(0,229,204,0.7)",
                         }}
                       >
-                        {conv.otherUser?.role === "recruiter"
+                        {isAdmin
+                          ? "THREAD"
+                          : conv.otherUser?.role === "recruiter"
                           ? "RECRUITER"
                           : conv.otherUser?.role === "jobSeeker"
                           ? "APPLICANT"
@@ -392,7 +409,11 @@ export default function ConversationsPage() {
                         marginBottom: "0.2rem",
                       }}
                     >
-                      {conv.otherUser?.name || "Unknown"}
+                      {isAdmin
+                        ? `${participant?.name || "Unknown"} to ${
+                            secondaryParticipant?.name || "Unknown"
+                          }`
+                        : participant?.name || "Unknown"}
                     </div>
                     <div
                       style={{
