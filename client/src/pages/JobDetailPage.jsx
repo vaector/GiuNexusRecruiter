@@ -346,7 +346,7 @@ const JobDetailPage = () => {
       <div style={{ minHeight: "100vh", background: BG, position: "relative", zIndex: 1 }}>
 
         {/* ── Header ─────────────────────────────────────────── */}
-        <div style={{ padding: "3.5rem 6% 0", maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{ padding: "6.75rem 6% 0", maxWidth: 1280, margin: "0 auto" }}>
           {/* breadcrumb */}
           <p style={{ fontFamily: MONO, fontSize: "10px", letterSpacing: "2px", color: "rgba(0,229,204,0.45)", textTransform: "uppercase", marginBottom: "1.25rem" }}>
             <Link
@@ -434,9 +434,9 @@ const JobDetailPage = () => {
                   <button
                     style={{
                       ...darkBtn,
-                      background: isOpen ? TEAL : "transparent",
-                      color: isOpen ? "#000" : "rgba(255,255,255,0.25)",
-                      borderColor: isOpen ? TEAL : "rgba(255,255,255,0.1)",
+                      background: isOpen ? "rgba(0,229,204,0.12)" : "transparent",
+                      color: isOpen ? TEAL : "rgba(255,255,255,0.25)",
+                      borderColor: isOpen ? "rgba(0,229,204,0.4)" : "rgba(255,255,255,0.1)",
                       cursor: isOpen ? "pointer" : "not-allowed",
                     }}
                     disabled={!isOpen}
@@ -479,7 +479,7 @@ const JobDetailPage = () => {
         </div>
 
         {/* ── Two-column body ─────────────────────────────────── */}
-        <div style={{
+        <div className="jd-two-col" style={{
           maxWidth: 1280, margin: "0 auto",
           padding: "2.5rem 6% 6rem",
           display: "grid",
@@ -542,7 +542,7 @@ const JobDetailPage = () => {
           </div>
 
           {/* ── Right sidebar ─── */}
-          <div style={{ position: "sticky", top: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ position: "sticky", top: "5.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
 
             {/* At a glance */}
             <DarkSection>
@@ -608,7 +608,7 @@ const JobDetailPage = () => {
         confirmText={applyLoading ? "Submitting…" : "Submit Application"}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-          <p style={{ fontSize: 14, color: "var(--color-text-muted)", lineHeight: "20px", margin: 0 }}>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: "20px", margin: 0 }}>
             Your profile (name, bio, skills) is shared automatically.
             {job.requiresCoverLetter ? " ⚠️ A cover letter is required." : " A cover letter is optional but recommended."}
           </p>
@@ -636,11 +636,12 @@ const JobDetailPage = () => {
             style={{
               width: "100%", boxSizing: "border-box",
               padding: "0.75rem", borderRadius: 4,
-              border: "1px solid var(--color-border)",
-              background: "var(--color-bg, #fff)",
-              color: "var(--color-text)",
+              border: "1px solid var(--border-glass)",
+              background: "rgba(0,0,0,0.25)",
+              color: "var(--text-primary)",
               fontFamily: "'Inter',sans-serif", fontSize: "14px", lineHeight: "22px",
               resize: "vertical",
+              outline: "none",
             }}
           />
           {applyError && (
@@ -681,7 +682,7 @@ const JobDetailPage = () => {
           )}
           {aiText && !aiLoading && (
             <>
-              <p style={{ fontSize: "12px", color: "var(--color-text-muted)", margin: 0 }}>
+              <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
                 Generated from your profile bio + this job. Edit before using.
               </p>
               <textarea
@@ -691,11 +692,12 @@ const JobDetailPage = () => {
                 style={{
                   width: "100%", boxSizing: "border-box",
                   padding: "0.75rem", borderRadius: 4,
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-bg, #fff)",
-                  color: "var(--color-text)",
+                  border: "1px solid var(--border-glass)",
+                  background: "rgba(0,0,0,0.25)",
+                  color: "var(--text-primary)",
                   fontFamily: "'Inter',sans-serif", fontSize: "13px", lineHeight: "21px",
                   resize: "vertical",
+                  outline: "none",
                 }}
               />
             </>
@@ -712,6 +714,9 @@ const JobDetailPage = () => {
         @media (max-width: 900px) {
           .jd-two-col { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 640px) {
+          .jd-two-col { padding-left: 1rem !important; padding-right: 1rem !important; }
+        }
       `}</style>
     </>
   );
@@ -719,29 +724,41 @@ const JobDetailPage = () => {
 
 // ── Shared button styles ──────────────────────────────────────────────────────
 const darkBtn = {
-  background: "transparent",
+  background: "rgba(0,229,204,0.12)",
   border: "1px solid rgba(0,229,204,0.35)",
   color: TEAL,
   fontFamily: MONO,
-  fontSize: "10px",
-  letterSpacing: "2px",
+  fontSize: "0.68rem",
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
-  padding: "0.6rem 1.25rem",
+  padding: "0.7rem 1.25rem",
+  minHeight: "46px",
+  borderRadius: "4px",
   cursor: "pointer",
-  transition: "all 0.2s",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "0.5rem",
+  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
 };
 
 const aiBtn = {
-  background: "rgba(124,58,237,0.08)",
-  border: "1px solid rgba(124,58,237,0.35)",
-  color: "#a78bfa",
+  background: "transparent",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "rgba(234,242,255,0.62)",
   fontFamily: MONO,
-  fontSize: "10px",
-  letterSpacing: "2px",
+  fontSize: "0.68rem",
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
-  padding: "0.6rem 1.25rem",
+  padding: "0.7rem 1.25rem",
+  minHeight: "46px",
+  borderRadius: "4px",
   cursor: "pointer",
-  transition: "all 0.2s",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "0.5rem",
+  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
 };
 
 export default JobDetailPage;
