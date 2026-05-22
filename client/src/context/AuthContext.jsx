@@ -1,13 +1,9 @@
-// Global authentication state
-// Exposes: user, token, login(), logout(), isAuthenticated
-// Wraps entire app so all components can access auth state
-import { createContext, useState, useEffect, useCallback } from "react";
-import { getToken, setToken, removeToken } from "../utils/token";
+import { createContext, useState, useContext } from "react";
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setTokenState] = useState(getToken());
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
@@ -17,35 +13,27 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  const isAuthenticated = Boolean(token);
-
   const login = (newToken, newUser) => {
-    setToken(newToken);
-    setTokenState(newToken);
-    setUser(newUser);
+    localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
   };
 
-  const logout = useCallback(() => {
-    removeToken();
-    setTokenState(null);
-    setUser(null);
+  const logout = () => {
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
-  }, []);
-
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === "token" && !e.newValue) logout();
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [logout]);
+    setToken(null);
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, setUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: Boolean(token) }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);
 
 export default AuthProvider;
