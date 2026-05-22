@@ -725,7 +725,7 @@ const Navbar = () => {
               </li>
             ))}
           </ul>
-          {isAuthenticated && (user?.role === "jobSeeker" || user?.role === "admin") && unreadCount > 0 && (
+          {isAuthenticated && (user?.role === "jobSeeker" || user?.role === "admin" || user?.role === "recruiter") && unreadCount > 0 && (
             <div className="nav-panel-notif-row">
               <Link to="/notifications" className="nav-panel-notif-link" onClick={() => setMenuOpen(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
