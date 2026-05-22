@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useContext } from "react";
 import Lenis from "lenis";
 import { ProjectionScene } from "../components/projection";
 import CardTunnel from "../components/projection/CardTunnel";
@@ -11,10 +11,12 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import FluidBackground from "../components/FluidBackground";
 import GooeyCursor from "../components/GooeyCursor";
-
-const HERO_SCROLL_VH = 6;
+import { AuthContext } from "../context/AuthContext";
 
 export default function HomePage() {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const isJobSeeker = isAuthenticated && user?.role === "jobSeeker";
+  const HERO_SCROLL_VH = isJobSeeker ? 9 : 6;
   const zoomTargetRef = useRef(0);
   const lenisRef = useRef(null);
   const scrollbarRef = useRef(null);
@@ -91,7 +93,7 @@ export default function HomePage() {
             transition: "opacity 0.05s linear",
           }}
         >
-          <div style={{ pointerEvents: "auto", width: "100%", height: "100%" }}>
+          <div style={{ pointerEvents: "none", width: "100%", height: "100%" }}>
             <ProjectionScene zoomTargetRef={zoomTargetRef} />
           </div>
 

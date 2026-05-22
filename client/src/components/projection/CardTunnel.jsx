@@ -1,17 +1,77 @@
-import { useEffect, useRef } from "react";
-
-const JOBS = [
-  { id: "NXS-4821", title: "Quantum ML Engineer", company: "NeuralDyne", type: "FT", tags: "ML\u00b7Quantum\u00b7Python" },
-  { id: "NXS-7193", title: "Blockchain Architect", company: "ChainVault", type: "CT", tags: "Solidity\u00b7Rust\u00b7DeFi" },
-  { id: "NXS-3356", title: "Neural Interface UX", company: "Synaptic Labs", type: "FT", tags: "UX\u00b7Neuro\u00b7BIO" },
-  { id: "NXS-9087", title: "Cloud Infra Lead", company: "CloudForge", type: "RM", tags: "K8s\u00b7AWS\u00b7Terraform" },
-  { id: "NXS-1124", title: "Cyber Threat Analyst", company: "ShieldNet", type: "FT", tags: "SOC\u00b7Pentest\u00b7ZeroTrust" },
-  { id: "NXS-6650", title: "AI Research Scientist", company: "DeepMind Nexus", type: "FT", tags: "NLP\u00b7PyTorch\u00b7Research" },
-];
+import { useEffect, useRef, useContext, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import { jobsAPI } from "../../services/api";
 
 const COLORS = ["#00e5cc", "#ff003c", "#ccff00", "#f0c040", "#a78bfa", "#ffffff"];
+const Z_GAP = 600;
 
-const SEQUENCE = [
+const fmtSalary = (s) => {
+  if (!s) return null;
+  if (typeof s === "string") return s;
+  const cur = s.currency || "USD";
+  const min = s.min;
+  const max = s.max;
+  const period = s.period === "yearly" ? "/yr" : s.period === "monthly" ? "/mo" : s.period === "hourly" ? "/hr" : "";
+  if (min && max) return `${cur} ${min.toLocaleString()}–${max.toLocaleString()}${period}`;
+  if (min) return `${cur} ${min.toLocaleString()}${period}`;
+  return null;
+};
+
+const fmtLocation = (l) => {
+  if (!l) return "Remote";
+  if (typeof l === "string") return l;
+  return [l.city, l.country].filter(Boolean).join(", ") || "Remote";
+};
+
+const formatJobForCard = (job, index) => {
+  const salaryStr = fmtSalary(job.salary);
+  const locationStr = fmtLocation(job.location);
+  return {
+    id: job._id || `JOB-${index}`,
+    title: job.title || "Untitled Position",
+    company: job.companyName || job.company || "Unknown Company",
+    type: job.type || "FT",
+    tags: [job.category, locationStr, salaryStr].filter(Boolean).join(" · ") || "Details TBD",
+    category: job.category || "Other",
+    location: locationStr,
+    salary: salaryStr || "Competitive",
+    postedAt: job.createdAt || new Date().toISOString(),
+    viewCount: job.viewCount || 0,
+  };
+};
+
+const EmptyCardPlaceholder = ({ index, total }) => (
+  <div style={{
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: "0.5rem",
+    opacity: 0.4,
+  }}>
+    <div style={{
+      fontSize: "0.7rem",
+      fontFamily: "'JetBrains Mono', monospace",
+      color: "rgba(255,255,255,0.3)",
+      textTransform: "uppercase",
+      letterSpacing: "0.1em",
+    }}>
+      No more jobs to show
+    </div>
+    <div style={{
+      fontSize: "0.6rem",
+      fontFamily: "'JetBrains Mono', monospace",
+      color: "rgba(255,255,255,0.15)",
+    }}>
+      {index} of {total} slots
+    </div>
+  </div>
+);
+
+const TRENDING_SEQUENCE = [
   { type: "card" },
   { type: "card" },
   { type: "card" },
@@ -31,29 +91,99 @@ const SEQUENCE = [
   { type: "card" },
 ];
 
-const CONFIG = {
-  starCount: 120,
-  zGap: 600,
-  camSpeed: 3,
-  tunnelDepth: SEQUENCE.length * 600,
-};
-
-const SECTION_VH = 600;
+const RECOMMENDED_SEQUENCE = [
+  { type: "heading", text: "RECOMMENDED" },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "heading", text: "RECOMMENDED" },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+  { type: "card", rec: true },
+];
 
 export default function CardTunnel({ embedded }) {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [viewingSection, setViewingSection] = useState("trending");
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [trendingJobs, setTrendingJobs] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
   const viewportRef = useRef(null);
   const worldRef = useRef(null);
   const velRef = useRef(null);
   const coordRef = useRef(null);
   const itemsRef = useRef([]);
+  const selectedJobRef = useRef(null);
   const stateRef = useRef({
     prevScroll: 0,
     velocity: 0,
     targetSpeed: 0,
     mouseX: 0,
     mouseY: 0,
+    currentSection: "trending",
   });
+
+  const isJobSeeker = isAuthenticated && user?.role === "jobSeeker";
+  const sequence = isJobSeeker
+    ? [...TRENDING_SEQUENCE, ...RECOMMENDED_SEQUENCE]
+    : TRENDING_SEQUENCE;
+  const trendingCount = TRENDING_SEQUENCE.length;
+
+  const handleSelectJob = useCallback((job) => {
+    setSelectedJob(job);
+  }, []);
+
+  useEffect(() => {
+    selectedJobRef.current = handleSelectJob;
+  }, [handleSelectJob]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const [trendingRes, recRes] = await Promise.all([
+          jobsAPI.getAllJobs({ limit: 50, status: "open" }),
+          isJobSeeker ? jobsAPI.getRecommendedJobs().catch((err) => {
+            console.warn("Recommended jobs fetch failed:", err);
+            return { data: { jobs: [] } };
+          }) : Promise.resolve({ data: { jobs: [] } }),
+        ]);
+        if (mounted) {
+          const allJobs = Array.isArray(trendingRes.data?.jobs) ? trendingRes.data.jobs : (Array.isArray(trendingRes.data) ? trendingRes.data : []);
+          console.log("Fetched trending jobs:", allJobs.length, allJobs);
+          const trending = [...allJobs]
+            .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+            .map(formatJobForCard);
+            
+          const recData = Array.isArray(recRes.data?.jobs) ? recRes.data.jobs : (Array.isArray(recRes.data) ? recRes.data : []);
+          const recommended = recData.map(formatJobForCard);
+          console.log("Processed trending:", trending.length, "recommended:", recommended.length);
+          setTrendingJobs(trending);
+          setRecommendedJobs(recommended);
+        }
+      } catch (err) {
+        console.error("Failed to fetch jobs for tunnel:", err);
+        if (mounted) {
+          setTrendingJobs([]);
+          setRecommendedJobs([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchJobs();
+    return () => { mounted = false; };
+  }, [isJobSeeker]);
 
   useEffect(() => {
     const world = worldRef.current;
@@ -67,10 +197,16 @@ export default function CardTunnel({ embedded }) {
     const spreadX = isMobile ? 0.12 : 0.25;
     const spreadY = isMobile ? 0.15 : 0.25;
 
+    const currentSequence = isJobSeeker
+      ? [...TRENDING_SEQUENCE, ...RECOMMENDED_SEQUENCE]
+      : TRENDING_SEQUENCE;
+    const currentTrendingCount = TRENDING_SEQUENCE.length;
+
     const items = [];
     let jobIdx = 0;
+    let recIdx = 0;
 
-    SEQUENCE.forEach((entry, i) => {
+    currentSequence.forEach((entry, i) => {
       const el = document.createElement("div");
       el.style.cssText =
         "position:absolute;left:0;top:0;backface-visibility:hidden;transform-origin:center center;display:flex;align-items:center;justify-content:center;";
@@ -81,11 +217,15 @@ export default function CardTunnel({ embedded }) {
           "font-size:12vw;font-weight:800;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,0.15);text-transform:uppercase;white-space:nowrap;pointer-events:none;letter-spacing:-0.5rem;mix-blend-mode:overlay;transform:translate(-50%,-50%);font-family:'Syncopate',sans-serif;";
         txt.innerText = entry.text;
         el.appendChild(txt);
-        items.push({ el, type: "text", x: 0, y: 0, rot: 0, baseZ: -i * CONFIG.zGap, textEl: txt });
+        items.push({ el, type: "text", x: 0, y: 0, rot: 0, baseZ: -i * Z_GAP, textEl: txt });
       } else {
-        const job = JOBS[jobIdx % JOBS.length];
-        const color = COLORS[jobIdx % COLORS.length];
-        jobIdx++;
+        const isRec = entry.rec;
+        const pool = isRec ? recommendedJobs : trendingJobs;
+        const idx = isRec ? recIdx++ : jobIdx++;
+        const poolLen = pool.length;
+        const isEmpty = poolLen === 0;
+        const job = isEmpty ? null : pool[idx % 6];
+        const color = isRec ? "#a78bfa" : COLORS[idx % COLORS.length];
 
         const card = document.createElement("div");
         card.style.cssText = [
@@ -102,18 +242,28 @@ export default function CardTunnel({ embedded }) {
           "-webkit-backdrop-filter:blur(8px)",
           "box-shadow:0 0 0 1px rgba(0,0,0,0.5),0 20px 50px rgba(0,0,0,0.5)",
           "transform:translate(-50%,-50%)",
+          isEmpty ? "cursor:default" : "cursor:pointer",
+          "transition:border-color 0.2s ease,box-shadow 0.2s ease,transform 0.2s ease",
         ].join(";");
 
-        card.innerHTML = [
-          '<div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0.75rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">',
-          '<span style="font-family:JetBrains Mono,monospace;font-size:0.7rem;color:' + color + ';letter-spacing:0.12em;">' + job.id + "</span>",
-          '<span style="font-size:0.6rem;font-weight:600;letter-spacing:0.08em;color:' + color + ";border:1px solid " + color + '66;padding:0.15rem 0.5rem;border-radius:2px;">' + job.type + "</span>",
-          "</div>",
-          '<h2 style="font-size:1.6rem;line-height:0.9;margin:0;text-transform:uppercase;font-weight:700;color:#fff;font-family:Syncopate,sans-serif;mix-blend-mode:hard-light;">' + job.title + "</h2>",
-          '<div style="margin-top:0.5rem;font-family:JetBrains Mono,monospace;font-size:0.75rem;color:rgba(234,242,255,0.5);">' + job.company + "</div>",
-          '<div style="margin-top:auto;font-family:JetBrains Mono,monospace;font-size:0.7rem;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">' + job.tags + "</div>",
-          '<div style="position:absolute;bottom:1.5rem;right:1.5rem;font-size:3.5rem;opacity:0.04;font-weight:900;font-family:Syncopate,sans-serif;line-height:1;">0' + i + "</div>",
-        ].join("");
+if (isEmpty) {
+          card.innerHTML = [
+            '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.5rem;opacity:0.4;">',
+            '<div style="font-size:0.7rem;font-family:JetBrains Mono,monospace;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">No jobs available</div>',
+            "</div>",
+          ].join("");
+        } else {
+          card.innerHTML = [
+            '<div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0.75rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">',
+            '<span style="font-family:JetBrains Mono,monospace;font-size:0.7rem;color:' + color + ';letter-spacing:0.12em;">' + job.id.substring(0, 8) + "</span>",
+            '<span style="font-size:0.6rem;font-weight:600;letter-spacing:0.08em;color:' + color + ";border:1px solid " + color + '66;padding:0.15rem 0.5rem;border-radius:2px;">' + job.type + "</span>",
+            "</div>",
+            '<h2 style="font-size:1.6rem;line-height:0.9;margin:0;text-transform:uppercase;font-weight:700;color:#fff;font-family:Syncopate,sans-serif;mix-blend-mode:hard-light;">' + job.title + "</h2>",
+            '<div style="margin-top:0.5rem;font-family:JetBrains Mono,monospace;font-size:0.75rem;color:rgba(234,242,255,0.5);">' + job.company + "</div>",
+            '<div style="margin-top:auto;font-family:JetBrains Mono,monospace;font-size:0.7rem;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">' + job.tags + "</div>",
+            '<div style="position:absolute;bottom:1.5rem;right:1.5rem;font-size:3.5rem;opacity:0.04;font-weight:900;font-family:Syncopate,sans-serif;line-height:1;">0' + i + "</div>",
+          ].join("");
+        }
 
         const before = document.createElement("span");
         before.style.cssText = "position:absolute;top:-1px;left:-1px;width:10px;height:10px;border-top:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.3);pointer-events:none;";
@@ -123,20 +273,40 @@ export default function CardTunnel({ embedded }) {
         after.style.cssText = "position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-bottom:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);pointer-events:none;";
         card.appendChild(after);
 
+        card.addEventListener("mouseenter", () => {
+          if (!isEmpty) {
+            card.style.borderColor = "rgba(0, 229, 204, 0.35)";
+            card.style.boxShadow = "0 0 0 1px rgba(0,0,0,0.5),0 20px 50px rgba(0,0,0,0.5),0 0 20px rgba(0,229,204,0.15)";
+            card.style.transform = "translate(-50%,-50%) scale(1.02)";
+          }
+        });
+        card.addEventListener("mouseleave", () => {
+          if (!isEmpty) {
+            card.style.borderColor = "rgba(255,255,255,0.08)";
+            card.style.boxShadow = "0 0 0 1px rgba(0,0,0,0.5),0 20px 50px rgba(0,0,0,0.5)";
+            card.style.transform = "translate(-50%,-50%) scale(1)";
+          }
+        });
+        card.addEventListener("click", () => {
+          if (!isEmpty) {
+            selectedJobRef.current(job);
+          }
+        });
+
         el.appendChild(card);
 
-        const angle = (i / SEQUENCE.length) * Math.PI * 6;
+        const angle = (i / currentSequence.length) * Math.PI * 6;
         const x = Math.cos(angle) * (window.innerWidth * spreadX);
         const y = Math.sin(angle) * (window.innerHeight * spreadY);
         const rot = (Math.random() - 0.5) * 16;
 
-        items.push({ el, type: "card", x, y, rot, baseZ: -i * CONFIG.zGap });
+        items.push({ el, type: "card", x, y, rot, baseZ: -i * Z_GAP });
       }
 
       world.appendChild(el);
     });
 
-    for (let i = 0; i < CONFIG.starCount; i++) {
+    for (let i = 0; i < 120; i++) {
       const el = document.createElement("div");
       el.style.cssText = "position:absolute;width:2px;height:2px;background:white;transform:translate(-50%,-50%);";
       world.appendChild(el);
@@ -145,13 +315,18 @@ export default function CardTunnel({ embedded }) {
         type: "star",
         x: (Math.random() - 0.5) * 3000,
         y: (Math.random() - 0.5) * 3000,
-        baseZ: -(Math.random() * (CONFIG.tunnelDepth + 2000)),
+        baseZ: -(Math.random() * (currentSequence.length * Z_GAP + 2000)),
       });
     }
 
     itemsRef.current = items;
 
     const state = stateRef.current;
+    state.prevScroll = 0;
+    state.velocity = 0;
+    state.targetSpeed = 0;
+    state.currentSection = "trending";
+
     const onMouseMove = (e) => {
       state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
       state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -190,15 +365,16 @@ export default function CardTunnel({ embedded }) {
       if (velRef.current) velRef.current.textContent = Math.abs(state.velocity).toFixed(2);
       if (coordRef.current) coordRef.current.textContent = String(Math.floor(localScroll)).padStart(6, "0");
 
-      const tiltX = state.mouseY * 5 - state.velocity * 0.5;
-      const tiltY = state.mouseX * 5;
-      world.style.transform = "rotateX(" + tiltX + "deg) rotateY(" + tiltY + "deg)";
-
-      const baseFov = 1000;
-      const fov = baseFov - Math.min(Math.abs(state.velocity) * 10, 600);
-      viewport.style.perspective = "" + fov + "px";
-
-      const cameraZ = localScroll * CONFIG.camSpeed;
+      const cameraZ = localScroll * 3;
+      const currentIsJobSeeker = isJobSeeker;
+      if (currentIsJobSeeker && currentTrendingCount > 0) {
+        const trendingEndZ = currentTrendingCount * Z_GAP;
+        const section = cameraZ >= trendingEndZ ? "recommended" : "trending";
+        if (state.currentSection !== section) {
+          state.currentSection = section;
+          setViewingSection(section);
+        }
+      }
 
       for (let idx = 0; idx < items.length; idx++) {
         const item = items[idx];
@@ -244,13 +420,27 @@ export default function CardTunnel({ embedded }) {
       window.removeEventListener("mousemove", onMouseMove);
       while (world.firstChild) world.removeChild(world.firstChild);
     };
-  }, []);
+  }, [isJobSeeker, trendingJobs, recommendedJobs, embedded]);
+
+  const sectionVH = sequence.length > TRENDING_SEQUENCE.length
+    ? Math.max(600, Math.ceil(sequence.length * Z_GAP / 900) + 100)
+    : 600;
+
+  const handleViewMore = () => {
+    if (viewingSection === "recommended") {
+      navigate("/jobs/recommended");
+    } else {
+      navigate("/jobs");
+    }
+  };
+
+  const handleCloseSelected = () => setSelectedJob(null);
 
   return (
     <section
       ref={sectionRef}
       className="card-tunnel-section"
-      style={{ height: embedded ? "100%" : SECTION_VH + "vh", position: "relative", background: "#030303" }}
+      style={{ height: embedded ? "100%" : sectionVH + "vh", position: "relative", background: "#030303" }}
     >
       <div
         className="card-tunnel-viewport"
@@ -259,8 +449,9 @@ export default function CardTunnel({ embedded }) {
           top: 0,
           height: "100vh",
           overflow: "hidden",
-          cursor: "crosshair",
+          cursor: selectedJob ? "pointer" : "crosshair",
         }}
+        onClick={selectedJob ? handleCloseSelected : undefined}
       >
         <div
           style={{
@@ -300,7 +491,6 @@ export default function CardTunnel({ embedded }) {
             position: "absolute",
             inset: 0,
             perspective: "1000px",
-            overflow: "hidden",
             zIndex: 1,
           }}
         >
@@ -390,12 +580,144 @@ export default function CardTunnel({ embedded }) {
                 }}
               />
             </div>
-            {/* <span>VER 2.0.4 [BETA]</span> */}
           </div>
         </div>
+
+        {isJobSeeker && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleViewMore(); }}
+            style={{
+              position: "absolute",
+              bottom: "2rem",
+              right: "2rem",
+              zIndex: 100,
+              background: "rgba(0, 229, 204, 0.08)",
+              border: "1px solid rgba(0, 229, 204, 0.25)",
+              color: "#00e5cc",
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "0.68rem",
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              padding: "0.55rem 1.4rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(0, 229, 204, 0.15)";
+              e.currentTarget.style.borderColor = "rgba(0, 229, 204, 0.5)";
+              e.currentTarget.style.boxShadow = "0 0 16px rgba(0, 229, 204, 0.2)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(0, 229, 204, 0.08)";
+              e.currentTarget.style.borderColor = "rgba(0, 229, 204, 0.25)";
+              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            {viewingSection === "recommended" ? "VIEW MORE RECOMMENDED" : "VIEW MORE TRENDING"} &rarr;
+          </button>
+        )}
+
+        {selectedJob && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 50,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+            }}
+            onClick={(e) => { e.stopPropagation(); setSelectedJob(null); }}
+          >
+            <div
+              style={{
+                width: "min(380px, 88vw)",
+                background: "rgba(10,10,10,0.85)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                padding: "2rem",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                position: "relative",
+                animation: "cardTunnelFadeIn 0.25s ease",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedJob(null)}
+                style={{
+                  position: "absolute",
+                  top: "0.75rem",
+                  right: "0.75rem",
+                  background: "none",
+                  border: "none",
+                  color: "rgba(255,255,255,0.4)",
+                  cursor: "pointer",
+                  fontSize: "1.2rem",
+                  lineHeight: 1,
+                  padding: "0.25rem",
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+              >
+                &times;
+              </button>
+              <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "0.75rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.7rem", color: selectedJob.id?.startsWith("REC") ? "#a78bfa" : "#00e5cc", letterSpacing: "0.12em" }}>{selectedJob.id}</span>
+                <span style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.08em", color: selectedJob.id?.startsWith("REC") ? "#a78bfa" : "#00e5cc", border: "1px solid " + (selectedJob.id?.startsWith("REC") ? "#a78bfa66" : "#00e5cc66"), padding: "0.15rem 0.5rem", borderRadius: "2px" }}>{selectedJob.type}</span>
+              </div>
+              <h2 style={{ fontSize: "1.4rem", lineHeight: 0.9, margin: 0, textTransform: "uppercase", fontWeight: 700, color: "#fff", fontFamily: "'Syncopate', sans-serif" }}>{selectedJob.title}</h2>
+              <div style={{ marginTop: "0.5rem", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.75rem", color: "rgba(234,242,255,0.5)" }}>{selectedJob.company}</div>
+              <div style={{ marginTop: "0.5rem", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>{selectedJob.tags}</div>
+              <button
+                onClick={() => { setSelectedJob(null); navigate("/jobs"); }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: "1.5rem",
+                  padding: "0.7rem 1rem",
+                  background: "rgba(0, 229, 204, 0.1)",
+                  border: "1px solid rgba(0, 229, 204, 0.3)",
+                  color: "#00e5cc",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0, 229, 204, 0.2)";
+                  e.currentTarget.style.borderColor = "rgba(0, 229, 204, 0.6)";
+                  e.currentTarget.style.boxShadow = "0 0 20px rgba(0, 229, 204, 0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(0, 229, 204, 0.1)";
+                  e.currentTarget.style.borderColor = "rgba(0, 229, 204, 0.3)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                View Job Details &rarr;
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
+        @keyframes cardTunnelFadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @media (max-width: 767px) {
           .card-tunnel-hud {
             inset: 0.75rem !important;

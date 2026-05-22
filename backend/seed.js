@@ -26,9 +26,19 @@ async function seed() {
       role: "jobSeeker",
       status: "approved",
     },
+    {
+      name: "Recruiter",
+      email: "recruiter@test.com",
+      password: "recruiter123",
+      role: "recruiter",
+      status: "approved",
+    },
   ]);
 
-  console.log("Seeded: Admin (admin@giunexus.com), Job Seeker (seeker@test.com / seeker123)");
+  console.log("Seeded users:");
+  console.log("  Admin      — admin@giunexus.com / adminpassword123");
+  console.log("  Job Seeker  — seeker@test.com / seeker123");
+  console.log("  Recruiter   — recruiter@test.com / recruiter123");
   process.exit();
 }
 
