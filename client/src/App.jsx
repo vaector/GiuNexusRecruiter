@@ -13,18 +13,18 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
-// import EditProfilePage from "./pages/EditProfilePage";
-// import ChangePasswordPage from "./pages/ChangePasswordPage";
+import EditProfilePage from "./pages/EditProfilePage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import JobListPage from "./pages/JobListPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 import SavedJobsPage from "./pages/SavedJobsPage";
-// import MyApplicationsPage from "./pages/MyApplicationsPage";
+import ApplicantsPage from "./pages/ApplicantsPage";
+import MyApplicationsPage from "./pages/MyApplicationsPage";
 // import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CreateJobPage from "./pages/CreateJobPage";
 import EditJobPage from "./pages/EditJobPage";
-import ApplicantsPage from "./pages/ApplicantsPage";
 import JobAnalyticsPage from "./pages/JobAnalyticsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminJobsPage from "./pages/AdminJobsPage";
@@ -59,14 +59,19 @@ const App = () => {
             <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/profile" element={<RoleRoute allowedRoles={["jobSeeker"]}><ProfilePage /></RoleRoute>} />
-            {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
-            {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
+            <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} />
+            <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} />
             <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
             <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} />
             <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
             <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+            {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
+            {/* <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} /> */}
+            <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} />
+            {<Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />}
+            {<Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} />}
+            {<Route path="/recruiter/applicants/:jobId" element={<RoleRoute allowedRoles={["recruiter"]}><ApplicantsPage /></RoleRoute>} />}
             <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} />
-            {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
             <Route path="/profile/totp-setup" element={<PrivateRoute><TotpSetupPage /></PrivateRoute>} />
             <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />
