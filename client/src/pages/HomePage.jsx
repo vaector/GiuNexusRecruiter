@@ -181,7 +181,7 @@ export default function HomePage() {
       {/* Section 7 - CTA Banner */}
       <CtaBanner />
 
-      <Footer />
+      {/* <Footer /> */}
 
       <Navbar />
 

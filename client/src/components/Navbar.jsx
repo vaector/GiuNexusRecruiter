@@ -84,44 +84,20 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const DUMMY_NOTIFS = useMemo(() => [
-    { _id: "d1", title: "Application Update", message: "Your application to Senior Frontend Dev at TechCorp was viewed by the hiring manager.", read: false, createdAt: new Date(Date.now() - 2 * 60000).toISOString() },
-    { _id: "d2", title: "New Job Match", message: "3 new jobs match your saved search 'React Developer Remote'.", read: false, createdAt: new Date(Date.now() - 15 * 60000).toISOString() },
-    { _id: "d3", title: "Referral Used", message: "Ahmed S. used your referral code for Full Stack Engineer at CloudBase.", read: false, createdAt: new Date(Date.now() - 45 * 60000).toISOString() },
-    { _id: "d4", title: "Application Status", message: "You've been shortlisted for UI/UX Designer at DesignLab. Congratulations!", read: false, createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
-    { _id: "d5", title: "Saved Job Expiring", message: "Backend Developer at APIForge expires in 2 days. Apply now!", read: false, createdAt: new Date(Date.now() - 3 * 3600000).toISOString() },
-    { _id: "d6", title: "Profile View", message: "5 recruiters viewed your profile this week.", read: true, createdAt: new Date(Date.now() - 6 * 3600000).toISOString() },
-    { _id: "d7", title: "Recommendation", message: "Based on your skills, we recommend checking out DevOps Engineer at InfraCo.", read: true, createdAt: new Date(Date.now() - 8 * 3600000).toISOString() },
-    { _id: "d8", title: "Document Verified", message: "Your resume has been verified and is now visible to recruiters.", read: true, createdAt: new Date(Date.now() - 12 * 3600000).toISOString() },
-    { _id: "d9", title: "Interview Invite", message: "You're invited to schedule an interview for Full Stack Developer at WebScale.", read: false, createdAt: new Date(Date.now() - 24 * 3600000).toISOString() },
-    { _id: "d10", title: "Application Withdrawn", message: "You withdrew your application from Legacy Systems Inc.", read: true, createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-    { _id: "d11", title: "Skill Badge Earned", message: "You earned the 'React Expert' skill badge! It's now on your profile.", read: false, createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-    { _id: "d12", title: "Job Alert", message: "12 new jobs posted in your area in the last 24 hours.", read: true, createdAt: new Date(Date.now() - 4 * 86400000).toISOString() },
-    { _id: "d13", title: "Referral Request", message: "Omar K. requested a referral for Mobile Developer at AppWorks.", read: false, createdAt: new Date(Date.now() - 5 * 86400000).toISOString() },
-    { _id: "d14", title: "Application Rejected", message: "Your application to QA Engineer at BugHunt was not selected.", read: true, createdAt: new Date(Date.now() - 7 * 86400000).toISOString() },
-    { _id: "d15", title: "System Notice", message: "Scheduled maintenance on Saturday 2AM-4AM EST. Services may be briefly unavailable.", read: true, createdAt: new Date(Date.now() - 10 * 86400000).toISOString() },
-  ], []);
-
   useEffect(() => {
     if (!isAuthenticated) return;
     const fetchNotifs = async () => {
       try {
         const res = await api.get("/notifications?limit=10");
-        const notifs = res.data.notifications || [];
-        if (notifs.length > 0) {
-          setNotifications(notifs);
-          setUnreadCount(res.data.unreadCount || 0);
-        } else {
-          setNotifications(DUMMY_NOTIFS);
-          setUnreadCount(DUMMY_NOTIFS.filter(n => !n.read).length);
-        }
+        setNotifications(res.data.notifications || []);
+        setUnreadCount(res.data.unreadCount || 0);
       } catch {
-        setNotifications(DUMMY_NOTIFS);
-        setUnreadCount(DUMMY_NOTIFS.filter(n => !n.read).length);
+        setNotifications([]);
+        setUnreadCount(0);
       }
     };
     fetchNotifs();
-  }, [isAuthenticated, DUMMY_NOTIFS]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -310,7 +286,7 @@ const Navbar = () => {
     }
   }, [menuOpen, playOpen, playClose]);
 
-  const handleLogout = () => { logout(); navigate("/login"); };
+  const handleLogout = () => { logout(); navigate("/"); };
   const isActive = (path) => location.pathname === path;
 
   const getCenterLinks = () => {
