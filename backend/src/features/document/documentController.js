@@ -63,10 +63,7 @@ const uploadDocument = asyncHandler(async (req, res, next) => {
         return next(createError(500, 'Failed to upload file'));
     }
 
-    const fileHash = crypto
-        .createHash('sha256')
-        .update(req.file.buffer)
-        .digest('hex');
+    const fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
 
     const document = await Document.create({
         ...(applicationId && { application: applicationId }),
