@@ -27,7 +27,7 @@ import RegisterPage from "./pages/RegisterPage";
 // import AdminDashboard from "./pages/AdminDashboard";
 // import PendingRecruitersPage from "./pages/PendingRecruitersPage";
 // import AdminJobsPage from "./pages/AdminJobsPage";
-// import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
 // import AdminReportsPage from "./pages/AdminReportsPage";
 // import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 // import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
