@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 const ACCENT = "#00e5cc";
 
 export default function CtaBanner() {
+  const { isAuthenticated } = useContext(AuthContext);
   return (
     <section
       style={{
@@ -122,7 +124,7 @@ export default function CtaBanner() {
             }}
           />
           <Link
-            to="/register"
+            to={isAuthenticated ? "/jobs" : "/register"}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -151,7 +153,7 @@ export default function CtaBanner() {
               e.currentTarget.style.color = ACCENT;
             }}
           >
-            REGISTER NOW
+            {isAuthenticated ? "BROWSE JOBS" : "REGISTER NOW"}
             <span style={{ fontSize: "1.2em" }}>&#8594;</span>
           </Link>
         </div>
