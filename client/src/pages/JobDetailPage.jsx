@@ -215,6 +215,14 @@ const JobDetailPage = () => {
   const [applyLoading,  setApplyLoading]   = useState(false);
   const [applyError,    setApplyError]     = useState(null);
 
+  // CV upload
+  const [cvMode,        setCvMode]         = useState("disk"); // "disk" | "cloud"
+  const [cvFile,        setCvFile]         = useState(null);
+  const [cvUrl,         setCvUrl]          = useState("");
+  const [cvUploading,   setCvUploading]    = useState(false);
+  const [cvUploaded,    setCvUploaded]     = useState(false);
+  const [cvError,       setCvError]        = useState(null);
+
   // AI cover letter
   const [aiOpen,    setAiOpen]    = useState(false);
   const [aiText,    setAiText]    = useState("");
@@ -278,8 +286,36 @@ const JobDetailPage = () => {
     }
   }, [id, isAuthenticated, isJobSeeker]);
 
+  // ── CV upload ──────────────────────────────────────────────────────────────
+  const handleUploadCv = async () => {
+    setCvError(null);
+    if (cvMode === "disk" && !cvFile) { setCvError("Please select a file."); return; }
+    if (cvMode === "cloud" && !cvUrl.trim()) { setCvError("Please enter a URL."); return; }
+    setCvUploading(true);
+    try {
+      const { documentsAPI } = await import("../services/api");
+      if (cvMode === "disk") {
+        const fd = new FormData();
+        fd.append("file", cvFile);
+        fd.append("type", "cv");
+        await documentsAPI.uploadDocument(fd);
+      } else {
+        const fd = new FormData();
+        fd.append("fileUrl", cvUrl.trim());
+        fd.append("type", "cv");
+        await documentsAPI.uploadDocument(fd);
+      }
+      setCvUploaded(true);
+    } catch (err) {
+      setCvError(err.response?.data?.message || "Upload failed. Try again.");
+    } finally {
+      setCvUploading(false);
+    }
+  };
+
   // ── Apply ──────────────────────────────────────────────────────────────────
   const handleApply = async () => {
+    if (job.requiresCv && !cvUploaded) { setApplyError("Please upload your CV first."); return; }
     setApplyLoading(true);
     setApplyError(null);
     try {
@@ -288,6 +324,7 @@ const JobDetailPage = () => {
       setMyApplication({ status: app.status || "pending" });
       setApplyOpen(false);
       setCoverLetter("");
+      setCvFile(null); setCvUrl(""); setCvUploaded(false);
     } catch (err) {
       setApplyError(err.response?.data?.message || "Failed to submit.");
     } finally {
@@ -619,25 +656,88 @@ const JobDetailPage = () => {
       {/* ── Apply Modal ──────────────────────────────────────────── */}
       <Modal
         isOpen={applyOpen}
-        onClose={() => { setApplyOpen(false); setApplyError(null); }}
+        onClose={() => { setApplyOpen(false); setApplyError(null); setCvFile(null); setCvUrl(""); setCvUploaded(false); setCvError(null); }}
         onConfirm={handleApply}
         title={`Apply to ${job.title}`}
         confirmText={applyLoading ? "Submitting…" : "Submit Application"}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+
+          {/* ── CV upload section (shown first when required) ── */}
+          {job.requiresCv && (
+            <div style={{
+              border: `1px solid ${cvUploaded ? "rgba(0,229,204,0.4)" : "rgba(255,180,0,0.35)"}`,
+              borderRadius: 6,
+              padding: "1rem",
+              background: cvUploaded ? "rgba(0,229,204,0.04)" : "rgba(255,180,0,0.04)",
+            }}>
+              <p style={{ fontFamily: MONO, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: cvUploaded ? TEAL : "#f59e0b", margin: "0 0 0.75rem" }}>
+                {cvUploaded ? "✓ CV uploaded — ready to apply" : "⚠ This job requires a CV"}
+              </p>
+
+              {!cvUploaded && (
+                <>
+                  {/* Mode tabs */}
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    {["disk", "cloud"].map(m => (
+                      <button key={m} type="button" onClick={() => { setCvMode(m); setCvError(null); }} style={{
+                        fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase",
+                        padding: "0.3rem 0.75rem", borderRadius: 3, cursor: "pointer",
+                        border: `1px solid ${cvMode === m ? TEAL : "rgba(255,255,255,0.15)"}`,
+                        background: cvMode === m ? "rgba(0,229,204,0.1)" : "transparent",
+                        color: cvMode === m ? TEAL : "rgba(255,255,255,0.5)",
+                      }}>
+                        {m === "disk" ? "📁 From Disk" : "☁️ Cloud Link"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {cvMode === "disk" ? (
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={e => { setCvFile(e.target.files[0]); setCvError(null); }}
+                      style={{ fontSize: "13px", color: "var(--text-primary)", width: "100%" }}
+                    />
+                  ) : (
+                    <input
+                      type="url"
+                      placeholder="https://drive.google.com/... or Dropbox link"
+                      value={cvUrl}
+                      onChange={e => { setCvUrl(e.target.value); setCvError(null); }}
+                      style={{
+                        width: "100%", boxSizing: "border-box", padding: "0.55rem 0.75rem",
+                        borderRadius: 4, border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(0,0,0,0.25)", color: "var(--text-primary)",
+                        fontFamily: "'Inter',sans-serif", fontSize: "13px", outline: "none",
+                      }}
+                    />
+                  )}
+
+                  {cvError && <p style={{ fontFamily: MONO, fontSize: "11px", color: "#ef4444", margin: "0.5rem 0 0" }}>{cvError}</p>}
+
+                  <button type="button" onClick={handleUploadCv} disabled={cvUploading} style={{
+                    marginTop: "0.65rem", background: TEAL, color: "#030303",
+                    fontFamily: MONO, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em",
+                    textTransform: "uppercase", padding: "0.5rem 1.1rem",
+                    border: "none", borderRadius: 3, cursor: cvUploading ? "not-allowed" : "pointer",
+                    opacity: cvUploading ? 0.6 : 1,
+                  }}>
+                    {cvUploading ? "Uploading…" : "Upload CV"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Cover letter section ── */}
           <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: "20px", margin: 0 }}>
             Your profile (name, bio, skills) is shared automatically.
             {job.requiresCoverLetter ? " ⚠️ A cover letter is required." : " A cover letter is optional but recommended."}
           </p>
 
-          {/* AI generate button inside modal */}
           <button
-            style={{
-              ...aiBtn,
-              fontSize: "11px",
-              padding: "0.45rem 0.875rem",
-              alignSelf: "flex-start",
-            }}
+            style={{ ...aiBtn, fontSize: "11px", padding: "0.45rem 0.875rem", alignSelf: "flex-start" }}
             onClick={handleGenerateCL}
             disabled={aiLoading}
           >
@@ -648,7 +748,7 @@ const JobDetailPage = () => {
             value={coverLetter}
             onChange={e => { setCoverLetter(e.target.value); if (applyError) setApplyError(null); }}
             placeholder="Write a cover letter, or use the AI button above…"
-            rows={6}
+            rows={5}
             disabled={applyLoading}
             style={{
               width: "100%", boxSizing: "border-box",
@@ -657,13 +757,13 @@ const JobDetailPage = () => {
               background: "rgba(0,0,0,0.25)",
               color: "var(--text-primary)",
               fontFamily: "'Inter',sans-serif", fontSize: "14px", lineHeight: "22px",
-              resize: "vertical",
-              outline: "none",
+              resize: "vertical", outline: "none",
             }}
           />
+
           {applyError && (
             <p style={{ fontFamily: MONO, fontSize: "11px", color: "#ef4444", margin: 0 }}>
-              ERROR: {applyError}
+              {applyError}
             </p>
           )}
         </div>
