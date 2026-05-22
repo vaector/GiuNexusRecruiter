@@ -243,7 +243,7 @@ const CreateJobPage = () => {
                   {form.requirements.map((req, i) => (
                     <span key={i} className="cj-chip">
                       {req}
-                      <button type="button" className="cj-chip-remove" onClick={() => set("requirements", form.requirements.filter((_, j) => j !== i))}>×</button>
+                      <button type="button" className="cj-chip-remove" onClick={() => set("requirements", form.requirements.filter((_, j) => j !== i))}>x</button>
                     </span>
                   ))}
                 </div>
@@ -308,7 +308,7 @@ const CreateJobPage = () => {
                   {form.perks.map((perk, i) => (
                     <span key={i} className="cj-chip">
                       {perk}
-                      <button type="button" className="cj-chip-remove" onClick={() => set("perks", form.perks.filter((_, j) => j !== i))}>×</button>
+                      <button type="button" className="cj-chip-remove" onClick={() => set("perks", form.perks.filter((_, j) => j !== i))}>x</button>
                     </span>
                   ))}
                 </div>
@@ -366,7 +366,7 @@ const CreateJobPage = () => {
                   <div key={i} className="cj-question-row">
                     <div>
                       <span className="cj-question-text">{q.question}</span>
-                      <span className="cj-question-meta">{formatLabel(q.type)}{q.required ? " · Required" : ""}</span>
+                      <span className="cj-question-meta">{formatLabel(q.type)}{q.required ? " - Required" : ""}</span>
                     </div>
                     <button type="button" className="cj-btn-remove" onClick={() => set("screeningQuestions", form.screeningQuestions.filter((_, j) => j !== i))}>Remove</button>
                   </div>
