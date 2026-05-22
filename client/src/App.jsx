@@ -36,9 +36,10 @@ import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import ConversationsPage from "./pages/ConversationsPage";
 import MessagesPage from "./pages/MessagesPage";
-// import ReferralsPage from "./pages/ReferralsPage";
+import ReferralsPage from "./pages/ReferralsPage";
 // import DocumentsPage from "./pages/DocumentsPage";
-// import SavedSearchesPage from "./pages/SavedSearchesPage";
+import SavedSearchesPage from "./pages/SavedSearchesPage";
+import TotpSetupPage from "./pages/TotpSetupPage";
 
 const App = () => {
   return (
@@ -61,13 +62,14 @@ const App = () => {
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
             <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
-            {/* <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} /> */}
+            <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} />
             <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
             <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
             {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
             {/* <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} /> */}
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
-            {/* <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} /> */}
+            <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
+            <Route path="/profile/totp-setup" element={<PrivateRoute><TotpSetupPage /></PrivateRoute>} />
             {/* <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
             { <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} /> }
             { <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> }

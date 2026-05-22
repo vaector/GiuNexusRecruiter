@@ -31,6 +31,8 @@ export const authAPI = {
   forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
   verifyOtp: (data) => api.post("/auth/verify-otp", data),
   resetPassword: (token, password) => api.patch(`/auth/reset-password/${token}`, { password }),
+  setupTotp: () => api.post("/auth/setup-totp"),
+  verifyMfaOtp: (data) => api.post("/auth/verify-mfa", data),
 };
 
 // Profile
@@ -39,6 +41,7 @@ export const profileAPI = {
   updateMyProfile: (data) => api.patch("/profile", data),
   changePassword: (data) => api.patch("/profile/change-password", data),
   extractSkills: () => api.post("/profile/extract-skills"),
+  toggleMfa: (data) => api.patch("/profile/mfa", data),
 };
 
 // Jobs

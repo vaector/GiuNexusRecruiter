@@ -6,7 +6,7 @@ const asyncHandler = require("../../middleware/asyncHandler");
 const { addToBlacklist } = require('../../middleware/tokenBlacklist');
 const AuditLog = require("../auditLog/auditLog");
 const { AuditAction, Role, UserStatus } = require("../../enums");
-const { generateSecret, verifyTotp, printQrToConsole } = require("../../middleware/totpService");
+const { generateSecret, verifyTotp, generateOtpauthUrl } = require("../../middleware/totpService");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -265,11 +265,12 @@ const setupTotp = asyncHandler(async (req, res, next) => {
   const secret = generateSecret();
   user.totpSecret = secret;
   await user.save({ validateBeforeSave: false });
-  printQrToConsole(secret, user.email);
+  const otpauthUrl = generateOtpauthUrl(secret, user.email);
   return res.status(200).json({
     success: true,
     secret,
-    message: 'Scan the QR URL printed in server console with your authenticator app',
+    otpauthUrl,
+    message: 'Scan the QR code with your authenticator app, then verify with a code',
   });
 });
 
