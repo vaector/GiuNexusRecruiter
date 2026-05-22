@@ -6,16 +6,16 @@ const MONO = "'JetBrains Mono','Fira Code',monospace";
 const SANS = "'Inter',sans-serif";
 
 const TEAM_MEMBERS = [
-  { name: "Mohab", url: "https://github.com/MohabHindawy" },
-  { name: "Yassin", url: "https://github.com/Yassin-Hegazy" },
+  { name: "Mohab Khaled", url: "https://github.com/MohabHindawy" },
+  { name: "Yassin Amr", url: "https://github.com/Yassin-Hegazy" },
   { name: "Amro Taha", url: "https://github.com/aequate" },
-  { name: "Taher", url: "https://github.com/gasTSK" },
-  { name: "Ziad", url: "https://github.com/vaector" },
-  { name: "Tarek", url: "https://github.com/Tarek16006923" },
-  { name: "Mohamed", url: "https://github.com/mohammedrizk16008623" },
-  { name: "Fares", url: "https://github.com/FaresEl-Sonbaty" },
-  { name: "Youssef", url: "https://github.com/youssefkhaleel0689" },
-  { name: "Ahmed", url: "https://github.com/AhmedSoliman1023" },
+  { name: "Taher Khalaf", url: "https://github.com/gasTSK" },
+  { name: "Zeyad Amr", url: "https://github.com/vaector" },
+  { name: "Tarek Ahmed", url: "https://github.com/Tarek16006923" },
+  { name: "Mohammed Fady", url: "https://github.com/mohammedrizk16008623" },
+  { name: "Fares Mostafa", url: "https://github.com/FaresEl-Sonbaty" },
+  { name: "Youssef Hassan", url: "https://github.com/youssefkhaleel0689" },
+  { name: "Ahmed Bahaa", url: "https://github.com/AhmedSoliman1023" },
 ];
 
 const COLUMNS = [
@@ -108,7 +108,7 @@ export default function Footer() {
           className="footer-columns"
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr repeat(4, 1fr)",
+            gridTemplateColumns: "2fr repeat(4, 1fr) auto", 
             gap: "48px",
             marginBottom: "56px",
           }}
@@ -140,35 +140,6 @@ export default function Footer() {
             >
               AI-powered career & talent matching platform. Connecting the right people with the right opportunities.
             </p>
-
-            {/* --- TEAM SECTION --- */}
-            <div style={{ marginTop: "24px" }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.25)", display: "block", marginBottom: "8px", letterSpacing: "0.1em" }}>
-                DEVELOPED BY:
-              </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                {TEAM_MEMBERS.map((member) => (
-                  <a
-                    key={member.name}
-                    href={member.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 11,
-                      color: "rgba(255,255,255,0.45)",
-                      textDecoration: "none",
-                      transition: "color 0.25s ease",
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.color = ACCENT)}
-                    onMouseOut={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
-                  >
-                    {member.name}
-                  </a>
-                ))}
-              </div>
-            </div>
-            
           </div>
 
           {COLUMNS.map((col) => (
@@ -203,6 +174,69 @@ export default function Footer() {
               ))}
             </div>
           ))}
+
+          {/* --- NEW SPLIT TEAM COLUMN --- */}
+          <div>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 10,
+                letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.25)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: "16px",
+              }}
+            >
+              TEAM
+            </span>
+            <div style={{ display: "flex", gap: "32px" }}>
+              
+              {/* Left Column (First 5 members) */}
+              <div>
+                {TEAM_MEMBERS.slice(0, 5).map((member) => (
+                  <a
+                    key={member.name}
+                    href={member.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = ACCENT;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                    }}
+                  >
+                    {member.name}
+                  </a>
+                ))}
+              </div>
+
+              {/* Right Column (Remaining 5 members) */}
+              <div>
+                {TEAM_MEMBERS.slice(5, 10).map((member) => (
+                  <a
+                    key={member.name}
+                    href={member.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = ACCENT;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                    }}
+                  >
+                    {member.name}
+                  </a>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         <div
