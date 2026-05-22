@@ -29,18 +29,10 @@ const SavedJobsPage = () => {
 
     const loadSavedJobs = async () => {
       try {
-        setLoading(true);
-        setError("");
-        const response = await jobsAPI.getSavedJobs();
-        const savedJobs = Array.isArray(response.data?.jobs) ? response.data.jobs : [];
-
-        if (isMounted) {
-          setJobs(savedJobs);
-        }
-      } catch (requestError) {
-        if (isMounted) {
-          setError(requestError.response?.data?.message || "Failed to load saved jobs.");
-        }
+        const { data } = await api.get("/jobs/saved");
+        setJobs(data);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load saved jobs.");
       } finally {
         if (isMounted) {
           setLoading(false);
