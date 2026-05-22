@@ -102,7 +102,7 @@ screeningAnswers: [ScreeningAnswerSchema],
   timestamps: { createdAt: true, updatedAt: false },
 });
 
-ApplicationSchema.pre('save', async function (next) {
+ApplicationSchema.pre('save', async function () {
   if (this.isNew && !this.applicationCode) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code, exists, attempts = 0;
@@ -113,7 +113,6 @@ ApplicationSchema.pre('save', async function (next) {
     } while (exists && attempts < 10);
     this.applicationCode = code;
   }
-  next();
 });
 
 ApplicationSchema.index({ user: 1, job: 1 }, { unique: true });

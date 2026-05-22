@@ -20,7 +20,7 @@ import HomePage from "./pages/HomePage";
 // import MyApplicationsPage from "./pages/MyApplicationsPage";
 // import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 // import RecruiterDashboard from "./pages/RecruiterDashboard";
-// import CreateJobPage from "./pages/CreateJobPage";
+ import CreateJobPage from "./pages/CreateJobPage";
 // import EditJobPage from "./pages/EditJobPage";
 // import ApplicantsPage from "./pages/ApplicantsPage";
 // import JobAnalyticsPage from "./pages/JobAnalyticsPage";
@@ -67,7 +67,7 @@ const App = () => {
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             {/* <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} /> */}
             {/* <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
-            {/* <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} /> */}
+            { <Route path="/recruiter/jobs/create" element={<CreateJobPage/>}/> }
             {/* <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> */}
             {/* <Route path="/recruiter/applicants/:jobId" element={<RoleRoute allowedRoles={["recruiter"]}><ApplicantsPage /></RoleRoute>} /> */}
             {/* <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} /> */}
