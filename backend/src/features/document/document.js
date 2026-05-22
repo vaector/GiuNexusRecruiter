@@ -6,7 +6,6 @@ const DocumentSchema = new mongoose.Schema(
     application: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Application",
-      required: true,
     },
     type: {
       type: String,
