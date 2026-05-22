@@ -1,10 +1,16 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const User = require("./src/features/user/User");
 const JobPost = require("./src/features/jobPost/jobPost");
 const Message = require("./src/features/messaging/message");
 const Application = require("./src/features/application/Application");
+const ApplicationDocument = require("./src/features/document/document");
+const SavedSearch = require("./src/features/savedSearch/savedSearch");
+const Referral = require("./src/features/referrals/Referral");
+const Report = require("./src/features/reports/reports");
+const Notification = require("./src/features/notification/notification");
 
 async function seed() {
   const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -19,8 +25,13 @@ async function seed() {
   await JobPost.deleteMany({});
   await Message.deleteMany({});
   await Application.deleteMany({});
+  await ApplicationDocument.deleteMany({});
+  await SavedSearch.deleteMany({});
+  await Referral.deleteMany({});
+  await Report.deleteMany({});
+  await Notification.deleteMany({});
 
-  const [admin, seeker, recruiter] = await User.create([
+  const [admin, seeker1, seeker2, seeker3, recruiter1, recruiter2] = await User.create([
     {
       name: "Admin",
       email: "admin@giunexus.com",
@@ -29,15 +40,36 @@ async function seed() {
       status: "approved",
     },
     {
-      name: "Job Seeker",
-      email: "seeker@test.com",
+      name: "Alice Chen",
+      email: "alice@test.com",
       password: "seeker123",
       role: "jobSeeker",
       status: "approved",
     },
     {
-      name: "Recruiter",
-      email: "recruiter@test.com",
+      name: "Bob Martinez",
+      email: "bob@test.com",
+      password: "seeker123",
+      role: "jobSeeker",
+      status: "approved",
+    },
+    {
+      name: "Carol Wu",
+      email: "carol@test.com",
+      password: "seeker123",
+      role: "jobSeeker",
+      status: "approved",
+    },
+    {
+      name: "Dana Recruiter",
+      email: "dana@test.com",
+      password: "recruiter123",
+      role: "recruiter",
+      status: "approved",
+    },
+    {
+      name: "Eli Hiring",
+      email: "eli@test.com",
       password: "recruiter123",
       role: "recruiter",
       status: "approved",
@@ -47,11 +79,15 @@ async function seed() {
   await User.updateOne({ email: "admin@giunexus.com" }, { $set: { mfaEnabled: false } });
 
   console.log("Seeded users:");
-  console.log("  Admin       — admin@giunexus.com / adminpassword123");
-  console.log("  Job Seeker  — seeker@test.com / seeker123");
-  console.log("  Recruiter   — recruiter@test.com / recruiter123");
+  console.log("  Admin        — admin@giunexus.com / adminpassword123");
+  console.log("  Alice (seek) — alice@test.com / seeker123");
+  console.log("  Bob   (seek) — bob@test.com / seeker123");
+  console.log("  Carol (seek) — carol@test.com / seeker123");
+  console.log("  Dana  (rec)  — dana@test.com / recruiter123");
+  console.log("  Eli   (rec)  — eli@test.com / recruiter123");
 
-  const recruiterId = recruiter._id;
+  const recruiterId = recruiter1._id;
+  const recruiterId2 = recruiter2._id;
 
   const createdJobs = await JobPost.create([
     {
@@ -430,41 +466,560 @@ async function seed() {
   ]);
 
   const now = new Date();
+  const ago = (ms) => new Date(now.getTime() - ms);
+  const days = (d) => d * 86400000;
+  const hours = (h) => h * 3600000;
 
-  await Application.create({
-    user: seeker._id,
-    job: createdJobs[0]._id,
-    status: "pending",
-    appliedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 3)
-  });
-  
+  // ── Applications ──
+  const applications = await Application.create([
+    {
+      user: seeker1._id,
+      job: createdJobs[0]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(5)),
+      coverLetter: "I have 6 years of React experience and would love to join NovaTech.",
+      aiMatchScore: 92,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(5)), updatedBy: recruiter1._id },
+        { stage: "screening", updatedAt: ago(days(4)), updatedBy: recruiter1._id },
+        { stage: "interview", updatedAt: ago(days(2)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker2._id,
+      job: createdJobs[0]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(4)),
+      coverLetter: "Passionate frontend developer with deep TypeScript expertise.",
+      aiMatchScore: 85,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(4)), updatedBy: recruiter1._id },
+        { stage: "screening", updatedAt: ago(days(3)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker3._id,
+      job: createdJobs[0]._id,
+      status: "rejected",
+      appliedAt: ago(days(6)),
+      coverLetter: "Looking for a new challenge in frontend engineering.",
+      aiMatchScore: 58,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(6)), updatedBy: recruiter1._id },
+        { stage: "rejected", updatedAt: ago(days(5)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker1._id,
+      job: createdJobs[1]._id,
+      status: "pending",
+      appliedAt: ago(days(3)),
+      aiMatchScore: 74,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(3)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker2._id,
+      job: createdJobs[1]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(7)),
+      coverLetter: "ML infrastructure is my specialty — I've built GPU cluster orchestration at scale.",
+      aiMatchScore: 96,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(7)), updatedBy: recruiter1._id },
+        { stage: "screening", updatedAt: ago(days(5)), updatedBy: recruiter1._id },
+        { stage: "interview", updatedAt: ago(days(2)), updatedBy: recruiter1._id },
+        { stage: "offer", updatedAt: ago(hours(8)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker3._id,
+      job: createdJobs[2]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(2)),
+      coverLetter: "Full stack developer with Node.js and React expertise.",
+      aiMatchScore: 78,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(2)), updatedBy: recruiter1._id },
+        { stage: "screening", updatedAt: ago(days(1)), updatedBy: recruiter1._id },
+      ],
+    },
+    {
+      user: seeker1._id,
+      job: createdJobs[4]._id,
+      status: "pending",
+      appliedAt: ago(days(1)),
+      coverLetter: "I bridge design and engineering — strong UX sensibility.",
+      aiMatchScore: 67,
+    },
+    {
+      user: seeker2._id,
+      job: createdJobs[5]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(10)),
+      coverLetter: "Data analytics intern with SQL and Python skills.",
+      aiMatchScore: 81,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(10)), updatedBy: recruiter2._id },
+        { stage: "screening", updatedAt: ago(days(7)), updatedBy: recruiter2._id },
+        { stage: "interview", updatedAt: ago(days(3)), updatedBy: recruiter2._id },
+        { stage: "offer", updatedAt: ago(days(1)), updatedBy: recruiter2._id },
+        { stage: "contract_sent", updatedAt: ago(hours(6)), updatedBy: recruiter2._id },
+      ],
+    },
+    {
+      user: seeker3._id,
+      job: createdJobs[7]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(4)),
+      coverLetter: "Go microservices veteran — shipped production gRPC services.",
+      aiMatchScore: 88,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(4)), updatedBy: recruiterId2 },
+        { stage: "screening", updatedAt: ago(days(2)), updatedBy: recruiterId2 },
+        { stage: "interview", updatedAt: ago(days(1)), updatedBy: recruiterId2 },
+      ],
+    },
+    {
+      user: seeker1._id,
+      job: createdJobs[15]._id,
+      status: "shortlisted",
+      appliedAt: ago(days(14)),
+      coverLetter: "Eager to learn — internship would be a dream.",
+      aiMatchScore: 70,
+      stageHistory: [
+        { stage: "pending", updatedAt: ago(days(14)), updatedBy: recruiter1._id },
+        { stage: "screening", updatedAt: ago(days(10)), updatedBy: recruiter1._id },
+        { stage: "interview", updatedAt: ago(days(5)), updatedBy: recruiter1._id },
+        { stage: "offer", updatedAt: ago(days(2)), updatedBy: recruiter1._id },
+        { stage: "accepted", updatedAt: ago(days(1)), updatedBy: recruiter1._id },
+      ],
+    },
+  ]);
+
+  // ── Messages ──
   await Message.create([
     {
       job: createdJobs[0]._id,
-      sender: seeker._id,
-      recipient: recruiter._id,
+      sender: seeker1._id,
+      recipient: recruiter1._id,
       body: "Hi, I'm very interested in the Senior Frontend Engineer role!",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2)
+      createdAt: ago(days(2)),
     },
     {
       job: createdJobs[0]._id,
-      sender: recruiter._id,
-      recipient: seeker._id,
+      sender: recruiter1._id,
+      recipient: seeker1._id,
       body: "Hello! Thanks for reaching out. Your background looks great. When are you free for a call?",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 1)
+      createdAt: ago(days(1)),
     },
     {
       job: createdJobs[0]._id,
-      sender: seeker._id,
-      recipient: recruiter._id,
+      sender: seeker1._id,
+      recipient: recruiter1._id,
       body: "I am available tomorrow anytime between 2pm and 5pm EST.",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 5)
-    }
+      createdAt: ago(hours(5)),
+    },
+    {
+      job: createdJobs[1]._id,
+      sender: seeker2._id,
+      recipient: recruiter1._id,
+      body: "Excited about the ML Platform Engineer position! I have Kubernetes and TensorFlow experience.",
+      createdAt: ago(days(3)),
+    },
+    {
+      job: createdJobs[1]._id,
+      sender: recruiter1._id,
+      recipient: seeker2._id,
+      body: "Great to hear! Your profile is a strong match. Let's schedule a technical screen.",
+      createdAt: ago(days(2)),
+    },
+    {
+      job: createdJobs[2]._id,
+      sender: seeker3._id,
+      recipient: recruiterId2,
+      body: "Hi! I'd love to discuss the Full Stack Developer role at Helios Labs.",
+      createdAt: ago(days(1)),
+    },
   ]);
 
-  console.log("\nSeeded 20 fake jobs across multiple categories");
-  console.log("Seeded messages for testing conversations");
-  console.log('Run "node seed.js" to re-seed at any time.\n');
+  // ── Documents ──
+  const docApp1 = applications[0];
+  const docApp2 = applications[4];
+  const docApp3 = applications[7];
+
+  await ApplicationDocument.create([
+    {
+      application: docApp1._id,
+      type: "offer_letter",
+      fileName: "NovaTech_OfferLetter_AliceChen.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000001/docs/offer_alice_chen.pdf",
+      uploadedBy: recruiter1._id,
+      status: "pending",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+    },
+    {
+      application: docApp1._id,
+      type: "nda",
+      fileName: "NovaTech_NDA_AliceChen.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000002/docs/nda_alice_chen.pdf",
+      uploadedBy: recruiter1._id,
+      status: "pending",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+    },
+    {
+      application: docApp1._id,
+      type: "contract",
+      fileName: "NovaTech_Contract_AliceChen.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000003/docs/contract_alice_chen.pdf",
+      uploadedBy: recruiter1._id,
+      signedBy: seeker1._id,
+      signedAt: ago(days(1)),
+      status: "signed",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+      signatureToken: crypto.randomBytes(16).toString("hex"),
+    },
+    {
+      application: docApp2._id,
+      type: "offer_letter",
+      fileName: "DeepVault_OfferLetter_BobMartinez.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000004/docs/offer_bob_martinez.pdf",
+      uploadedBy: recruiter1._id,
+      signedBy: seeker2._id,
+      signedAt: ago(hours(12)),
+      status: "signed",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+      signatureToken: crypto.randomBytes(16).toString("hex"),
+    },
+    {
+      application: docApp2._id,
+      type: "nda",
+      fileName: "DeepVault_NDA_BobMartinez.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000005/docs/nda_bob_martinez.pdf",
+      uploadedBy: recruiter1._id,
+      status: "pending",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+    },
+    {
+      application: docApp3._id,
+      type: "cv",
+      fileName: "CarolWu_CV.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000006/docs/cv_carol_wu.pdf",
+      uploadedBy: seeker3._id,
+      status: "pending",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+    },
+    {
+      application: docApp3._id,
+      type: "cover_letter",
+      fileName: "CarolWu_CoverLetter.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000007/docs/cover_carol_wu.pdf",
+      uploadedBy: seeker3._id,
+      signedBy: recruiterId2,
+      signedAt: ago(days(1)),
+      status: "signed",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+      signatureToken: crypto.randomBytes(16).toString("hex"),
+    },
+    {
+      application: docApp3._id,
+      type: "contract",
+      fileName: "HeliosLabs_Contract_CarolWu.pdf",
+      fileUrl: "https://res.cloudinary.com/demo/raw/upload/v1700000008/docs/contract_carol_wu.pdf",
+      uploadedBy: recruiterId2,
+      status: "pending",
+      fileHash: crypto.randomBytes(32).toString("hex"),
+    },
+  ]);
+
+  // ── Saved Searches ──
+  await SavedSearch.create([
+    {
+      user: seeker1._id,
+      name: "Remote React Jobs",
+      filters: { keywords: "React", isRemote: true, type: "full-time" },
+      alertEnabled: true,
+      lastCheckedAt: ago(hours(3)),
+    },
+    {
+      user: seeker1._id,
+      name: "Berlin Engineering",
+      filters: { keywords: "Engineer", location: "Berlin", category: "Engineering" },
+      alertEnabled: false,
+    },
+    {
+      user: seeker2._id,
+      name: "ML Positions Above $150k",
+      filters: { keywords: "Machine Learning", salaryMin: 150000, type: "full-time" },
+      alertEnabled: true,
+      lastCheckedAt: ago(hours(1)),
+    },
+    {
+      user: seeker2._id,
+      name: "Remote Internships",
+      filters: { keywords: "intern", isRemote: true, type: "internship" },
+      alertEnabled: false,
+    },
+    {
+      user: seeker3._id,
+      name: "Full Stack Remote",
+      filters: { keywords: "Full Stack", isRemote: true },
+      alertEnabled: true,
+      lastCheckedAt: ago(days(1)),
+    },
+  ]);
+
+  // ── Referrals ──
+  await Referral.create([
+    {
+      referrer: seeker1._id,
+      referred: seeker2._id,
+      job: createdJobs[0]._id,
+      code: "ALICE-REF",
+      status: "pending",
+      message: "Hey Bob, this Frontend role at NovaTech looks perfect for you!",
+      requestedAt: ago(days(3)),
+    },
+    {
+      referrer: seeker2._id,
+      referred: seeker1._id,
+      job: createdJobs[1]._id,
+      code: "BOB-REF-ML",
+      status: "accepted",
+      message: "Alice, you should apply for this ML Platform role.",
+      requestedAt: ago(days(5)),
+      respondedAt: ago(days(4)),
+    },
+    {
+      referrer: seeker3._id,
+      referred: seeker1._id,
+      job: createdJobs[2]._id,
+      code: "CAROL-HELIOS",
+      status: "rejected",
+      message: "Not interested right now, but thanks!",
+      requestedAt: ago(days(7)),
+      respondedAt: ago(days(6)),
+    },
+    {
+      referrer: seeker1._id,
+      referred: seeker3._id,
+      job: createdJobs[5]._id,
+      code: "ALICE-INTERN",
+      status: "expired",
+      message: "Carol, this Data Analyst internship could be a great fit.",
+      requestedAt: ago(days(30)),
+    },
+  ]);
+
+  // ── Reports ──
+  await Report.create([
+    {
+      reporter: seeker1._id,
+      targetModel: "JobPost",
+      targetId: createdJobs[7]._id,
+      reason: "misleading",
+      details: "The salary range for theBackend Engineer role seems inflated compared to market rates for Amsterdam.",
+      status: "open",
+    },
+    {
+      reporter: seeker2._id,
+      targetModel: "JobPost",
+      targetId: createdJobs[13]._id,
+      reason: "fake_company",
+      details: "ChainVerse doesn't seem to be a real company — no web presence found.",
+      status: "reviewed",
+      reviewedBy: admin._id,
+      reviewedAt: ago(days(1)),
+      adminNote: "Verified: company has legitimate registration but minimal web presence. Keeping under review.",
+    },
+    {
+      reporter: seeker3._id,
+      targetModel: "User",
+      targetId: recruiter2._id,
+      reason: "harassment",
+      details: "Recruiter sent inappropriate messages outside the platform.",
+      status: "actioned",
+      reviewedBy: admin._id,
+      reviewedAt: ago(days(2)),
+      adminNote: "Warning issued to recruiter. Account monitored.",
+    },
+    {
+      reporter: seeker1._id,
+      targetModel: "User",
+      targetId: seeker2._id,
+      reason: "spam",
+      details: "This user is posting spam applications.",
+      status: "dismissed",
+      reviewedBy: admin._id,
+      reviewedAt: ago(days(4)),
+      adminNote: "Reviewed applications — no spam detected. Dismissing report.",
+    },
+  ]);
+
+  // ── Notifications ──
+  await Notification.create([
+    {
+      recipient: seeker1._id,
+      type: "application_status_changed",
+      title: "Application Update",
+      message: "Your application for Senior Frontend Engineer at NovaTech has been shortlisted!",
+      relatedJob: createdJobs[0]._id,
+      relatedApplication: applications[0]._id,
+      isRead: false,
+      createdAt: ago(hours(8)),
+    },
+    {
+      recipient: seeker1._id,
+      type: "new_job_match",
+      title: "New Job Match",
+      message: "A new Full Stack Developer role at Helios Labs matches your profile.",
+      relatedJob: createdJobs[2]._id,
+      isRead: false,
+      createdAt: ago(days(1)),
+    },
+    {
+      recipient: seeker1._id,
+      type: "referral_responded",
+      title: "Referral Accepted",
+      message: "Bob accepted your referral for the Senior Frontend Engineer role at NovaTech.",
+      relatedJob: createdJobs[0]._id,
+      isRead: true,
+      readAt: ago(hours(2)),
+      createdAt: ago(days(2)),
+    },
+    {
+      recipient: seeker1._id,
+      type: "new_message",
+      title: "New Message",
+      message: "Dana Recruiter sent you a message about the Senior Frontend Engineer position.",
+      relatedJob: createdJobs[0]._id,
+      isRead: true,
+      readAt: ago(hours(5)),
+      createdAt: ago(days(1)),
+    },
+    {
+      recipient: seeker2._id,
+      type: "application_status_changed",
+      title: "Interview Scheduled",
+      message: "You've been moved to the interview stage for ML Platform Engineer at DeepVault AI!",
+      relatedJob: createdJobs[1]._id,
+      relatedApplication: applications[4]._id,
+      isRead: false,
+      createdAt: ago(hours(3)),
+    },
+    {
+      recipient: seeker2._id,
+      type: "new_applicant",
+      title: "New Applicant",
+      message: "A new applicant has applied for ML Platform Engineer at DeepVault AI.",
+      relatedJob: createdJobs[1]._id,
+      isRead: true,
+      readAt: ago(hours(6)),
+      createdAt: ago(days(3)),
+    },
+    {
+      recipient: seeker2._id,
+      type: "new_job_match",
+      title: "New Job Match",
+      message: "A new Blockchain Developer role at ChainVerse matches your skills.",
+      relatedJob: createdJobs[13]._id,
+      isRead: false,
+      createdAt: ago(days(1)),
+    },
+    {
+      recipient: seeker3._id,
+      type: "application_status_changed",
+      title: "Application Rejected",
+      message: "Your application for Senior Frontend Engineer at NovaTech was not selected.",
+      relatedJob: createdJobs[0]._id,
+      relatedApplication: applications[2]._id,
+      isRead: true,
+      readAt: ago(days(4)),
+      createdAt: ago(days(5)),
+    },
+    {
+      recipient: seeker3._id,
+      type: "referral_requested",
+      title: "Referral Request",
+      message: "Alice is requesting a referral for the Data Analyst Intern position at QuantumLeap.",
+      relatedJob: createdJobs[5]._id,
+      isRead: false,
+      createdAt: ago(days(1)),
+    },
+    {
+      recipient: seeker3._id,
+      type: "new_message",
+      title: "New Message",
+      message: "Eli Hiring sent you a message about the Full Stack Developer role.",
+      relatedJob: createdJobs[2]._id,
+      isRead: false,
+      createdAt: ago(hours(12)),
+    },
+    {
+      recipient: recruiter1._id,
+      type: "new_applicant",
+      title: "New Applicant",
+      message: "Alice Chen applied for Senior Frontend Engineer at NovaTech.",
+      relatedJob: createdJobs[0]._id,
+      relatedApplication: applications[0]._id,
+      isRead: true,
+      readAt: ago(days(4)),
+      createdAt: ago(days(5)),
+    },
+    {
+      recipient: recruiter1._id,
+      type: "new_applicant",
+      title: "New Applicant",
+      message: "Bob Martinez applied for ML Platform Engineer at DeepVault AI.",
+      relatedJob: createdJobs[1]._id,
+      relatedApplication: applications[4]._id,
+      isRead: true,
+      readAt: ago(days(6)),
+      createdAt: ago(days(7)),
+    },
+    {
+      recipient: recruiter1._id,
+      type: "application_withdrawn",
+      title: "Application Withdrawn",
+      message: "An applicant has withdrawn from Software Engineering Intern at NovaTech.",
+      relatedJob: createdJobs[15]._id,
+      isRead: false,
+      createdAt: ago(hours(10)),
+    },
+    {
+      recipient: recruiter2._id,
+      type: "new_applicant",
+      title: "New Applicant",
+      message: "Bob Martinez applied for Data Analyst Intern at QuantumLeap.",
+      relatedJob: createdJobs[5]._id,
+      relatedApplication: applications[7]._id,
+      isRead: true,
+      readAt: ago(days(8)),
+      createdAt: ago(days(10)),
+    },
+    {
+      recipient: recruiter2._id,
+      type: "account_approved",
+      title: "Account Approved",
+      message: "Your recruiter account has been approved. You can now post jobs and review applicants.",
+      isRead: true,
+      readAt: ago(days(14)),
+      createdAt: ago(days(14)),
+    },
+  ]);
+
+  console.log("\nSeeded:");
+  console.log("  6 users (1 admin, 3 seekers, 2 recruiters)");
+  console.log("  20 job posts across multiple categories");
+  console.log("  10 applications with stage histories");
+  console.log("  6 messages across 3 conversations");
+  console.log("  8 documents (offer letters, NDAs, contracts, CVs, cover letters)");
+  console.log("  5 saved searches");
+  console.log("  4 referrals (pending, accepted, rejected, expired)");
+  console.log("  4 reports (open, reviewed, actioned, dismissed)");
+  console.log("  15 notifications across all users");
+  console.log('\nRun "node seed.js" to re-seed at any time.\n');
 
   process.exit();
 }
