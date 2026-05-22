@@ -9,8 +9,8 @@ function generateCode() {
   return code;
 }
 
-User.schema.pre("save", async function (next) {
-  if (!this.isNew) return next();
+User.schema.pre("save", async function () {
+  if (!this.isNew) return;
 
   if (!this.referralCode) {
     let code;
@@ -21,7 +21,7 @@ User.schema.pre("save", async function (next) {
       exists = await User.findOne({ referralCode: code });
       attempts++;
     }
-    if (attempts === 10) return next(new Error('Could not generate unique referral code'));
+    if (attempts === 10) throw new Error('Could not generate unique referral code');
     this.referralCode = code;
   }
 
@@ -34,9 +34,7 @@ User.schema.pre("save", async function (next) {
       exists = await User.findOne({ userCode: code });
       attempts++;
     }
-    if (attempts === 10) return next(new Error('Could not generate unique user code'));
+    if (attempts === 10) throw new Error('Could not generate unique user code');
     this.userCode = code;
   }
-
-  next();
 });
