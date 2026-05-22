@@ -14,11 +14,22 @@ export default function RecruiterDashboard() {
   useEffect(() => {
     jobsAPI.getMyJobs()
       .then(({ data }) => {
-        // handle both array and object response shapes
         const jobList = Array.isArray(data) ? data : 
                         Array.isArray(data.data) ? data.data : 
                         Array.isArray(data.jobs) ? data.jobs : [];
-        setJobs(jobList);
+        // fetch applicant counts for each job
+        Promise.all(
+          jobList.map((job) =>
+            jobsAPI.getApplicants(job._id)
+              .then(({ data: appData }) => {
+                const count = Array.isArray(appData) ? appData.length :
+                              Array.isArray(appData.data) ? appData.data.length :
+                              Array.isArray(appData.applications) ? appData.applications.length : 0;
+                return { ...job, applicantCount: count };
+              })
+              .catch(() => ({ ...job, applicantCount: 0 }))
+          )
+        ).then(setJobs);
       })
       .catch((err) => setError(err.response?.data?.message || "Failed to load jobs"))
       .finally(() => setLoading(false));
