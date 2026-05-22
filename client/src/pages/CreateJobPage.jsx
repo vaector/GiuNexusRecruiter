@@ -100,9 +100,11 @@ const CreateJobPage = () => {
   if (createdJob) {
     return (
       <div className="cj-page">
-        <div className="cj-bg-grid" aria-hidden="true" />
-        <div className="cj-container" style={{ position: "relative", zIndex: 1 }}>
-          <div className="cj-success-card">
+      <div className="cj-bg-grid" aria-hidden="true" />
+      <div className="cj-vignette" aria-hidden="true" />
+      <div className="cj-grain" aria-hidden="true" />
+      <div className="cj-container" style={{ position: "relative", zIndex: 1 }}>
+        <div className="cj-success-card">
             <p className="cj-eyebrow">Job Posted</p>
             <h1 className="cj-success-title">Job created successfully</h1>
             <p className="cj-success-sub">Your listing is live and accepting applications.</p>
@@ -132,6 +134,8 @@ const CreateJobPage = () => {
   return (
     <div className="cj-page">
       <div className="cj-bg-grid" aria-hidden="true" />
+      <div className="cj-vignette" aria-hidden="true" />
+      <div className="cj-grain" aria-hidden="true" />
       <div className="cj-container" style={{ position: "relative", zIndex: 1 }}>
 
         <div className="cj-page-header">
@@ -149,16 +153,16 @@ const CreateJobPage = () => {
             <h2 className="cj-section-title">Basic Information</h2>
             <div className="cj-grid-2">
               <div className="cj-field">
-                <label className="cj-label">Job Title</label>
+                <label className="cj-label">Job Title <span className="cj-required">*</span></label>
                 <input className="cj-input" name="title" placeholder="e.g. Senior Frontend Developer" value={form.title} onChange={(e) => set("title", e.target.value)} required />
               </div>
               <div className="cj-field">
-                <label className="cj-label">Company</label>
+                <label className="cj-label">Company <span className="cj-required">*</span></label>
                 <input className="cj-input" name="company" placeholder="e.g. Acme Corp" value={form.company} onChange={(e) => set("company", e.target.value)} required />
               </div>
             </div>
             <div className="cj-field">
-              <label className="cj-label">Description</label>
+              <label className="cj-label">Description <span className="cj-required">*</span></label>
               <textarea className="cj-input cj-textarea" placeholder="Describe the role, responsibilities, and what you're looking for..." value={form.description} onChange={(e) => set("description", e.target.value)} required rows={5} />
             </div>
           </section>
@@ -168,11 +172,11 @@ const CreateJobPage = () => {
             <h2 className="cj-section-title">Location & Work Type</h2>
             <div className="cj-grid-2">
               <div className="cj-field">
-                <label className="cj-label">City</label>
+                <label className="cj-label">City <span className="cj-required">*</span></label>
                 <input className="cj-input" placeholder="e.g. Cairo" value={form.location.city} onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, city: e.target.value } }))} required />
               </div>
               <div className="cj-field">
-                <label className="cj-label">Country</label>
+                <label className="cj-label">Country <span className="cj-required">*</span></label>
                 <input className="cj-input" placeholder="e.g. Egypt" value={form.location.country} onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, country: e.target.value } }))} required />
               </div>
               <div className="cj-field">
@@ -274,7 +278,7 @@ const CreateJobPage = () => {
                 <input className="cj-input" placeholder="e.g. Computer Science" value={form.requiredEducationField} onChange={(e) => set("requiredEducationField", e.target.value)} />
               </div>
               <div className="cj-field">
-                <label className="cj-label">Total Slots</label>
+                <label className="cj-label">Total Slots <span className="cj-required">*</span></label>
                 <input className="cj-input" type="number" min={1} value={form.totalSlots} onChange={(e) => set("totalSlots", e.target.value)} required />
               </div>
               <div className="cj-field">
@@ -394,12 +398,15 @@ const Styles = () => (
   <style>{`
     .cj-page {
       min-height: 100vh;
-      background: #030303;
       color: #eaf2ff;
-      padding: 96px 1.5rem 5rem;
+      padding: clamp(6rem, 11vh, 7.5rem) clamp(1rem, 4vw, 3rem) clamp(3rem, 7vh, 5rem);
       font-family: 'Inter', system-ui, sans-serif;
       position: relative;
       overflow-x: hidden;
+      background:
+        linear-gradient(135deg, rgba(0, 229, 204, 0.08), transparent 34%),
+        radial-gradient(circle at 78% 16%, rgba(0, 229, 204, 0.12), transparent 28%),
+        #030303;
     }
     .cj-bg-grid {
       position: fixed;
@@ -410,6 +417,21 @@ const Styles = () => (
       background-size: 42px 42px;
       mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 80%, transparent);
       opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .cj-grain {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .cj-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.6) 120%);
       pointer-events: none;
       z-index: 0;
     }
@@ -495,6 +517,10 @@ const Styles = () => (
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: rgba(234,242,255,0.5);
+    }
+    .cj-required {
+      color: #00e5cc;
+      font-weight: 700;
     }
     .cj-input {
       background: rgba(0, 0, 0, 0.35);
@@ -788,7 +814,7 @@ const Styles = () => (
     }
     @media (max-width: 640px) {
       .cj-grid-2, .cj-grid-4 { grid-template-columns: 1fr; }
-      .cj-page { padding: 80px 1rem 3rem; }
+      .cj-page { padding: 5.5rem 1rem 2rem; }
       .cj-card { padding: 1.1rem; }
     }
   `}</style>

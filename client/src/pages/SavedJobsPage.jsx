@@ -152,6 +152,8 @@ const SavedJobsPage = () => {
 const SavedJobsShell = ({ children }) => (
   <main className="saved-page">
     <div className="saved-bg-grid" aria-hidden="true" />
+    <div className="saved-vignette" aria-hidden="true" />
+    <div className="saved-grain" aria-hidden="true" />
     <div className="saved-container">{children}</div>
 
     <style>{`
@@ -164,6 +166,23 @@ const SavedJobsShell = ({ children }) => (
           linear-gradient(135deg, rgba(0, 229, 204, 0.08), transparent 34%),
           radial-gradient(circle at 78% 16%, rgba(0, 229, 204, 0.12), transparent 28%),
           var(--bg-base);
+      }
+
+      .saved-grain {
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .saved-vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.6) 120%);
+        pointer-events: none;
+        z-index: 0;
       }
 
       .saved-bg-grid {

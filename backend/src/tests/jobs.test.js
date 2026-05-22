@@ -10,10 +10,14 @@ jest.mock("../services/hfService", () => ({
   ]),
   featureExtraction: jest.fn().mockResolvedValue([[1, 0, 0], [0.9, 0.1, 0]]),
   tokenClassification: jest.fn().mockResolvedValue([]),
+  textGeneration: jest.fn().mockResolvedValue({
+    generated_text: "Dear TechCo Hiring Team,\n\nI am excited to apply for this role.",
+  }),
 }));
 
 const request = require("supertest");
 const app = require("./app");
+const hf = require("../services/hfService");
 const User = require("../features/user/User");
 
 const AUTH = "/api/v1/auth";
@@ -46,6 +50,14 @@ async function registerPendingRecruiter(email = "pending@corp.com", password = "
   const res = await request(app)
     .post(`${AUTH}/register`)
     .send({ name: "Pending Recruiter", email, password, role: "recruiter" });
+
+  return res.body.token;
+}
+
+async function registerSeeker(email = "seeker@techco.com", password = "pass123") {
+  const res = await request(app)
+    .post(`${AUTH}/register`)
+    .send({ name: "Sara Seeker", email, password, role: "jobSeeker" });
 
   return res.body.token;
 }
@@ -114,5 +126,33 @@ describe("GET /api/v1/jobs", () => {
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.jobs)).toBe(true);
     expect(res.body.total).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("POST /api/v1/jobs/:id/cover-letter-suggestion", () => {
+  it("returns a template draft when Hugging Face is unavailable", async () => {
+    const recruiterToken = await registerAndApproveRecruiter("cover-rec@techco.com");
+    const jobRes = await request(app)
+      .post(JOBS)
+      .set("Authorization", `Bearer ${recruiterToken}`)
+      .send(validJob);
+
+    const seekerToken = await registerSeeker("cover-seeker@example.com");
+    await User.findOneAndUpdate(
+      { email: "cover-seeker@example.com" },
+      { bio: "I build backend APIs and enjoy reliable product engineering.", skills: ["Node.js", "MongoDB"] }
+    );
+
+    hf.textGeneration.mockRejectedValueOnce(new Error("provider unavailable"));
+
+    const res = await request(app)
+      .post(`${JOBS}/${jobRes.body.job._id}/cover-letter-suggestion`)
+      .set("Authorization", `Bearer ${seekerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.generatedBy).toBe("template");
+    expect(res.body.suggestion).toMatch(/Dear TechCo Hiring Team/);
+    expect(res.body.suggestion).toMatch(/Node\.js/);
   });
 });

@@ -76,6 +76,41 @@ const normalizeEmbedding = (embedding) => {
     return embedding;
 };
 
+const getGeneratedText = (result) => {
+    if (typeof result === "string") return result;
+    if (Array.isArray(result)) return result[0]?.generated_text || "";
+    return result?.generated_text || "";
+};
+
+const buildCoverLetterFallback = ({ user, job, bio, skills, requirements }) => {
+    const applicantName = user?.name || "Applicant";
+    const company = job.company || "your company";
+    const title = job.title || "this role";
+    const skillList = (user?.skills || []).slice(0, 6);
+    const requirementList = (job.requirements || []).slice(0, 4);
+
+    const skillSentence = skillList.length
+        ? `My experience with ${skillList.join(", ")} aligns well with the needs of this position.`
+        : "My background has prepared me to contribute quickly and keep learning in a professional engineering environment.";
+
+    const requirementSentence = requirementList.length
+        ? `I was especially drawn to the role's focus on ${requirementList.join(", ")}, and I would be glad to bring practical, detail-oriented work to those areas.`
+        : "I am interested in contributing to the team's goals with clear communication, ownership, and steady execution.";
+
+    return [
+        `Dear ${company} Hiring Team,`,
+        "",
+        `I am excited to apply for the ${title} role at ${company}. ${bio || `${applicantName}'s profile shows a strong interest in this field.`}`,
+        "",
+        `${skillSentence} ${requirementSentence}`,
+        "",
+        `Thank you for considering my application. I would welcome the opportunity to discuss how my background can support ${company}'s work.`,
+        "",
+        `Sincerely,`,
+        applicantName,
+    ].join("\n");
+};
+
 // GET /api/v1/jobs/recommended
 const getRecommendedJobs = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id).select("skills");
@@ -492,11 +527,17 @@ const generateCoverLetterSuggestion = asyncHandler(async (req, res, next) => {
             parameters: { max_new_tokens: 350, temperature: 0.7, return_full_text: false },
         });
 
-        const suggestion = result?.generated_text?.trim() || "";
-        return res.status(200).json({ success: true, suggestion });
+        const suggestion = getGeneratedText(result).trim();
+        if (suggestion) {
+            return res.status(200).json({ success: true, suggestion, generatedBy: "huggingface" });
+        }
+
+        const fallback = buildCoverLetterFallback({ user, job, bio, skills, requirements });
+        return res.status(200).json({ success: true, suggestion: fallback, generatedBy: "template" });
     } catch (err) {
         console.error("HF cover letter error:", err?.message);
-        return next(createError(503, "AI service unavailable. Please try again later."));
+        const fallback = buildCoverLetterFallback({ user, job, bio, skills, requirements });
+        return res.status(200).json({ success: true, suggestion: fallback, generatedBy: "template" });
     }
 });
 
