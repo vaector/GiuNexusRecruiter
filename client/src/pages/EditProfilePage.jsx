@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { profileAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 export default function EditProfilePage() {
   const { setUser } = useContext(AuthContext);
@@ -56,13 +57,7 @@ export default function EditProfilePage() {
         <p>Update your personal details and profile picture.</p>
       </div>
 
-      {loading ? (
-        <section className="ep-state-card">
-          <p className="nexus-eyebrow">Loading</p>
-          <h2>Retrieving profile</h2>
-          <p>Your profile data is being loaded.</p>
-        </section>
-      ) : (
+      {loading ? <PageLoader /> : (
         <form className="ep-card" onSubmit={submit}>
           {error && <div className="ep-error">{error}</div>}
           {message && <div className="ep-success">{message}</div>}

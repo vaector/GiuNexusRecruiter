@@ -40,6 +40,14 @@ export default function MyApplicationsPage() {
     }
   };
 
+  const buildMessageUrl = (application) => {
+    const job = application.job || {};
+    const params = new URLSearchParams();
+    params.set("role", "recruiter");
+    if (job.title) params.set("job", job.title);
+    return `/conversations/${job._id}?${params.toString()}`;
+  };
+
   return (
     <ApplicationsShell>
       <div className="ma-header">
@@ -77,6 +85,11 @@ export default function MyApplicationsPage() {
                 </div>
                 <div className="ma-actions">
                   {job._id && <Link className="nexus-btn secondary" to={`/jobs/${job._id}`}>View job</Link>}
+                  {job._id && application.status !== "rejected" && (
+                    <Link className="nexus-btn secondary" to={buildMessageUrl(application)}>
+                      Message recruiter
+                    </Link>
+                  )}
                   <Link className="nexus-btn secondary" to={`/documents/${application._id}`}>Documents</Link>
                   <button
                     className="nexus-btn danger"

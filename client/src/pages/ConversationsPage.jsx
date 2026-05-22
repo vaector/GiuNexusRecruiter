@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { messagesAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const relativeTime = (dateStr) => {
   if (!dateStr) return "";
@@ -244,39 +245,7 @@ export default function ConversationsPage() {
           )}
         </div>
 
-        {loading ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              padding: "4rem 0",
-              gap: "1rem",
-            }}
-          >
-            <div
-              style={{
-                width: "24px",
-                height: "24px",
-                border: "2px solid rgba(0,229,204,0.2)",
-                borderTopColor: "#00e5cc",
-                borderRadius: "50%",
-                animation: "convSpin 0.8s linear infinite",
-              }}
-            />
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono','Fira Code',monospace",
-                fontSize: "0.68rem",
-                letterSpacing: "0.14em",
-                color: "rgba(234,242,255,0.3)",
-                textTransform: "uppercase",
-              }}
-            >
-              LOADING...
-            </div>
-          </div>
-        ) : conversations.length === 0 ? (
+        {loading ? <PageLoader /> : conversations.length === 0 ? (
           <div
             style={{
               display: "flex",

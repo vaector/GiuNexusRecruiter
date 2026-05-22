@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { applicationsAPI, jobsAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 
 const STAGES = ["pending", "screening", "interview", "offer", "contract_sent", "accepted", "rejected"];
 const STATUS_OPTIONS = ["pending", "shortlisted", "rejected"];
+const STAGE_OPTIONS = ["pending", "screening", "interview", "offer", "contract_sent", "accepted"];
 
 const formatLabel = (value) =>
   (value || "")
@@ -89,6 +91,15 @@ export default function ApplicantsPage() {
     }
   };
 
+  const buildMessageUrl = (application) => {
+    const candidate = application.user || {};
+    const params = new URLSearchParams();
+    if (candidate._id) params.set("with", candidate._id);
+    if (candidate.name) params.set("name", candidate.name);
+    params.set("role", "jobSeeker");
+    return `/conversations/${jobId}?${params.toString()}`;
+  };
+
   const handleNotesBlur = async (application, recruiterNotes) => {
     if ((application.recruiterNotes || "") === recruiterNotes) return;
 
@@ -128,9 +139,7 @@ export default function ApplicantsPage() {
         {error && <div className="applicants-alert error">{error}</div>}
         {success && <div className="applicants-alert success">{success}</div>}
 
-        {loading ? (
-          <div className="applicants-empty">Loading applicants...</div>
-        ) : applications.length === 0 ? (
+        {loading ? <PageLoader /> : applications.length === 0 ? (
           <div className="applicants-empty">No applicants for this job yet.</div>
         ) : (
           <div className="applicants-list">
@@ -178,6 +187,47 @@ export default function ApplicantsPage() {
                         {STATUS_OPTIONS.map((status) => (
                           <option key={status} value={status}>
                             {formatLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div className="status-actions" aria-label="Application actions">
+                      <button
+                        type="button"
+                        className="pipeline-btn approve"
+                        disabled={savingId === application._id || application.status === "shortlisted"}
+                        onClick={() => handleStatusChange(application, "shortlisted")}
+                      >
+                        Shortlist
+                      </button>
+                      <button
+                        type="button"
+                        className="pipeline-btn reject"
+                        disabled={savingId === application._id || application.status === "rejected"}
+                        onClick={() => handleStatusChange(application, "rejected")}
+                      >
+                        Reject
+                      </button>
+                      {application.status !== "rejected" ? (
+                        <Link className="pipeline-btn message" to={buildMessageUrl(application)}>
+                          Message
+                        </Link>
+                      ) : (
+                        <span className="pipeline-btn disabled">No messaging</span>
+                      )}
+                    </div>
+
+                    <label>
+                      Pipeline Stage
+                      <select
+                        value={currentStage}
+                        disabled={savingId === application._id || application.status === "rejected"}
+                        onChange={(event) => handleStatusChange(application, event.target.value)}
+                      >
+                        {STAGE_OPTIONS.map((stage) => (
+                          <option key={stage} value={stage}>
+                            {formatLabel(stage)}
                           </option>
                         ))}
                       </select>
@@ -372,6 +422,48 @@ export default function ApplicantsPage() {
           display: grid;
           gap: 0.75rem;
         }
+        .status-actions {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.5rem;
+        }
+        .pipeline-btn {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.035);
+          color: rgba(234, 242, 255, 0.75);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.64rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          text-decoration: none;
+          cursor: pointer;
+        }
+        .pipeline-btn:disabled,
+        .pipeline-btn.disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+        }
+        .pipeline-btn.approve {
+          border-color: rgba(74, 222, 128, 0.35);
+          color: #4ade80;
+          background: rgba(74, 222, 128, 0.08);
+        }
+        .pipeline-btn.reject {
+          border-color: rgba(239, 68, 68, 0.35);
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.08);
+        }
+        .pipeline-btn.message {
+          border-color: rgba(0, 229, 204, 0.35);
+          color: #00e5cc;
+          background: rgba(0, 229, 204, 0.08);
+        }
         .applicant-controls label {
           display: grid;
           gap: 0.35rem;
@@ -418,6 +510,9 @@ export default function ApplicantsPage() {
           }
           .applicants-header {
             flex-direction: column;
+          }
+          .status-actions {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>

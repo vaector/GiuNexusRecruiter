@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { applicationsAPI } from "../services/api";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
 import StageHistory from "../components/StageHistory";
-import Spinner from "../components/Spinner";
+import PageLoader from "../components/PageLoader";
 
 export default function ApplicationDetailPage() {
   const { id } = useParams();
@@ -20,7 +20,7 @@ export default function ApplicationDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <Spinner />;
+  if (loading) return <PageLoader />;
 
   if (error) {
     return (
@@ -34,6 +34,11 @@ export default function ApplicationDetailPage() {
   }
 
   if (!application) return null;
+
+  const messageParams = new URLSearchParams();
+  messageParams.set("role", "recruiter");
+  if (application.job?.title) messageParams.set("job", application.job.title);
+  const canMessage = application.job?._id && application.status !== "rejected";
 
   return (
     <div style={{ minHeight: "100vh", background: "#030303", position: "relative", zIndex: 1 }}>
@@ -54,6 +59,16 @@ export default function ApplicationDetailPage() {
             </span>
             <ApplicationStatusBadge status={application.status} />
           </div>
+
+          {canMessage && (
+            <Link
+              to={`/conversations/${application.job._id}?${messageParams.toString()}`}
+              className="nexus-btn secondary"
+              style={{ marginBottom: "1.5rem" }}
+            >
+              Message recruiter
+            </Link>
+          )}
 
           {application.coverLetter && (
             <div style={{ marginBottom: "1.5rem" }}>

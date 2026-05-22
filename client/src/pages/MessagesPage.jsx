@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback }
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { messagesAPI } from "../services/api";
+import PageLoader from "../components/PageLoader";
 import usePolling from "../utils/usePolling";
 
 const MAX_CHARS = 2000;
@@ -80,6 +81,9 @@ export default function MessagesPage() {
   const withParam = searchParams.get("with");
   const senderParam = searchParams.get("sender");
   const recipientParam = searchParams.get("recipient");
+  const contextName = searchParams.get("name");
+  const contextRole = searchParams.get("role");
+  const contextJobTitle = searchParams.get("job");
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -311,6 +315,11 @@ export default function MessagesPage() {
   };
 
   const currentUserId = user?._id;
+  const displayOtherUser = otherUser || (contextName || contextRole ? {
+    name: contextName || (contextRole === "jobSeeker" ? "Applicant" : "Recruiter"),
+    role: contextRole || (user?.role === "recruiter" ? "jobSeeker" : "recruiter"),
+  } : null);
+  const displayJobInfo = jobInfo || (contextJobTitle ? { title: contextJobTitle } : null);
 
   return (
     <div
@@ -451,32 +460,7 @@ export default function MessagesPage() {
           ref={messagesListRef}
           className="msg-list"
         >
-          {loading ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                gap: "1rem",
-              }}
-            >
-              <div className="msg-spinner" />
-              <div
-                style={{
-                  fontFamily:
-                    "'JetBrains Mono','Fira Code',monospace",
-                  fontSize: "0.68rem",
-                  letterSpacing: "0.14em",
-                  color: "rgba(234,242,255,0.3)",
-                  textTransform: "uppercase",
-                }}
-              >
-                LOADING...
-              </div>
-            </div>
-          ) : messages.length === 0 ? (
+          {loading ? <PageLoader /> : messages.length === 0 ? (
             <div
               style={{
                 display: "flex",

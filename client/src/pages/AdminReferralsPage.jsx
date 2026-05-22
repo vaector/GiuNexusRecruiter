@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from "react";
 import Lenis from "lenis";
 import { referralsAPI } from "../services/api";
-import { Spinner } from "../components/Spinner";
+import PageLoader from "../components/PageLoader";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
 
@@ -168,9 +168,7 @@ export default function AdminReferralsPage() {
             </div>
           )}
 
-          {loading ? (
-            <div className="nexus-state-container"><Spinner /></div>
-          ) : referrals.length === 0 ? (
+          {loading ? <PageLoader /> : referrals.length === 0 ? (
             <div className="nexus-glass-panel empty-state">
               <p className="nexus-body-lg text-primary">No referrals match this filter.</p>
             </div>
