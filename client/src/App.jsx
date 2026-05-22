@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
@@ -52,6 +53,7 @@ const ContactPage = lazy(() => import("./pages/PublicInfoPage").then(m => ({ def
 const App = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Navbar />
         <main style={{ flex: 1 }}>
