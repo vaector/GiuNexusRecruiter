@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef, useCallback } from "react";
+import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { messagesAPI } from "../services/api";
@@ -183,11 +183,9 @@ export default function MessagesPage() {
     fetchMessages(1).finally(() => setLoading(false));
   }, [isAuthenticated, jobId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!loading && messages.length > 0) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      }, 100);
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
   }, [loading]);
 
@@ -197,6 +195,14 @@ export default function MessagesPage() {
       currentCount > prevMessageCountRef.current &&
       prevMessageCountRef.current > 0
     ) {
+      const el = messagesListRef.current;
+      if (el) {
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+        if (!nearBottom) {
+          prevMessageCountRef.current = currentCount;
+          return;
+        }
+      }
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 150);
@@ -319,6 +325,7 @@ export default function MessagesPage() {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        paddingTop: "84px",
       }}
     >
       <div

@@ -30,7 +30,7 @@ const COLUMNS = [
       { label: "Dashboard", to: "/recruiter/dashboard" },
       { label: "Post a Job", to: "/recruiter/jobs/create" },
       { label: "Messages", to: "/conversations" },
-      { label: "Applicants", to: "/recruiter/applicants" },
+      { label: "My Jobs", to: "/recruiter/jobs" },
     ],
   },
   {
@@ -42,6 +42,12 @@ const COLUMNS = [
       { label: "Security", to: "/profile/totp-setup" },
     ],
   },
+];
+
+const LEGAL_LINKS = [
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const linkStyle = {
@@ -179,15 +185,16 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} GIU NEXUS &mdash; ALL SYSTEMS NOMINAL
           </span>
           <div style={{ display: "flex", gap: "24px" }}>
-            {["Privacy", "Terms", "Contact"].map((item) => (
-              <span
-                key={item}
+            {LEGAL_LINKS.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
                 style={{
                   fontFamily: MONO,
                   fontSize: 10,
                   letterSpacing: "0.1em",
                   color: "rgba(255,255,255,0.25)",
-                  cursor: "pointer",
+                  textDecoration: "none",
                   transition: "color 0.25s ease",
                 }}
                 onMouseOver={(e) => {
@@ -197,8 +204,8 @@ export default function Footer() {
                   e.currentTarget.style.color = "rgba(255,255,255,0.25)";
                 }}
               >
-                {item.toUpperCase()}
-              </span>
+                {item.label.toUpperCase()}
+              </Link>
             ))}
           </div>
         </div>

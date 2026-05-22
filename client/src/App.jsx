@@ -43,6 +43,7 @@ import DocumentsPage from "./pages/DocumentsPage";
 import SavedSearchesPage from "./pages/SavedSearchesPage";
 import TotpSetupPage from "./pages/TotpSetupPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import { ContactPage, PrivacyPage, TermsPage } from "./pages/PublicInfoPage";
 
 const App = () => {
   return (
@@ -60,6 +61,9 @@ const App = () => {
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
             {/* Job Seeker routes */}
             <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} />
@@ -79,10 +83,9 @@ const App = () => {
 
             <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} />
             <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} />
-            <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} />
-            <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
 
             <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />
+            <Route path="/recruiter/jobs" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />
             <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} />
             <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} />
             <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} />
