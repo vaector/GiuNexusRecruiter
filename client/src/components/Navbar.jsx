@@ -55,7 +55,7 @@ const RECRUITER_DROPDOWNS = [
     items: [
       { label: "Dashboard", to: "/recruiter/dashboard", icon: "clipboard" },
       { label: "Post Job", to: "/recruiter/jobs/create", icon: "sparkles" },
-      { label: "My Jobs", to: "/recruiter/jobs", icon: "search" },
+      { label: "My Jobs", to: "/recruiter/dashboard", icon: "search" },
     ],
   },
   {
