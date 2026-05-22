@@ -51,6 +51,12 @@ app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use("/api/v1/referrals", referralRoutes);
 
+// Serve client
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

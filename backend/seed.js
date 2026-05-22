@@ -3,6 +3,8 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const mongoose = require("mongoose");
 const User = require("./src/features/user/User");
 const JobPost = require("./src/features/jobPost/jobPost");
+const Message = require("./src/features/messaging/message");
+const Application = require("./src/features/application/Application");
 
 async function seed() {
   const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -15,6 +17,8 @@ async function seed() {
 
   await User.deleteMany({});
   await JobPost.deleteMany({});
+  await Message.deleteMany({});
+  await Application.deleteMany({});
 
   const [admin, seeker, recruiter] = await User.create([
     {
@@ -40,6 +44,8 @@ async function seed() {
     },
   ]);
 
+  await User.updateOne({ email: "admin@giunexus.com" }, { $set: { mfaEnabled: false } });
+
   console.log("Seeded users:");
   console.log("  Admin       — admin@giunexus.com / adminpassword123");
   console.log("  Job Seeker  — seeker@test.com / seeker123");
@@ -47,7 +53,7 @@ async function seed() {
 
   const recruiterId = recruiter._id;
 
-  await JobPost.create([
+  const createdJobs = await JobPost.create([
     {
       title: "Senior Frontend Engineer",
       company: "NovaTech",
@@ -423,7 +429,41 @@ async function seed() {
     },
   ]);
 
+  const now = new Date();
+
+  await Application.create({
+    user: seeker._id,
+    job: createdJobs[0]._id,
+    status: "pending",
+    appliedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 3)
+  });
+  
+  await Message.create([
+    {
+      job: createdJobs[0]._id,
+      sender: seeker._id,
+      recipient: recruiter._id,
+      body: "Hi, I'm very interested in the Senior Frontend Engineer role!",
+      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2)
+    },
+    {
+      job: createdJobs[0]._id,
+      sender: recruiter._id,
+      recipient: seeker._id,
+      body: "Hello! Thanks for reaching out. Your background looks great. When are you free for a call?",
+      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 1)
+    },
+    {
+      job: createdJobs[0]._id,
+      sender: seeker._id,
+      recipient: recruiter._id,
+      body: "I am available tomorrow anytime between 2pm and 5pm EST.",
+      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 5)
+    }
+  ]);
+
   console.log("\nSeeded 20 fake jobs across multiple categories");
+  console.log("Seeded messages for testing conversations");
   console.log('Run "node seed.js" to re-seed at any time.\n');
 
   process.exit();

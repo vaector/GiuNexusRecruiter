@@ -47,7 +47,7 @@ const NotificationBell = () => {
       onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
       title="Notifications"
     >
-      🔔
+      🕭
       {unreadCount > 0 && (
         <span style={{
           position: "absolute",
