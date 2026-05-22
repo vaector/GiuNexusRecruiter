@@ -101,7 +101,9 @@ const RecommendedJobsPage = () => {
       ) : (
         <div className="recommended-grid">
           {jobs.map((job) => {
-            const score = typeof job.score === "number" ? Math.round(job.score * 100) : null;
+            const score = typeof job.score === "number" && isFinite(job.score)
+              ? Math.round(Math.max(0, Math.min(1, job.score)) * 100)
+              : null;
             const location = formatLocation(job.location);
 
             return (
@@ -206,7 +208,7 @@ const RecommendedShell = ({ children }) => (
 
       .recommended-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 1rem;
       }
 
@@ -234,6 +236,12 @@ const RecommendedShell = ({ children }) => (
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
+        min-width: 0;
+      }
+
+      .recommended-card-top > div {
+        min-width: 0;
+        flex: 1;
       }
 
       .recommended-card h2 {
@@ -243,6 +251,8 @@ const RecommendedShell = ({ children }) => (
         line-height: 1.3;
         text-transform: uppercase;
         letter-spacing: 0;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
 
       .recommended-card h2 a {
@@ -256,7 +266,6 @@ const RecommendedShell = ({ children }) => (
 
       .recommended-match-pill {
         flex: 0 0 auto;
-        min-width: 4.8rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
