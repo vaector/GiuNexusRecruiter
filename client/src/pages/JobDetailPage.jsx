@@ -19,6 +19,7 @@ import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { CATEGORY_COLORS } from "../components/JobCard";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
+import ReportButton from "../components/ReportButton";
 import Modal from "../components/Modal";
 
 // ── Design tokens (identical to JobListPage) ─────────────────────────────────
@@ -454,7 +455,7 @@ const JobDetailPage = () => {
               )
             )}
 
-            {/* save */}
+{/* save */}
             {isAuthenticated && isJobSeeker && (
               <button
                 style={{
@@ -473,6 +474,8 @@ const JobDetailPage = () => {
                 {saveLoading ? "..." : isSaved ? "🔖 SAVED" : "🏷️ SAVE"}
               </button>
             )}
+
+            <ReportButton targetModel="JobPost" targetId={id} />
           </div>
 
           <div style={{ height: "1px", background: "linear-gradient(to right, rgba(0,229,204,0.3), transparent)", marginTop: "2rem" }} />
