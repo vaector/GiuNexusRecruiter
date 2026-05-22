@@ -29,8 +29,8 @@ const SavedJobsPage = () => {
 
     const loadSavedJobs = async () => {
       try {
-        const { data } = await api.get("/jobs/saved");
-        setJobs(data);
+        const { data } = await jobsAPI.getSavedJobs();
+        setJobs(data.jobs || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load saved jobs.");
       } finally {

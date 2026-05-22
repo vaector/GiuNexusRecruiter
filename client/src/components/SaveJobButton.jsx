@@ -3,7 +3,7 @@
 // Updates state optimistically
 // Disabled when job status is not open
 // Props: jobId, initialSaved, jobStatus
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
@@ -11,6 +11,10 @@ const SaveJobButton = ({ jobId, initialSaved = false, jobStatus, onToggle }) => 
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useContext(AuthContext);
+
+  useEffect(() => {
+    setSaved(initialSaved);
+  }, [initialSaved]);
 
   if (!isAuthenticated) return null;
 
