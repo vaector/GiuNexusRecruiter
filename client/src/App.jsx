@@ -31,7 +31,7 @@ import RegisterPage from "./pages/RegisterPage";
 // import AdminReportsPage from "./pages/AdminReportsPage";
 // import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 // import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
-// import NotificationsPage from "./pages/NotificationsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 // import ConversationsPage from "./pages/ConversationsPage";
 // import MessagesPage from "./pages/MessagesPage";
 // import ReferralsPage from "./pages/ReferralsPage";
@@ -58,7 +58,7 @@ const App = () => {
             {/* <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
-            {/* <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} /> */}
+            <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
             {/* <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} /> */}
             {/* <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} /> */}
             {/* <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} /> */}
