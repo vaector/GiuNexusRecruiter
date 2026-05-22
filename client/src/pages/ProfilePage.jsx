@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { profileAPI } from "../services/api";
 
 const ProfilePage = () => {
-  const { setUser } = useContext(AuthContext);
+  const { updateUser } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -25,7 +25,7 @@ const ProfilePage = () => {
 
         setProfile(user);
         if (user) {
-          setUser?.(user);
+          updateUser?.(user);
         }
       } catch (error) {
         if (!isMounted) return;
@@ -51,24 +51,26 @@ const ProfilePage = () => {
 
     try {
       setIsExtracting(true);
-      const response = await profileAPI.extractSkills();
-      const skills = response.data?.skills || response.data?.extracted || [];
+      await profileAPI.extractSkills();
 
-      setProfile((currentProfile) => {
-        const nextProfile = currentProfile ? { ...currentProfile, skills } : currentProfile;
-        if (nextProfile) {
-          setUser?.(nextProfile);
-        }
-        return nextProfile;
-      });
-
-      setStatusMessage("Skills updated from your bio.");
+      // Re-fetch profile from server to get authoritative updated skills
+      const fresh = await profileAPI.getMyProfile();
+      const user = fresh.data?.user || null;
+      if (user) {
+        setProfile(user);
+        updateUser?.(user);
+        const count = (user.skills || []).length;
+        setStatusMessage(
+          count > 0
+            ? `${count} skill${count !== 1 ? "s" : ""} extracted from your bio.`
+            : "No skills could be extracted. Try adding more technical keywords to your bio."
+        );
+      }
     } catch (error) {
       if (error.response?.status === 400) {
         setExtractError(error.response?.data?.message || "Bio is empty. Add a bio before extracting skills.");
         return;
       }
-
       setExtractError(error.response?.data?.message || "Unable to extract skills right now.");
     } finally {
       setIsExtracting(false);
