@@ -42,7 +42,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await authAPI.verifyMfa({ userId: mfa.userId, otp, method: mfa.mfaMethod });
+      const res = await authAPI.verifyMfaOtp({ userId: mfa.userId, otp, method: mfa.mfaMethod });
       const data = res.data;
       login(data.token, data.user);
       navigate(from, { replace: true });
