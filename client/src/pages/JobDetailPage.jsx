@@ -694,7 +694,15 @@ const JobDetailPage = () => {
           )}
           {aiError && (
             <p style={{ fontFamily: MONO, fontSize: "11px", color: "#ef4444", margin: 0 }}>
-              ERROR: {aiError}
+              {aiError.includes("bio or extracted skills") ? (
+                <>
+                  Your profile has no bio or skills yet.{" "}
+                  <a href="/profile" style={{ color: "#00e5cc", textDecoration: "underline" }}>
+                    Update your profile
+                  </a>{" "}
+                  first, then try again.
+                </>
+              ) : <>ERROR: {aiError}</>}
             </p>
           )}
           {aiText && !aiLoading && (
