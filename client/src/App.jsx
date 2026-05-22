@@ -6,7 +6,7 @@ import RoleRoute from "./components/RoleRoute";
 
 import HomePage from "./pages/HomePage";
 // import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+// import RegisterPage from "./pages/RegisterPage";
 // import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 // import VerifyOtpPage from "./pages/VerifyOtpPage";
 // import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -21,7 +21,7 @@ import RegisterPage from "./pages/RegisterPage";
 // import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 // import RecruiterDashboard from "./pages/RecruiterDashboard";
  import CreateJobPage from "./pages/CreateJobPage";
-// import EditJobPage from "./pages/EditJobPage";
+ import EditJobPage from "./pages/EditJobPage";
 // import ApplicantsPage from "./pages/ApplicantsPage";
 // import JobAnalyticsPage from "./pages/JobAnalyticsPage";
 // import AdminDashboard from "./pages/AdminDashboard";
@@ -47,7 +47,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             {/* <Route path="/login" element={<LoginPage />} /> */}
-            <Route path="/register" element={<RegisterPage />} />
+            {/* <Route path="/register" element={<RegisterPage />} /> */}
             {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
             {/* <Route path="/verify-otp" element={<VerifyOtpPage />} /> */}
             {/* <Route path="/reset-password/:token" element={<ResetPasswordPage />} /> */}
@@ -67,8 +67,8 @@ const App = () => {
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             {/* <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} /> */}
             {/* <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
-            { <Route path="/recruiter/jobs/create" element={<CreateJobPage/>}/> }
-            {/* <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> */}
+            { <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} /> }
+            { <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> }
             {/* <Route path="/recruiter/applicants/:jobId" element={<RoleRoute allowedRoles={["recruiter"]}><ApplicantsPage /></RoleRoute>} /> */}
             {/* <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/dashboard" element={<RoleRoute allowedRoles={["admin"]}><AdminDashboard /></RoleRoute>} /> */}
