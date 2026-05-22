@@ -43,6 +43,9 @@ import DocumentsPage from "./pages/DocumentsPage";
 import SavedSearchesPage from "./pages/SavedSearchesPage";
 import TotpSetupPage from "./pages/TotpSetupPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
+import ContactPage from "./pages/ContactPage";
 
 const App = () => {
   return (
@@ -53,6 +56,9 @@ const App = () => {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
             <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
