@@ -1,6 +1,5 @@
 const path = require("path");
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 require("./src/features/referrals/userReferralExtension");
@@ -51,6 +50,12 @@ app.use('/api/v1/saved-searches', savedSearchRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use("/api/v1/referrals", referralRoutes);
+
+// Serve client
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
 
 app.use(errorHandler);
 
