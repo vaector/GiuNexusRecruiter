@@ -130,6 +130,8 @@ These are additive features and should not replace or weaken Milestone 2 require
 
 ## Environment
 
+### Backend
+
 Create `backend/.env` locally. Do not commit real secrets.
 
 Required variables are documented in `backend/.env.example`:
@@ -148,6 +150,20 @@ Required variables are documented in `backend/.env.example`:
 - `CLOUDINARY_API_SECRET`
 
 `seed.js` accepts either `MONGO_URI` or `MONGODB_URI`.
+
+### Frontend
+
+Create `client/.env` from the provided example before running the dev server:
+
+```bash
+cp client/.env.example client/.env
+```
+
+Required variable:
+
+- `VITE_API_URL` — base URL of the backend API (e.g. `http://localhost:5000/api/v1`)
+
+> **Note:** Vite will not fall back to any default if this variable is missing. A blank `VITE_API_URL` means every API call silently targets an empty URL. Copy the example file first.
 
 ## Running Locally
 
