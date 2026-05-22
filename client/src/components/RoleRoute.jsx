@@ -1,22 +1,12 @@
-// Wraps routes that require a specific role
-// Redirects to / if user role doesnt match required role
-// Props: allowedRoles
 import { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const RoleRoute = ({ children, allowedRoles }) => {
+const RoleRoute = ({ roles }) => {
   const { user, isAuthenticated } = useContext(AuthContext);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!allowedRoles.includes(user?.role)) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!roles.includes(user?.role)) return <Navigate to="/" replace />;
+  return <Outlet />;
 };
 
 export default RoleRoute;
