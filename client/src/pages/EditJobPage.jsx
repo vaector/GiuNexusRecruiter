@@ -142,6 +142,10 @@ export default function EditJobPage() {
     const question = { question: screeningQuestion.question.trim(), type: screeningQuestion.type, required: screeningQuestion.required };
     if (screeningQuestion.type === "multiple_choice") question.options = screeningQuestion.options.split(",").map(i => i.trim()).filter(Boolean);
     setForm({ ...form, screeningQuestions: [...form.screeningQuestions, question] });
+  };
+
+  const removeScreeningQuestion = (index) => {
+    setForm({ ...form, screeningQuestions: form.screeningQuestions.filter((_, i) => i !== index) });
     setScreeningQuestion({ question: "", type: "text", options: "", required: false });
   };
 

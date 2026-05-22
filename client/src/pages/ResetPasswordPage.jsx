@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { authAPI } from "../services/api";
+import { AuthContext } from "../context/AuthContext";
 
 export default function ResetPasswordPage() {
   const { token } = useParams();
+  const { login } = useContext(AuthContext);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState(null);
@@ -20,9 +22,10 @@ export default function ResetPasswordPage() {
     setError(null);
     setLoading(true);
     try {
-      await authAPI.resetPassword(token, password);
+      const res = await authAPI.resetPassword(token, password);
+      login(res.data.token, res.data.user);
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2500);
+      setTimeout(() => navigate("/"), 1500);
     } catch (err) {
       setError(err.response?.data?.message || "Reset failed");
     } finally {

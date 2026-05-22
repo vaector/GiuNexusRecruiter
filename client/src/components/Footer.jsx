@@ -44,6 +44,19 @@ const COLUMNS = [
   },
 ];
 
+const TEAM_MEMBERS = [
+  "Mohab Khaled",
+  "Youssef Hassan",
+  "Taher Khalaf",
+  "Tarek Ahmed",
+  "Yassin Amr",
+  "Amro Taha",
+  "Zeyad Amr",
+  "Mohammed Fady Rizk",
+  "Fares El Sonbaty",
+  "Ahmed Bahaa Eldein",
+];
+
 const LEGAL_LINKS = [
   { label: "Privacy", to: "/privacy" },
   { label: "Terms", to: "/terms" },
@@ -95,7 +108,7 @@ export default function Footer() {
             className="footer-columns"
             style={{
               display: "grid",
-              gridTemplateColumns: "2fr repeat(4, 1fr)",
+              gridTemplateColumns: "1.5fr repeat(4, 1fr) 1.5fr",
               gap: "48px",
               marginBottom: "56px",
             }}
@@ -161,6 +174,46 @@ export default function Footer() {
               ))}
             </div>
           ))}
+
+          <div>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 10,
+                letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.25)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: "16px",
+              }}
+            >
+              TEAM
+            </span>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "0 12px",
+              }}
+            >
+              {TEAM_MEMBERS.map((name) => (
+                <span
+                  key={name}
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.35)",
+                    padding: "3px 0",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div
@@ -211,6 +264,15 @@ export default function Footer() {
         </div>
       </div>
       <style>{`
+        @media (max-width: 1023px) {
+          .footer-columns {
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 32px !important;
+          }
+          .footer-columns > div:first-child {
+            grid-column: 1 / -1 !important;
+          }
+        }
         @media (max-width: 767px) {
           .footer-columns {
             grid-template-columns: 1fr 1fr !important;
