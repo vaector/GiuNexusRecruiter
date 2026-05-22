@@ -21,8 +21,9 @@ const uploadDocument = asyncHandler(async (req, res, next) => {
         return next(createError(400, 'type is required'));
     }
 
-    if (!req.file) {
-        return next(createError(400, 'A file is required'));
+    const cloudUrl = req.body.fileUrl;
+    if (!req.file && !cloudUrl) {
+        return next(createError(400, 'A file or cloud link is required'));
     }
 
     if (req.user.role === 'recruiter' && !RECRUITER_TYPES.includes(type)) {
@@ -56,25 +57,30 @@ const uploadDocument = asyncHandler(async (req, res, next) => {
     }
 
     let fileUrl;
-    try {
-        const result = await uploadFile(req.file.buffer, req.file.mimetype);
-        fileUrl = result.secure_url;
-    } catch {
-        return next(createError(500, 'Failed to upload file'));
-    }
+    let fileName;
+    let fileHash;
 
-    const fileHash = crypto
-        .createHash('sha256')
-        .update(req.file.buffer)
-        .digest('hex');
+    if (req.file) {
+        try {
+            const result = await uploadFile(req.file.buffer, req.file.mimetype);
+            fileUrl = result.secure_url;
+        } catch {
+            return next(createError(500, 'Failed to upload file'));
+        }
+        fileName = req.file.originalname;
+        fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+    } else {
+        fileUrl = cloudUrl;
+        fileName = cloudUrl.split('/').pop().split('?')[0] || 'cv-document';
+    }
 
     const document = await Document.create({
         ...(applicationId && { application: applicationId }),
         type,
         fileUrl,
-        fileName: req.file.originalname,
+        fileName,
         uploadedBy: req.user._id,
-        fileHash,
+        ...(fileHash && { fileHash }),
     });
 
     res.status(201).json({ success: true, document });
