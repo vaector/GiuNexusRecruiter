@@ -37,10 +37,14 @@ const NotificationBell = () => {
         background: "none",
         border: "none",
         cursor: "pointer",
-        fontSize: "1.3rem",
-        padding: "0.25rem",
+        fontSize: "1.1rem",
+        padding: "0.3rem",
         lineHeight: 1,
+        transition: "transform 0.15s ease, filter 0.2s ease",
+        filter: unreadCount > 0 ? "drop-shadow(0 0 6px rgba(0, 229, 204, 0.7))" : "none",
       }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.15)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
       title="Notifications"
     >
       🔔
@@ -49,19 +53,27 @@ const NotificationBell = () => {
           position: "absolute",
           top: -2,
           right: -4,
-          background: "#dc2626",
-          color: "#fff",
-          fontSize: "0.65rem",
+          background: "#00e5cc",
+          color: "#050a14",
+          fontSize: "0.6rem",
           fontWeight: 700,
           borderRadius: "999px",
-          padding: "0.1rem 0.35rem",
-          minWidth: 16,
+          padding: "0.1rem 0.3rem",
+          minWidth: 14,
           textAlign: "center",
           lineHeight: 1.4,
+          boxShadow: "0 0 8px rgba(0, 229, 204, 0.6)",
+          animation: "bellPulse 2s ease-in-out infinite",
         }}>
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
+      <style>{`
+        @keyframes bellPulse {
+          0%, 100% { box-shadow: 0 0 4px rgba(0, 229, 204, 0.4); }
+          50% { box-shadow: 0 0 12px rgba(0, 229, 204, 0.8); }
+        }
+      `}</style>
     </button>
   );
 };
