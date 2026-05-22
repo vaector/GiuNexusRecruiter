@@ -156,7 +156,7 @@ export default function PendingRecruitersPage() {
 
           <div className="nexus-filter-bar" style={{ marginBottom: "2rem" }}>
             <div className="nexus-filter-pill active">
-              STATUS: AWAITING_REVIEW
+              STATUS: AWAITING REVIEW
               {recruiters.length > 0 && <span className="nexus-badge">{recruiters.length}</span>}
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function PendingRecruitersPage() {
               </div>
             ) : recruiters.length === 0 ? (
               <div className="nexus-glass-panel empty-state">
-                <div className="nexus-display-md text-secondary" style={{ marginBottom: '0.5rem' }}>// NULL</div>
+                <div className="nexus-display-md text-secondary" style={{ marginBottom: '0.5rem' }}>✓</div>
                 <h2 className="nexus-body-lg text-primary">No pending requests</h2>
                 <p className="nexus-body-sm text-tertiary">All recruiter accounts have been processed.</p>
               </div>
