@@ -43,7 +43,7 @@ const ProfilePage = () => {
     return () => {
       isMounted = false;
     };
-  }, [setUser]);
+  }, []);
 
   const handleExtractSkills = async () => {
     setExtractError("");
