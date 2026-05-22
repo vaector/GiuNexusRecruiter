@@ -22,8 +22,8 @@ const JOB_SEEKER_DROPDOWNS = [
     items: [
       { label: "Applications", to: "/applications/my", icon: "clipboard" },
       { label: "Referrals", to: "/referrals", icon: "users" },
-      { label: "Documents", to: "/documents", icon: "file" },
       { label: "Profile", to: "/profile", icon: "user" },
+      { label: "Edit Profile", to: "/profile/edit", icon: "user" },
       { label: "Security", to: "/profile/totp-setup", icon: "shield" },
     ],
   },
@@ -56,16 +56,14 @@ const RECRUITER_DROPDOWNS = [
       { label: "Dashboard", to: "/recruiter/dashboard", icon: "clipboard" },
       { label: "Post Job", to: "/recruiter/jobs/create", icon: "sparkles" },
       { label: "My Jobs", to: "/recruiter/jobs", icon: "search" },
-      { label: "Applicants", to: "/recruiter/applicants", icon: "users" },
     ],
   },
   {
     label: "Manage",
     items: [
       { label: "Messages", to: "/conversations", icon: "user" },
-      { label: "Analytics", to: "/recruiter/job-analytics", icon: "filter" },
-      { label: "Documents", to: "/documents", icon: "file" },
-      { label: "Profile", to: "/profile", icon: "user" },
+      { label: "Edit Account", to: "/profile/edit", icon: "user" },
+      { label: "Security", to: "/profile/totp-setup", icon: "shield" },
     ],
   },
 ];
@@ -339,11 +337,9 @@ const Navbar = () => {
       { label: "Dashboard", to: "/recruiter/dashboard" },
       { label: "Post Job", to: "/recruiter/jobs/create" },
       { label: "My Jobs", to: "/recruiter/jobs" },
-      { label: "Applicants", to: "/recruiter/applicants" },
       { label: "Messages", to: "/conversations" },
-      { label: "Analytics", to: "/recruiter/job-analytics" },
-      { label: "Documents", to: "/documents" },
-      { label: "Profile", to: "/profile" },
+      { label: "Edit Account", to: "/profile/edit" },
+      { label: "Security", to: "/profile/totp-setup" },
     ];
     if (user?.role === "admin") return [
       { label: "Dashboard", to: "/admin/dashboard" },
@@ -375,8 +371,8 @@ const Navbar = () => {
         { label: "Saved Searches", to: "/saved-searches" },
         { label: "Applications", to: "/applications/my" },
         { label: "Referrals", to: "/referrals" },
-        { label: "Documents", to: "/documents" },
         { label: "Profile", to: "/profile" },
+        { label: "Edit Profile", to: "/profile/edit" },
         { label: "Security", to: "/profile/totp-setup" },
       ]
     : [...getCenterLinks(), ...getRightLinks()];
@@ -598,19 +594,30 @@ const Navbar = () => {
               <div className="nav-profile-role-badge">{user?.role === "jobSeeker" ? "Job Seeker" : user?.role === "recruiter" ? "Recruiter" : user?.role}</div>
             </div>
             <div className="nav-profile-links">
-              <Link to="/profile" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+              {user?.role === "jobSeeker" && (
+                <Link to="/profile" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  Profile
+                </Link>
+              )}
+              {user?.role !== "admin" && (
+                <Link to="/profile/edit" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                  </svg>
+                  {user?.role === "jobSeeker" ? "Edit Profile" : "Edit Account"}
+                </Link>
+              )}
+              <Link to="/profile/change-password" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Profile
-              </Link>
-              <Link to="/documents" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                Documents
+                Change Password
               </Link>
               <Link to="/profile/totp-setup" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

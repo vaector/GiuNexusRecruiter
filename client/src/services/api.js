@@ -38,7 +38,8 @@ export const authAPI = {
 // Profile
 export const profileAPI = {
   getMyProfile: () => api.get("/profile"),
-  updateMyProfile: (data) => api.patch("/profile", data),
+  updateMyProfile: (data) =>
+    api.patch("/profile", data, data instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined),
   changePassword: (data) => api.patch("/profile/change-password", data),
   extractSkills: () => api.post("/profile/extract-skills"),
   toggleMfa: (data) => api.patch("/profile/mfa", data),
@@ -64,8 +65,8 @@ export const applicationsAPI = {
   getMyApplications: () => api.get("/applications/my"),
   getAllApplications: (params) => api.get("/applications", { params }),
   updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
+  updateRecruiterNotes: (id, recruiterNotes) => api.patch(`/applications/${id}/notes`, { recruiterNotes }),
   withdrawApplication: (id) => api.delete(`/applications/${id}/withdraw`),
-  getApplicationById: (id) => api.get(`/applications/${id}`),
 };
 
 // Users (Admin)

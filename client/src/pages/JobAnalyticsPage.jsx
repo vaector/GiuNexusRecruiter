@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { jobsAPI, applicationsAPI } from "../services/api";
+import { jobsAPI } from "../services/api";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -92,7 +92,7 @@ export default function JobAnalyticsPage() {
         setLoading(true);
         const [jobRes, appRes] = await Promise.all([
           jobsAPI.getJobById(id),
-          applicationsAPI.getAllApplications({ job: id, limit: 100 }).catch(() => ({ data: { applications: [] } })),
+          jobsAPI.getApplicants(id),
         ]);
         setJob(jobRes.data.job || jobRes.data);
         setApplications(appRes.data.applications || []);

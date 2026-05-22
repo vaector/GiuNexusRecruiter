@@ -20,18 +20,15 @@ import JobDetailPage from "./pages/JobDetailPage";
 import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 import SavedJobsPage from "./pages/SavedJobsPage";
 // import MyApplicationsPage from "./pages/MyApplicationsPage";
-// import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 // import RecruiterDashboard from "./pages/RecruiterDashboard";
- import CreateJobPage from "./pages/CreateJobPage";
- import EditJobPage from "./pages/EditJobPage";
+import CreateJobPage from "./pages/CreateJobPage";
+import EditJobPage from "./pages/EditJobPage";
 // import ApplicantsPage from "./pages/ApplicantsPage";
-// import JobAnalyticsPage from "./pages/JobAnalyticsPage";
 import JobAnalyticsPage from "./pages/JobAnalyticsPage";
 // import AdminDashboard from "./pages/AdminDashboard";
 import PendingRecruitersPage from "./pages/PendingRecruitersPage";
 // import AdminJobsPage from "./pages/AdminJobsPage";
 // import AdminUsersPage from "./pages/AdminUsersPage";
-// import AdminReportsPage from "./pages/AdminReportsPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
@@ -56,7 +53,7 @@ const App = () => {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            {<Route path="/jobs" element={<JobListPage />} />}
+            <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} />
             <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
@@ -67,14 +64,14 @@ const App = () => {
             <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} />
             <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
             <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
-            {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
             <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} />
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
             <Route path="/profile/totp-setup" element={<PrivateRoute><TotpSetupPage /></PrivateRoute>} />
             {/* <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
-            { <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} /> }
-            { <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> }
+            {/* <Route path="/recruiter/jobs" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
+            <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} />
+            <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} />
             {/* <Route path="/recruiter/applicants/:jobId" element={<RoleRoute allowedRoles={["recruiter"]}><ApplicantsPage /></RoleRoute>} /> */}
             <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} />
             {/* <Route path="/admin/dashboard" element={<RoleRoute allowedRoles={["admin"]}><AdminDashboard /></RoleRoute>} /> */}
