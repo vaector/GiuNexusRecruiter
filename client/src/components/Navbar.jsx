@@ -37,12 +37,15 @@ const ADMIN_DROPDOWNS = [
       { label: "Users", to: "/admin/users", icon: "user" },
       { label: "Recruiters", to: "/admin/recruiters", icon: "users" },
       { label: "Jobs", to: "/admin/jobs", icon: "search" },
+      { label: "Applications", to: "/admin/applications", icon: "clipboard" },
+      { label: "Referrals", to: "/admin/referrals", icon: "users" },
     ],
   },
   {
     label: "System",
     items: [
       { label: "Reports", to: "/admin/reports", icon: "file" },
+      { label: "Conversations", to: "/admin/conversations", icon: "users" },
       { label: "Audit Logs", to: "/admin/audit-logs", icon: "bookmark" },
       { label: "Request Logs", to: "/admin/request-logs", icon: "filter" },
     ],
@@ -313,7 +316,10 @@ const Navbar = () => {
     }
   }, [menuOpen, playOpen, playClose]);
 
-  const handleLogout = () => { logout(); navigate("/"); };
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
   const isActive = (path) => location.pathname === path;
 
   const getCenterLinks = () => {
@@ -332,7 +338,10 @@ const Navbar = () => {
       { label: "Users", to: "/admin/users" },
       { label: "Recruiters", to: "/admin/recruiters" },
       { label: "Jobs", to: "/admin/jobs" },
+      { label: "Applications", to: "/admin/applications" },
+      { label: "Referrals", to: "/admin/referrals" },
       { label: "Reports", to: "/admin/reports" },
+      { label: "Conversations", to: "/admin/conversations" },
       { label: "Audit Logs", to: "/admin/audit-logs" },
       { label: "Request Logs", to: "/admin/request-logs" },
     ];
