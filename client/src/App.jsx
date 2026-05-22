@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import RoleRoute from "./components/RoleRoute";
+import GuestRoute from "./components/GuestRoute";
 import ChatWidget from "./components/ChatWidget";
 
 import HomePage from "./pages/HomePage";
@@ -47,8 +48,8 @@ const App = () => {
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
