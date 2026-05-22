@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import { jobsAPI } from "../services/api";
 import { CATEGORY_COLORS } from "../components/JobCard";
 import SaveJobButton from "../components/SaveJobButton";
+import ReportButton from "../components/ReportButton";
 
 const MONO = "'JetBrains Mono','Fira Code',monospace";
 const TEAL = "#00e5cc";
@@ -160,6 +161,7 @@ function DarkJobCard({ job, initialSaved }) {
         {isAuthenticated && user?.role === "jobSeeker" && (
           <SaveJobButton jobId={job._id} jobStatus={job.status} initialSaved={initialSaved} />
         )}
+        <ReportButton targetModel="JobPost" targetId={job._id} />
       </div>
     </div>
   );

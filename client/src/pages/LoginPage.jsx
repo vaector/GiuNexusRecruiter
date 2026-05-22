@@ -128,7 +128,11 @@ export default function LoginPage() {
                   className="nexus-input login-code-input"
                   placeholder="6-digit code"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setOtp(v); setError(null); }}
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
                   required
                 />
               </label>
