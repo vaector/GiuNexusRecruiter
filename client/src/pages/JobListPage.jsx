@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
 import { AuthContext } from "../context/AuthContext";
 import { jobsAPI } from "../services/api";
@@ -48,11 +48,13 @@ function DarkSkeleton() {
 /* ── Dark job card ── */
 function DarkJobCard({ job, initialSaved }) {
   const { user, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const catColors = CATEGORY_COLORS[job.category] || CATEGORY_COLORS.Other;
 
   return (
     <div
+      onClick={() => navigate(`/jobs/${job._id}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -62,7 +64,7 @@ function DarkJobCard({ job, initialSaved }) {
         position: "relative",
         transition: "border-color 0.25s ease, background 0.25s ease, transform 0.25s ease",
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        cursor: "default",
+        cursor: "pointer",
         display: "flex", flexDirection: "column", gap: "0.85rem",
       }}
     >
