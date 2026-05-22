@@ -10,7 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-// import ProfilePage from "./pages/ProfilePage";
+import ProfilePage from "./pages/ProfilePage";
 // import EditProfilePage from "./pages/EditProfilePage";
 // import ChangePasswordPage from "./pages/ChangePasswordPage";
 import JobListPage from "./pages/JobListPage";
