@@ -43,22 +43,7 @@ const normalizeSalary = (salary) => {
     if (typeof salary === 'number') {
         return { min: salary };
     }
-
-    if (!salary || typeof salary !== 'object') {
-        return salary;
-    }
-
-    const normalized = { ...salary };
-
-    if (normalized.min !== undefined && normalized.min !== null && normalized.min !== '') {
-        normalized.min = Number(normalized.min);
-    }
-
-    if (normalized.max !== undefined && normalized.max !== null && normalized.max !== '') {
-        normalized.max = Number(normalized.max);
-    }
-
-    return normalized;
+    return salary;
 };
 
 const getTopClassification = (result) => {
@@ -216,12 +201,7 @@ const createJob = asyncHandler(async (req, res, next) => {
         return next(createError(400, "Please provide all required fields"));
     }
 
-    if (
-        normalizedSalary &&
-        Number.isFinite(normalizedSalary.min) &&
-        Number.isFinite(normalizedSalary.max) &&
-        normalizedSalary.min > normalizedSalary.max
-    ) {
+    if (normalizedSalary && normalizedSalary.min && normalizedSalary.max && normalizedSalary.min > normalizedSalary.max) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
@@ -349,12 +329,7 @@ const updateJob = asyncHandler(async (req, res, next) => {
         }
     }
 
-    if (
-        job.salary &&
-        Number.isFinite(job.salary.min) &&
-        Number.isFinite(job.salary.max) &&
-        job.salary.min > job.salary.max
-    ) {
+    if (job.salary && job.salary.min && job.salary.max && job.salary.min > job.salary.max) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
@@ -457,6 +432,49 @@ const deleteJob = asyncHandler(async (req, res, next) => {
     return res.status(200).json({ success: true, message: "Job deleted" });
 });
 
+// POST /api/v1/jobs/:id/cover-letter-suggestion   (jobSeeker only)
+// BONUS: Uses HuggingFace text2text-generation to draft a cover letter
+const generateCoverLetterSuggestion = asyncHandler(async (req, res, next) => {
+    const job = await JobPost.findById(req.params.id).select("title company description requirements");
+    if (!job) return next(createError(404, "Job not found"));
+
+    const User = require("../user/User");
+    const user = await User.findById(req.user._id).select("name bio skills");
+
+    const bio = user?.bio?.trim();
+    const skills = (user?.skills || []).join(", ");
+    const requirements = (job.requirements || []).join(", ");
+
+    if (!bio && !skills) {
+        return next(createError(400, "Please update your profile with a bio or extracted skills first."));
+    }
+
+    const prompt =
+        `Write a professional cover letter for the following applicant applying to the job below.\n\n` +
+        `Applicant name: ${user?.name || "Applicant"}\n` +
+        `Applicant bio: ${bio || "(not provided)"}\n` +
+        `Applicant skills: ${skills || "(not provided)"}\n\n` +
+        `Job title: ${job.title}\n` +
+        `Company: ${job.company}\n` +
+        `Job description: ${job.description?.slice(0, 400) || ""}\n` +
+        `Required skills: ${requirements || "(not listed)"}\n\n` +
+        `Cover letter:`;
+
+    try {
+        const result = await hf.textGeneration({
+            model: "mistralai/Mistral-7B-Instruct-v0.2",
+            inputs: prompt,
+            parameters: { max_new_tokens: 350, temperature: 0.7, return_full_text: false },
+        });
+
+        const suggestion = result?.generated_text?.trim() || "";
+        return res.status(200).json({ success: true, suggestion });
+    } catch (err) {
+        console.error("HF cover letter error:", err?.message);
+        return next(createError(503, "AI service unavailable. Please try again later."));
+    }
+});
+
 module.exports = {
     getAllJobs,
     getMyJobs,
@@ -467,4 +485,5 @@ module.exports = {
     updateJob,
     deleteJob,
     getRecommendedJobs,
+    generateCoverLetterSuggestion,
 };
