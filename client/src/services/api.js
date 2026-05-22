@@ -87,10 +87,10 @@ export const adminAPI = {
   getRequestLogStats: () => api.get("/admin/request-logs/stats"),
 };
 
-// AI Features (Need to update the backend to use this)
-// export const aiAPI = {
-//   generateCoverLetter: (jobId) => api.post(`/jobs/${jobId}/cover-letter`),
-// };
+// AI Features
+export const aiAPI = {
+  generateCoverLetter: (jobId) => api.post(`/jobs/${jobId}/cover-letter`),
+};
 
 // Notifications
 export const notificationsAPI = {

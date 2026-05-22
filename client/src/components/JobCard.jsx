@@ -90,7 +90,13 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
       </div>
 
       <div style={metaStyle}>
-        <span> {job.location}</span>
+        <span>
+            {typeof job.location === "string"
+              ? job.location
+              : job.location?.city || job.location?.country
+                ? [job.location.city, job.location.country].filter(Boolean).join(", ")
+                : "Remote"}
+          </span>
         <span> {job.type}</span>
         {job.salary && <span> {job.salary?.toLocaleString()} EGP</span>}
         {job.score !== undefined && (

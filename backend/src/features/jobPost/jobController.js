@@ -95,6 +95,43 @@ const getRecommendedJobs = asyncHandler(async (req, res, next) => {
     }
 });
 
+// POST /api/v1/jobs/:id/cover-letter
+const generateCoverLetter = asyncHandler(async (req, res, next) => {
+    const job = await JobPost.findById(req.params.id);
+    if (!job) return next(createError(404, "Job not found"));
+
+    const user = await User.findById(req.user._id);
+    if (!user.bio || !user.bio.trim()) {
+        return next(createError(400, "Bio is empty. Update your profile first."));
+    }
+
+    const prompt = `Write a professional cover letter (under 200 words, first person, warm but concise) for the following job application.
+
+Applicant name: ${user.name}
+Applicant background: ${user.bio}
+Applicant skills: ${user.skills?.join(", ") || "not specified"}
+
+Job title: ${job.title}
+Company: ${job.company}
+Job description: ${job.description}
+Key requirements: ${job.requirements?.join("; ")}
+
+Cover letter:`;
+
+    try {
+        const result = await hf.textGeneration({
+            model: "google/flan-t5-large",
+            inputs: prompt,
+            parameters: { max_new_tokens: 300, temperature: 0.7, return_full_text: false },
+        });
+        return res.status(200).json({ success: true, coverLetter: result.generated_text.trim() });
+    } catch (hfError) {
+        console.error("HuggingFace cover letter generation failed:", hfError.message);
+        const fallback = `Dear ${job.company} team,\n\nI'm writing to express my interest in the ${job.title} role. My background in ${user.skills?.slice(0, 3).join(", ") || "this field"} aligns with what you're building.\n\n[Auto-generated draft — please personalize before submitting.]\n\nBest regards,\n${user.name}`;
+        return res.status(200).json({ success: true, coverLetter: fallback });
+    }
+});
+
 // GET /api/v1/jobs
 const getAllJobs = asyncHandler(async (req, res) => {
     const { category, location, type, status, keyword } = req.query;
@@ -442,4 +479,5 @@ module.exports = {
     updateJob,
     deleteJob,
     getRecommendedJobs,
+    generateCoverLetter,
 };

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getAllJobs, getMyJobs, getSavedJobs, getJobById, createJob, toggleSaveJob, updateJob, deleteJob, getRecommendedJobs } = require("./jobController");
+const { getAllJobs, getMyJobs, getSavedJobs, getJobById, createJob, toggleSaveJob, updateJob, deleteJob, getRecommendedJobs, generateCoverLetter } = require("./jobController");
 const { applyToJob, getJobApplicants } = require("../application/applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
@@ -296,6 +296,28 @@ router.post("/:id/save", protect, authorize("jobSeeker"), toggleSaveJob);
  *         description: Job not found
  */
 router.post("/:jobId/apply", protect, authorize("jobSeeker"), applyToJob);
+
+/**
+ * @swagger
+ * /jobs/{id}/cover-letter:
+ *   post:
+ *     summary: Generate a draft cover letter using AI based on the user's bio and the job description (job seeker only)
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Cover letter draft generated
+ *       400:
+ *         description: Bio is empty
+ *       404:
+ *         description: Job not found
+ */
+router.post("/:id/cover-letter", protect, authorize("jobSeeker"), generateCoverLetter);
 
 /**
  * @swagger

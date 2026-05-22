@@ -3,7 +3,7 @@
 // Props: isOpen, onClose, onConfirm, title, children
 import { useEffect } from "react";
 
-const Modal = ({ isOpen, onClose, onConfirm, title, children, confirmText = "Confirm", confirmDanger = false }) => {
+const Modal = ({ isOpen, onClose, onConfirm, title, children, confirmText = "Confirm", confirmDanger = false, confirmDisabled = false }) => {
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     if (isOpen) document.addEventListener("keydown", handleKey);
@@ -63,15 +63,17 @@ const Modal = ({ isOpen, onClose, onConfirm, title, children, confirmText = "Con
             </button>
             <button
               onClick={onConfirm}
+              disabled={confirmDisabled}
               style={{
                 padding: "0.5rem 1.25rem",
                 borderRadius: "8px",
                 border: "none",
                 background: confirmDanger ? "#dc2626" : "var(--color-accent)",
                 color: "#fff",
-                cursor: "pointer",
+                cursor: confirmDisabled ? "not-allowed" : "pointer",
                 fontSize: "0.9rem",
                 fontWeight: 600,
+                opacity: confirmDisabled ? 0.65 : 1,
               }}
             >
               {confirmText}
