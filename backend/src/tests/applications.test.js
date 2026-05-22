@@ -131,3 +131,26 @@ describe("GET /api/v1/applications/my", () => {
     expect(res.body.applications[0].job.title).toBe(validJob.title);
   });
 });
+
+describe("GET /api/v1/jobs/:jobId/applicants", () => {
+  it("returns each applicant's profile picture for the recruiter", async () => {
+    const { seekerToken, recruiterToken, jobId } = await setupActors();
+    const profilePicture = "https://example.com/sara-avatar.jpg";
+
+    await User.findOneAndUpdate({ email: "sara@example.com" }, { profilePicture });
+
+    await request(app)
+      .post(`${JOBS}/${jobId}/apply`)
+      .set("Authorization", `Bearer ${seekerToken}`)
+      .send({ coverLetter: "I am interested in this role." });
+
+    const res = await request(app)
+      .get(`${JOBS}/${jobId}/applicants`)
+      .set("Authorization", `Bearer ${recruiterToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.applications).toHaveLength(1);
+    expect(res.body.applications[0].user.profilePicture).toBe(profilePicture);
+  });
+});

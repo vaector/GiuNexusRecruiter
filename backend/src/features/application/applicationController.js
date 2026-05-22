@@ -162,7 +162,7 @@ const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   }
 
   const updatedApplication = await Application.findById(application._id)
-    .populate("user", "name email skills")
+    .populate("user", "name email skills profilePicture")
     .populate("job", "title company type status");
 
   await Notification.send({
@@ -365,7 +365,7 @@ const updateRecruiterNotes = asyncHandler(async (req, res, next) => {
   await application.save();
 
   const updatedApplication = await Application.findById(application._id)
-    .populate("user", "name email")
+    .populate("user", "name email skills profilePicture")
     .populate("job", "title company");
 
   return res.status(200).json({ success: true, application: updatedApplication });

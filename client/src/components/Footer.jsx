@@ -30,7 +30,7 @@ const COLUMNS = [
       { label: "Dashboard", to: "/recruiter/dashboard" },
       { label: "Post a Job", to: "/recruiter/jobs/create" },
       { label: "Messages", to: "/conversations" },
-      { label: "Applicants", to: "/recruiter/applicants" },
+      { label: "My Jobs", to: "/recruiter/jobs" },
     ],
   },
   {
@@ -42,6 +42,12 @@ const COLUMNS = [
       { label: "Security", to: "/profile/totp-setup" },
     ],
   },
+];
+
+const LEGAL_LINKS = [
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const linkStyle = {
@@ -179,11 +185,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} GIU NEXUS &mdash; ALL SYSTEMS NOMINAL
           </span>
           <div style={{ display: "flex", gap: "24px" }}>
-            {[
-              { label: "Privacy", to: "/privacy" },
-              { label: "Terms", to: "/terms" },
-              { label: "Contact", to: "/contact" },
-            ].map((item) => (
+            {LEGAL_LINKS.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}

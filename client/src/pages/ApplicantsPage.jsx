@@ -143,9 +143,7 @@ export default function ApplicantsPage() {
               return (
                 <article key={application._id} className="applicant-row">
                   <div className="applicant-main">
-                    <div className="applicant-avatar">
-                      {(candidate.name || "?").charAt(0).toUpperCase()}
-                    </div>
+                    <ApplicantAvatar candidate={candidate} />
                     <div className="applicant-info">
                       <div className="applicant-name">{candidate.name || "Unknown applicant"}</div>
                       <div className="applicant-email">{candidate.email || "No email"}</div>
@@ -323,11 +321,23 @@ export default function ApplicantsPage() {
           width: 42px;
           height: 42px;
           border-radius: 4px;
+          overflow: hidden;
           display: grid;
           place-items: center;
           background: rgba(0, 229, 204, 0.1);
           color: #00e5cc;
           flex: 0 0 auto;
+        }
+        .applicant-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .applicant-avatar span {
+          font-family: 'JetBrains Mono', monospace;
+          font-weight: 700;
+          font-size: 0.85rem;
         }
         .applicant-info {
           min-width: 0;
@@ -411,6 +421,36 @@ export default function ApplicantsPage() {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+function ApplicantAvatar({ candidate }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const avatarUrl = candidate?.profilePicture;
+  const initials = (candidate?.name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [avatarUrl]);
+
+  return (
+    <div className="applicant-avatar">
+      {avatarUrl && !imageFailed ? (
+        <img
+          src={avatarUrl}
+          alt={`${candidate?.name || "Applicant"} profile`}
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span>{initials}</span>
+      )}
     </div>
   );
 }
