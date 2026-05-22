@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { listAllApplications, getMyApplications, updateApplicationStatus, withdrawApplication, updateRecruiterNotes } = require("./applicationController");
+const { listAllApplications, getApplication, getMyApplications, updateApplicationStatus, withdrawApplication, updateRecruiterNotes } = require("./applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
 /**
@@ -52,6 +52,29 @@ router.get("/", protect, authorize("admin"), listAllApplications);
  *         description: Forbidden
  */
 router.get("/my", protect, authorize("jobSeeker"), getMyApplications);
+
+/**
+ * @swagger
+ * /applications/{id}:
+ *   get:
+ *     summary: Get a single application by ID
+ *     description: Accessible by the applicant, the recruiter who owns the job, or an admin.
+ *     tags: [Applications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Application details with populated user and job
+ *       403:
+ *         description: Not authorised to view this application
+ *       404:
+ *         description: Application not found
+ */
+router.get("/:id", protect, getApplication);
 
 /**
  * @swagger

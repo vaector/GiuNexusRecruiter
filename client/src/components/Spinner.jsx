@@ -1,11 +1,9 @@
-// Loading spinner and skeleton components
-// Used across all pages during data fetching
-export const Spinner = ({ size = 32, color = "var(--color-accent)" }) => (
+export const Spinner = ({ size = 32, color = "var(--accent)" }) => (
   <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
     <div style={{
       width: size,
       height: size,
-      border: `3px solid var(--color-border)`,
+      border: `3px solid var(--border-glass)`,
       borderTop: `3px solid ${color}`,
       borderRadius: "50%",
       animation: "spin 0.7s linear infinite",
@@ -19,7 +17,7 @@ export const Skeleton = ({ width = "100%", height = 20, borderRadius = 6 }) => (
     width,
     height,
     borderRadius,
-    background: "linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-alt) 50%, var(--color-border) 75%)",
+    background: "linear-gradient(90deg, var(--border-glass) 25%, var(--bg-surface) 50%, var(--border-glass) 75%)",
     backgroundSize: "200% 100%",
     animation: "shimmer 1.4s infinite",
   }}>
@@ -29,8 +27,8 @@ export const Skeleton = ({ width = "100%", height = 20, borderRadius = 6 }) => (
 
 export const SkeletonCard = () => (
   <div style={{
-    background: "var(--color-surface)",
-    border: "1px solid var(--color-border)",
+    background: "var(--bg-surface-solid)",
+    border: "1px solid var(--border-glass)",
     borderRadius: "12px",
     padding: "1.25rem",
     display: "flex",

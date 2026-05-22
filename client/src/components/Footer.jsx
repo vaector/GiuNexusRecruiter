@@ -39,7 +39,7 @@ const COLUMNS = [
       { label: "Profile", to: "/profile" },
       { label: "Change Password", to: "/profile/change-password" },
       { label: "Notifications", to: "/notifications" },
-      { label: "Documents", to: "/documents" },
+      { label: "Security", to: "/profile/totp-setup" },
     ],
   },
 ];

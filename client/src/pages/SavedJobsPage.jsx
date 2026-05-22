@@ -1,22 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { jobsAPI } from "../services/api";
-
-const formatLocation = (location) => {
-  if (!location) return "";
-  if (typeof location === "string") return location;
-  if (typeof location === "object") {
-    return [location.city, location.country].filter(Boolean).join(", ");
-  }
-  return String(location);
-};
-
-const formatSalary = (salary) => {
-  if (!salary) return "";
-  const amount = salary.min ?? salary.amount;
-  if (amount == null) return "";
-  return `${amount.toLocaleString?.() ?? amount} ${salary.currency || ""}`.trim();
-};
+import { formatLocation, formatSalary } from "../utils/formatters";
 
 const SavedJobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -29,8 +14,8 @@ const SavedJobsPage = () => {
 
     const loadSavedJobs = async () => {
       try {
-        const { data } = await api.get("/jobs/saved");
-        setJobs(data);
+        const { data } = await jobsAPI.getSavedJobs();
+        setJobs(data.jobs || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load saved jobs.");
       } finally {
@@ -48,11 +33,13 @@ const SavedJobsPage = () => {
   }, []);
 
   const handleUnsave = async (jobId) => {
+    const previousJobs = jobs;
+    setJobs((currentJobs) => currentJobs.filter((job) => job._id !== jobId));
+    setUpdatingId(jobId);
     try {
-      setUpdatingId(jobId);
       await jobsAPI.saveJob(jobId);
-      setJobs((currentJobs) => currentJobs.filter((job) => job._id !== jobId));
     } catch (requestError) {
+      setJobs(previousJobs);
       setError(requestError.response?.data?.message || "Unable to remove this saved job.");
     } finally {
       setUpdatingId(null);

@@ -64,6 +64,24 @@ const getMyApplications = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, applications });
 });
 
+// GET /api/v1/applications/:id
+const getApplication = asyncHandler(async (req, res, next) => {
+  const application = await Application.findById(req.params.id)
+    .populate("user", "name email skills profilePicture")
+    .populate("job", "title company type status location category salary");
+  if (!application) return next(createError(404, "Application not found"));
+
+  const isRecruiterOwner = application.job?.createdBy?.toString() === req.user._id.toString();
+  const isApplicant = application.user._id.toString() === req.user._id.toString();
+  const isAdmin = req.user.role === "admin";
+
+  if (!isRecruiterOwner && !isApplicant && !isAdmin) {
+    return next(createError(403, "Not authorised to view this application"));
+  }
+
+  return res.status(200).json({ success: true, application });
+});
+
 // PATCH /api/v1/applications/:id/status
 const updateApplicationStatus = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -355,6 +373,7 @@ const updateRecruiterNotes = asyncHandler(async (req, res, next) => {
 
 module.exports = {
   listAllApplications,
+  getApplication,
   getJobApplicants,
   getMyApplications,
   updateApplicationStatus,

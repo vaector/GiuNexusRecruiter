@@ -2,12 +2,12 @@
 // GET /api/v1/users?role=recruiter&status=pending
 // Approve/Reject buttons call PATCH /api/v1/users/:id/status
 // Admin only
-import React, { useState, useEffect, useRef } from "react";
-import Lenis from "lenis";
+import React, { useState, useEffect } from "react";
 import { usersAPI } from "../services/api";
 import { Spinner } from "../components/Spinner";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
+import useAdminEffects from "../utils/useAdminEffects";
 
 export default function PendingRecruitersPage() {
   const [recruiters, setRecruiters] = useState([]);
@@ -16,12 +16,7 @@ export default function PendingRecruitersPage() {
   const [actionLoading, setActionLoading] = useState({});
   const [toast, setToast] = useState(null);
   
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-
-  const lenisRef = useRef(null);
-  const scrollbarRef = useRef(null);
-  const scrollbarTrackRef = useRef(null);
-  const pctRef = useRef(null);
+  const { coords, scrollbarRef, scrollbarTrackRef, pctRef } = useAdminEffects();
 
   const fetchPending = async () => {
     try {
@@ -37,38 +32,6 @@ export default function PendingRecruitersPage() {
 
   useEffect(() => {
     fetchPending();
-
-    if (typeof history !== "undefined") history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
-
-    const lenis = new Lenis({ lerp: 0.07, smoothWheel: true });
-    lenisRef.current = lenis;
-
-    let raf;
-    function tick(time) {
-      lenis.raf(time);
-      const scrollY = window.scrollY;
-      const totalH = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = totalH > 0 ? Math.min(Math.max(scrollY / totalH, 0), 1) : 0;
-
-      if (pctRef.current) pctRef.current.textContent = (pct * 100).toFixed(1) + "%";
-      if (scrollbarRef.current && scrollbarTrackRef.current) {
-        const trackH = scrollbarTrackRef.current.offsetHeight - scrollbarRef.current.offsetHeight;
-        scrollbarRef.current.style.transform = `translateY(${pct * Math.max(trackH, 0)}px)`;
-        scrollbarTrackRef.current.style.opacity = totalH > 50 ? "1" : "0"; 
-      }
-      raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-
-    const trackMouse = (e) => setCoords({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", trackMouse);
-
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", trackMouse);
-    };
   }, []);
 
   const showToast = (message, type = "success") => {
