@@ -408,9 +408,9 @@ export default function MessagesPage() {
                 marginBottom: "0.15rem",
               }}
             >
-              {otherUser?.role === "recruiter"
+            {displayOtherUser?.role === "recruiter"
                 ? "RECRUITER"
-                : otherUser?.role === "jobSeeker"
+                : displayOtherUser?.role === "jobSeeker"
                 ? "APPLICANT"
                 : "THREAD"}
             </div>
@@ -424,9 +424,9 @@ export default function MessagesPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              {otherUser?.name || "Loading..."}
+              {displayOtherUser?.name || "Loading..."}
             </div>
-            {jobInfo && (
+            {displayJobInfo && (
               <div
                 style={{
                   fontFamily:
@@ -438,8 +438,8 @@ export default function MessagesPage() {
                   marginTop: "0.1rem",
                 }}
               >
-                {jobInfo.title}
-                {jobInfo.company ? ` · ${jobInfo.company}` : ""}
+                {displayJobInfo.title}
+                {displayJobInfo.company ? ` · ${displayJobInfo.company}` : ""}
               </div>
             )}
           </div>
@@ -499,9 +499,19 @@ export default function MessagesPage() {
                 style={{
                   fontSize: "0.82rem",
                   color: "rgba(234,242,255,0.2)",
+                  textAlign: "center",
+                  maxWidth: "320px",
+                  lineHeight: "1.45",
                 }}
               >
-                Start the conversation below.
+                Send a message to start a conversation with{" "}
+                <span style={{ color: "#00e5cc", fontWeight: 500 }}>
+                  {displayOtherUser?.name || "the user"}
+                </span>{" "}
+                about the position of{" "}
+                <span style={{ color: "#00e5cc", fontWeight: 500 }}>
+                  {displayJobInfo?.title || "this job"}
+                </span>.
               </div>
             </div>
           ) : (

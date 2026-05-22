@@ -45,6 +45,7 @@ export default function MyApplicationsPage() {
     const params = new URLSearchParams();
     params.set("role", "recruiter");
     if (job.title) params.set("job", job.title);
+    if (job.company) params.set("name", job.company);
     return `/conversations/${job._id}?${params.toString()}`;
   };
 
