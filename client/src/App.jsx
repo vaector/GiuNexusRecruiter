@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import RoleRoute from "./components/RoleRoute";
+import GuestRoute from "./components/GuestRoute";
 import ChatWidget from "./components/ChatWidget";
 
 import HomePage from "./pages/HomePage";
@@ -15,7 +16,7 @@ import ProfilePage from "./pages/ProfilePage";
 // import EditProfilePage from "./pages/EditProfilePage";
 // import ChangePasswordPage from "./pages/ChangePasswordPage";
 import JobListPage from "./pages/JobListPage";
-// import JobDetailPage from "./pages/JobDetailPage";
+import JobDetailPage from "./pages/JobDetailPage";
 import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 // import SavedJobsPage from "./pages/SavedJobsPage";
 // import MyApplicationsPage from "./pages/MyApplicationsPage";
@@ -47,15 +48,15 @@ const App = () => {
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             {<Route path="/jobs" element={<JobListPage />} />}
             <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} />
             {/* <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} /> */}
-            {/* <Route path="/jobs/:id" element={<JobDetailPage />} /> */}
+            <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/profile" element={<RoleRoute allowedRoles={["jobSeeker"]}><ProfilePage /></RoleRoute>} />
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
