@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import SaveJobButton from "./SaveJobButton";
 import SkillChip from "./SkillChip";
+import ReportButton from "./ReportButton";
 
 export const CATEGORY_COLORS = {
   Frontend: { bg: "#dcfce7", color: "#166534" },
@@ -122,14 +123,15 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
         }}>
           {job.status}
         </span>
-        {isAuthenticated && user?.role === "jobSeeker" && (
-          <SaveJobButton
-            jobId={job._id}
-            jobStatus={job.status}
-            initialSaved={initialSaved}
-            onToggle={onSaveToggle}
-          />
-        )}
+{isAuthenticated && user?.role === "jobSeeker" && (
+           <SaveJobButton
+             jobId={job._id}
+             jobStatus={job.status}
+             initialSaved={initialSaved}
+             onToggle={onSaveToggle}
+           />
+         )}
+         <ReportButton targetModel="JobPost" targetId={job._id} />
       </div>
     </div>
   );

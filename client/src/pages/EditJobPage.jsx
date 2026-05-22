@@ -22,6 +22,9 @@ const formatSalary = (salary) => {
   return `${range}${currency}${period}`;
 };
 
+const HIRING_STAGES = ["pending", "screening", "interview", "offer", "contract_sent", "accepted", "rejected"];
+const QUESTION_TYPES = ["text", "multiple_choice", "yes_no"];
+
 const EditJobPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +34,8 @@ const EditJobPage = () => {
   const [success, setSuccess] = useState(false);
   const [updatedJob, setUpdatedJob] = useState(null);
   const [reqInput, setReqInput] = useState("");
+  const [perkInput, setPerkInput] = useState("");
+  const [screeningQuestion, setScreeningQuestion] = useState({ question: "", type: "text", options: "", required: false });
   const [form, setForm] = useState({
     title: "",
     company: "",
@@ -40,6 +45,16 @@ const EditJobPage = () => {
     type: "full-time",
     salary: { min: "", max: "", currency: "USD", period: "monthly" },
     totalSlots: 1,
+    applicationDeadline: "",
+    requiresCv: false,
+    requiresCoverLetter: false,
+    experience: { minYears: "" },
+    requiredEducation: "none",
+    requiredEducationField: "",
+    workplaceType: "on_site",
+    perks: [],
+    hiringStages: ["pending", "screening", "interview", "offer", "contract_sent", "accepted"],
+    screeningQuestions: [],
   });
 
   useEffect(() => {
@@ -56,6 +71,16 @@ const EditJobPage = () => {
           type: job.type || "full-time",
           salary: job.salary || { min: "", max: "", currency: "USD", period: "monthly" },
           totalSlots: job.totalSlots || 1,
+          applicationDeadline: job.applicationDeadline ? job.applicationDeadline.slice(0, 10) : "",
+          requiresCv: Boolean(job.requiresCv),
+          requiresCoverLetter: Boolean(job.requiresCoverLetter),
+          experience: { minYears: job.experience?.minYears ?? "" },
+          requiredEducation: job.requiredEducation || "none",
+          requiredEducationField: job.requiredEducationField || "",
+          workplaceType: job.workplaceType || "on_site",
+          perks: job.perks || [],
+          hiringStages: job.hiringStages || ["pending", "screening", "interview", "offer", "contract_sent", "accepted"],
+          screeningQuestions: job.screeningQuestions || [],
         });
       } catch (err) {
         setError("Failed to load job details.");
@@ -80,6 +105,43 @@ const EditJobPage = () => {
     setForm({ ...form, requirements: form.requirements.filter((_, i) => i !== index) });
   };
 
+  const addPerk = () => {
+    if (!perkInput.trim()) return;
+    setForm({ ...form, perks: [...form.perks, perkInput.trim()] });
+    setPerkInput("");
+  };
+
+  const removePerk = (index) => {
+    setForm({ ...form, perks: form.perks.filter((_, i) => i !== index) });
+  };
+
+  const toggleStage = (stage) => {
+    setForm((current) => ({
+      ...current,
+      hiringStages: current.hiringStages.includes(stage)
+        ? current.hiringStages.filter((item) => item !== stage)
+        : [...current.hiringStages, stage],
+    }));
+  };
+
+  const addScreeningQuestion = () => {
+    if (!screeningQuestion.question.trim()) return;
+    const question = {
+      question: screeningQuestion.question.trim(),
+      type: screeningQuestion.type,
+      required: screeningQuestion.required,
+    };
+    if (screeningQuestion.type === "multiple_choice") {
+      question.options = screeningQuestion.options.split(",").map((item) => item.trim()).filter(Boolean);
+    }
+    setForm({ ...form, screeningQuestions: [...form.screeningQuestions, question] });
+    setScreeningQuestion({ question: "", type: "text", options: "", required: false });
+  };
+
+  const removeScreeningQuestion = (index) => {
+    setForm({ ...form, screeningQuestions: form.screeningQuestions.filter((_, i) => i !== index) });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -90,9 +152,12 @@ const EditJobPage = () => {
         totalSlots: Number(form.totalSlots),
         salary: {
           ...form.salary,
-          min: form.salary.min === "" ? "" : Number(form.salary.min),
-          max: form.salary.max === "" ? "" : Number(form.salary.max),
+          min: form.salary.min === "" ? undefined : Number(form.salary.min),
+          max: form.salary.max === "" ? undefined : Number(form.salary.max),
         },
+        applicationDeadline: form.applicationDeadline || undefined,
+        experience: { minYears: form.experience.minYears === "" ? undefined : Number(form.experience.minYears) },
+        requiredEducationField: form.requiredEducationField || undefined,
       };
       const res = await api.patch(`/jobs/${id}`, payload);
       setUpdatedJob(res.data.job);
@@ -172,6 +237,12 @@ const EditJobPage = () => {
           <option value="internship">Internship</option>
         </select>
 
+        <select value={form.workplaceType} onChange={(e) => setForm({ ...form, workplaceType: e.target.value })}>
+          <option value="on_site">On-site</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+        </select>
+
         <input type="number" placeholder="Salary Min (optional)" value={form.salary.min} onChange={(e) => setForm({ ...form, salary: { ...form.salary, min: e.target.value } })} />
         <input type="number" placeholder="Salary Max (optional)" value={form.salary.max} onChange={(e) => setForm({ ...form, salary: { ...form.salary, max: e.target.value } })} />
 
@@ -180,6 +251,8 @@ const EditJobPage = () => {
           <option value="EGP">EGP</option>
           <option value="EUR">EUR</option>
           <option value="GBP">GBP</option>
+          <option value="AED">AED</option>
+          <option value="SAR">SAR</option>
         </select>
 
         <select value={form.salary.period} onChange={(e) => setForm({ ...form, salary: { ...form.salary, period: e.target.value } })}>
@@ -189,6 +262,77 @@ const EditJobPage = () => {
         </select>
 
         <input name="totalSlots" type="number" placeholder="Total Slots" value={form.totalSlots} onChange={handleChange} min={1} required />
+        <input type="date" value={form.applicationDeadline} onChange={(e) => setForm({ ...form, applicationDeadline: e.target.value })} />
+        <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <input type="checkbox" checked={form.requiresCv} onChange={(e) => setForm({ ...form, requiresCv: e.target.checked })} />
+          Requires CV
+        </label>
+        <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <input type="checkbox" checked={form.requiresCoverLetter} onChange={(e) => setForm({ ...form, requiresCoverLetter: e.target.checked })} />
+          Requires cover letter
+        </label>
+        <input type="number" min={0} placeholder="Minimum experience in years" value={form.experience.minYears} onChange={(e) => setForm({ ...form, experience: { minYears: e.target.value } })} />
+        <select value={form.requiredEducation} onChange={(e) => setForm({ ...form, requiredEducation: e.target.value })}>
+          <option value="none">No education requirement</option>
+          <option value="high_school">High school</option>
+          <option value="bachelor">Bachelor</option>
+          <option value="master">Master</option>
+          <option value="phd">PhD</option>
+        </select>
+        <input placeholder="Required education field (optional)" value={form.requiredEducationField} onChange={(e) => setForm({ ...form, requiredEducationField: e.target.value })} />
+
+        <div>
+          <label>Perks</label>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <input placeholder="Add a perk" value={perkInput} onChange={(e) => setPerkInput(e.target.value)} />
+            <button type="button" onClick={addPerk}>Add</button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
+            {form.perks.map((perk, i) => (
+              <span key={perk} style={{ background: "#0d8bd4", padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.85rem" }}>
+                {perk} <button type="button" onClick={() => removePerk(i)} style={{ background: "none", border: "none", cursor: "pointer" }}>x</button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label>Hiring stages</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
+            {HIRING_STAGES.map((stage) => (
+              <label key={stage} style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                <input type="checkbox" checked={form.hiringStages.includes(stage)} onChange={() => toggleStage(stage)} />
+                {stage.replace("_", " ")}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label>Screening questions</label>
+          <div style={{ display: "grid", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <input placeholder="Question" value={screeningQuestion.question} onChange={(e) => setScreeningQuestion({ ...screeningQuestion, question: e.target.value })} />
+            <select value={screeningQuestion.type} onChange={(e) => setScreeningQuestion({ ...screeningQuestion, type: e.target.value })}>
+              {QUESTION_TYPES.map((type) => <option key={type} value={type}>{type.replace("_", " ")}</option>)}
+            </select>
+            {screeningQuestion.type === "multiple_choice" && (
+              <input placeholder="Options separated by commas" value={screeningQuestion.options} onChange={(e) => setScreeningQuestion({ ...screeningQuestion, options: e.target.value })} />
+            )}
+            <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <input type="checkbox" checked={screeningQuestion.required} onChange={(e) => setScreeningQuestion({ ...screeningQuestion, required: e.target.checked })} />
+              Required question
+            </label>
+            <button type="button" onClick={addScreeningQuestion}>Add Question</button>
+          </div>
+          <div style={{ display: "grid", gap: "0.4rem", marginTop: "0.5rem" }}>
+            {form.screeningQuestions.map((question, i) => (
+              <div key={`${question.question}-${i}`} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                <span>{question.question} ({question.type}{question.required ? ", required" : ""})</span>
+                <button type="button" onClick={() => removeScreeningQuestion(i)}>Remove</button>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save Changes"}
