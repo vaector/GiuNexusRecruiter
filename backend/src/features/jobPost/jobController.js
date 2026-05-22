@@ -43,7 +43,22 @@ const normalizeSalary = (salary) => {
     if (typeof salary === 'number') {
         return { min: salary };
     }
-    return salary;
+
+    if (!salary || typeof salary !== 'object') {
+        return salary;
+    }
+
+    const normalized = { ...salary };
+
+    if (normalized.min !== undefined && normalized.min !== null && normalized.min !== '') {
+        normalized.min = Number(normalized.min);
+    }
+
+    if (normalized.max !== undefined && normalized.max !== null && normalized.max !== '') {
+        normalized.max = Number(normalized.max);
+    }
+
+    return normalized;
 };
 
 const getTopClassification = (result) => {
@@ -201,7 +216,12 @@ const createJob = asyncHandler(async (req, res, next) => {
         return next(createError(400, "Please provide all required fields"));
     }
 
-    if (normalizedSalary && normalizedSalary.min && normalizedSalary.max && normalizedSalary.min > normalizedSalary.max) {
+    if (
+        normalizedSalary &&
+        Number.isFinite(normalizedSalary.min) &&
+        Number.isFinite(normalizedSalary.max) &&
+        normalizedSalary.min > normalizedSalary.max
+    ) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
@@ -329,7 +349,12 @@ const updateJob = asyncHandler(async (req, res, next) => {
         }
     }
 
-    if (job.salary && job.salary.min && job.salary.max && job.salary.min > job.salary.max) {
+    if (
+        job.salary &&
+        Number.isFinite(job.salary.min) &&
+        Number.isFinite(job.salary.max) &&
+        job.salary.min > job.salary.max
+    ) {
         return next(createError(400, 'salary.min cannot be greater than salary.max'));
     }
 
