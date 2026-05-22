@@ -224,7 +224,8 @@ export default function CardTunnel({ embedded }) {
         const idx = isRec ? recIdx++ : jobIdx++;
         const poolLen = pool.length;
         const isEmpty = poolLen === 0;
-        const job = isEmpty ? null : pool[idx % 6];
+        const effectiveLen = Math.min(poolLen, 6);
+        const job = isEmpty ? null : pool[idx % effectiveLen];
         const color = isRec ? "#a78bfa" : COLORS[idx % COLORS.length];
 
         const card = document.createElement("div");
