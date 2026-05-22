@@ -19,16 +19,15 @@ import JobListPage from "./pages/JobListPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 import SavedJobsPage from "./pages/SavedJobsPage";
-// import MyApplicationsPage from "./pages/MyApplicationsPage";
-// import ApplicationDetailPage from "./pages/ApplicationDetailPage";
-// import RecruiterDashboard from "./pages/RecruiterDashboard";
- import CreateJobPage from "./pages/CreateJobPage";
- import EditJobPage from "./pages/EditJobPage";
 import ApplicantsPage from "./pages/ApplicantsPage";
+// import ApplicationDetailPage from "./pages/ApplicationDetailPage";
+import RecruiterDashboard from "./pages/RecruiterDashboard";
+import CreateJobPage from "./pages/CreateJobPage";
+// import EditJobPage from "./pages/EditJobPage";
 // import JobAnalyticsPage from "./pages/JobAnalyticsPage";
-// import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminJobsPage from "./pages/AdminJobsPage";
 import PendingRecruitersPage from "./pages/PendingRecruitersPage";
-// import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
 import AdminReferralsPage from "./pages/AdminReferralsPage";
@@ -55,7 +54,7 @@ const App = () => {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            {<Route path="/jobs" element={<JobListPage />} />}
+            <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} />
             <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
@@ -70,14 +69,14 @@ const App = () => {
             {/* <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} /> */}
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             {/* <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} /> */}
-            {/* <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} /> */}
-            { <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} /> }
-            { <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> }
+            <Route path="/recruiter/dashboard" element={<RoleRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />
+            <Route path="/recruiter/jobs/create" element={<RoleRoute allowedRoles={["recruiter"]}><CreateJobPage /></RoleRoute>} />
+            {/* <Route path="/recruiter/jobs/:id/edit" element={<RoleRoute allowedRoles={["recruiter"]}><EditJobPage /></RoleRoute>} /> */}
             <Route path="/recruiter/applicants/:jobId" element={<RoleRoute allowedRoles={["recruiter"]}><ApplicantsPage /></RoleRoute>} />
             {/* <Route path="/recruiter/jobs/:id/analytics" element={<RoleRoute allowedRoles={["recruiter"]}><JobAnalyticsPage /></RoleRoute>} /> */}
-            {/* <Route path="/admin/dashboard" element={<RoleRoute allowedRoles={["admin"]}><AdminDashboard /></RoleRoute>} /> */}
+            <Route path="/admin/dashboard" element={<RoleRoute allowedRoles={["admin"]}><AdminDashboard /></RoleRoute>} />
             <Route path="/admin/recruiters" element={<RoleRoute allowedRoles={["admin"]}><PendingRecruitersPage /></RoleRoute>} />
-            {/* <Route path="/admin/jobs" element={<RoleRoute allowedRoles={["admin"]}><AdminJobsPage /></RoleRoute>} /> */}
+            <Route path="/admin/jobs" element={<RoleRoute allowedRoles={["admin"]}><AdminJobsPage /></RoleRoute>} />
             <Route path="/admin/users" element={<RoleRoute allowedRoles={["admin"]}><AdminUsersPage /></RoleRoute>} />
             <Route path="/admin/applications" element={<RoleRoute allowedRoles={["admin"]}><AdminApplicationsPage /></RoleRoute>} />
             <Route path="/admin/referrals" element={<RoleRoute allowedRoles={["admin"]}><AdminReferralsPage /></RoleRoute>} />
