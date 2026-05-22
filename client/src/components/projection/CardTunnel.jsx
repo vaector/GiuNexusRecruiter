@@ -209,7 +209,7 @@ export default function CardTunnel({ embedded }) {
     currentSequence.forEach((entry, i) => {
       const el = document.createElement("div");
       el.style.cssText =
-        "position:absolute;left:0;top:0;backface-visibility:hidden;transform-origin:center center;display:flex;align-items:center;justify-content:center;";
+        "position:absolute;left:0;top:0;backface-visibility:hidden;transform-origin:center center;display:flex;align-items:center;justify-content:center;pointer-events:none;";
 
       if (entry.type === "heading") {
         const txt = document.createElement("div");
@@ -287,8 +287,9 @@ if (isEmpty) {
             card.style.transform = "translate(-50%,-50%) scale(1)";
           }
         });
-        card.addEventListener("click", () => {
+        card.addEventListener("click", (e) => {
           if (!isEmpty) {
+            e.stopPropagation();
             selectedJobRef.current(job);
           }
         });
@@ -308,7 +309,7 @@ if (isEmpty) {
 
     for (let i = 0; i < 120; i++) {
       const el = document.createElement("div");
-      el.style.cssText = "position:absolute;width:2px;height:2px;background:white;transform:translate(-50%,-50%);";
+      el.style.cssText = "position:absolute;width:2px;height:2px;background:white;transform:translate(-50%,-50%);pointer-events:none;";
       world.appendChild(el);
       items.push({
         el,
@@ -388,6 +389,12 @@ if (isEmpty) {
 
         item.el.style.opacity = alpha;
 
+        if (item.type === "card" && alpha > 0.3) {
+          item.el.style.pointerEvents = "auto";
+        } else {
+          item.el.style.pointerEvents = "none";
+        }
+
         if (alpha > 0) {
           let trans = "translate3d(" + item.x + "px," + item.y + "px," + relZ + "px)";
           if (item.type === "star") {
@@ -448,7 +455,7 @@ if (isEmpty) {
           position: "sticky",
           top: 0,
           height: "100vh",
-          overflow: "hidden",
+          overflow: "clip",
           cursor: selectedJob ? "pointer" : "crosshair",
         }}
         onClick={selectedJob ? handleCloseSelected : undefined}
@@ -583,8 +590,7 @@ if (isEmpty) {
           </div>
         </div>
 
-        {isJobSeeker && (
-          <button
+        <button
             onClick={(e) => { e.stopPropagation(); handleViewMore(); }}
             style={{
               position: "absolute",
@@ -620,9 +626,8 @@ if (isEmpty) {
           >
             {viewingSection === "recommended" ? "VIEW MORE RECOMMENDED" : "VIEW MORE TRENDING"} &rarr;
           </button>
-        )}
 
-        {selectedJob && (
+          {selectedJob && (
           <div
             style={{
               position: "absolute",

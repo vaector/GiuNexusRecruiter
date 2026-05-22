@@ -70,6 +70,7 @@ export default function ProjectionScene({ zoomTargetRef: externalZoomTargetRef }
         position: "relative",
         background: "#030303",
         overflow: "hidden",
+        pointerEvents: "none",
       }}
     >
       <Canvas
@@ -84,7 +85,7 @@ export default function ProjectionScene({ zoomTargetRef: externalZoomTargetRef }
         camera={{ fov: 45, near: 0.1, far: 100, position: [0, 1.2, 5.5] }}
         onCreated={({ camera }) => camera.lookAt(0, 0.8, 0)}
         frameloop="always"
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%", height: "100%", pointerEvents: "none" }}
       >
         <CameraZoom targetRef={zoomTargetRef} progressRef={zoomProgressRef} />
         <StarBackground />
