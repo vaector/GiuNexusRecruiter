@@ -308,7 +308,7 @@ const JobListPage = () => {
       <div style={{ minHeight: "100vh", background: "#030303", position: "relative", zIndex: 1 }}>
 
         {/* ── Header ── */}
-        <div style={{ padding: "4rem 6% 0", maxWidth: "1280px", margin: "0 auto" }}>
+        <div style={{ padding: "6.75rem 6% 0", maxWidth: "1280px", margin: "0 auto" }}>
           <p style={{ fontFamily: MONO, fontSize: "10px", letterSpacing: "3px", color: "rgba(0,229,204,0.6)", textTransform: "uppercase", marginBottom: "0.75rem" }}>
             SYS.LISTINGS
           </p>
@@ -330,7 +330,7 @@ const JobListPage = () => {
 
         {/* ── Filter bar ── */}
         <div style={{
-          position: "sticky", top: 0, zIndex: 20,
+          position: "sticky", top: "4.75rem", zIndex: 20,
           background: "rgba(3,3,3,0.95)", backdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(0,229,204,0.1)",
           padding: "0.875rem 6%",

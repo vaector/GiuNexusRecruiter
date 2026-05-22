@@ -17,46 +17,62 @@ const Modal = ({ isOpen, onClose, onConfirm, title, children, confirmText = "Con
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.5)",
+        background: "rgba(0,0,0,0.72)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
-        backdropFilter: "blur(2px)",
+        padding: "1rem",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "16px",
+          background: "var(--bg-surface-solid)",
+          border: "1px solid var(--border-glow)",
+          borderRadius: "var(--rounded-md)",
           padding: "2rem",
           width: "100%",
           maxWidth: "480px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+          boxShadow: "0 22px 70px rgba(0,0,0,0.56), 0 0 1px rgba(0,229,204,0.3)",
+          color: "var(--text-primary)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "1rem" }}>
+        <h2 style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "1.1rem",
+          fontWeight: 700,
+          color: "var(--text-primary)",
+          marginBottom: "1rem",
+          textTransform: "uppercase",
+          letterSpacing: 0,
+          lineHeight: 1.25,
+        }}>
           {title}
         </h2>
-        <div style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
+        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
           {children}
         </div>
         {onConfirm && (
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "1.5rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "1.5rem", flexWrap: "wrap" }}>
             <button
               onClick={onClose}
               style={{
-                padding: "0.5rem 1.25rem",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
+                minHeight: "42px",
+                padding: "0.6rem 1.25rem",
+                borderRadius: "var(--rounded-md)",
+                border: "1px solid var(--border-glass)",
                 background: "transparent",
-                color: "var(--color-text-muted)",
+                color: "var(--text-secondary)",
                 cursor: "pointer",
-                fontSize: "0.9rem",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.68rem",
                 fontWeight: 500,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
               }}
             >
               Cancel
@@ -64,14 +80,18 @@ const Modal = ({ isOpen, onClose, onConfirm, title, children, confirmText = "Con
             <button
               onClick={onConfirm}
               style={{
-                padding: "0.5rem 1.25rem",
-                borderRadius: "8px",
-                border: "none",
-                background: confirmDanger ? "#dc2626" : "var(--color-accent)",
-                color: "#fff",
+                minHeight: "42px",
+                padding: "0.6rem 1.25rem",
+                borderRadius: "var(--rounded-md)",
+                border: confirmDanger ? "1px solid rgba(255,78,110,0.45)" : "1px solid var(--accent-mid)",
+                background: confirmDanger ? "rgba(255,78,110,0.1)" : "var(--accent-dim)",
+                color: confirmDanger ? "#ff8ca3" : "var(--accent)",
                 cursor: "pointer",
-                fontSize: "0.9rem",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.68rem",
                 fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
               }}
             >
               {confirmText}
