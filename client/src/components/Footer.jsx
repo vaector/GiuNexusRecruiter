@@ -185,7 +185,15 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} GIU NEXUS &mdash; ALL SYSTEMS NOMINAL
           </span>
           <div style={{ display: "flex", gap: "24px" }}>
+<<<<<<< HEAD
             {LEGAL_LINKS.map((item) => (
+=======
+            {[
+              { label: "Privacy", to: "/privacy" },
+              { label: "Terms", to: "/terms" },
+              { label: "Contact", to: "/contact" },
+            ].map((item) => (
+>>>>>>> origin/main
               <Link
                 key={item.to}
                 to={item.to}

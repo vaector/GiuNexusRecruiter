@@ -17,12 +17,13 @@ const createError = (statusCode, message) => {
 const uploadDocument = asyncHandler(async (req, res, next) => {
     const { applicationId, type } = req.body;
 
-    if (!applicationId || !type) {
-        return next(createError(400, 'applicationId and type are required'));
+    if (!type) {
+        return next(createError(400, 'type is required'));
     }
 
-    if (!req.file) {
-        return next(createError(400, 'A file is required'));
+    const cloudUrl = req.body.fileUrl;
+    if (!req.file && !cloudUrl) {
+        return next(createError(400, 'A file or cloud link is required'));
     }
 
     if (req.user.role === 'recruiter' && !RECRUITER_TYPES.includes(type)) {
@@ -33,43 +34,53 @@ const uploadDocument = asyncHandler(async (req, res, next) => {
         return next(createError(400, 'Job seekers can only upload CVs and cover letters'));
     }
 
-    const application = await Application.findById(applicationId).populate('job');
-    if (!application) {
-        return next(createError(404, 'Application not found'));
-    }
+    // applicationId is optional for standalone CV uploads (job seekers uploading before applying)
+    if (applicationId) {
+        const application = await Application.findById(applicationId).populate('job');
+        if (!application) {
+            return next(createError(404, 'Application not found'));
+        }
 
-    if (req.user.role === 'recruiter') {
-        if (application.job.createdBy.toString() !== req.user._id.toString()) {
-            return next(createError(403, 'Not authorised to upload documents for this application'));
+        if (req.user.role === 'recruiter') {
+            if (application.job.createdBy.toString() !== req.user._id.toString()) {
+                return next(createError(403, 'Not authorised to upload documents for this application'));
+            }
+        } else if (req.user.role === 'jobSeeker') {
+            if (application.user.toString() !== req.user._id.toString()) {
+                return next(createError(403, 'Not authorised to upload documents for this application'));
+            }
+        } else {
+            return next(createError(403, 'Not authorised to upload documents'));
         }
-    } else if (req.user.role === 'jobSeeker') {
-        if (application.user.toString() !== req.user._id.toString()) {
-            return next(createError(403, 'Not authorised to upload documents for this application'));
-        }
-    } else {
-        return next(createError(403, 'Not authorised to upload documents'));
+    } else if (req.user.role !== 'jobSeeker' || type !== 'cv') {
+        return next(createError(400, 'applicationId is required for this document type'));
     }
 
     let fileUrl;
-    try {
-        const result = await uploadFile(req.file.buffer, req.file.mimetype);
-        fileUrl = result.secure_url;
-    } catch {
-        return next(createError(500, 'Failed to upload file'));
+    let fileName;
+    let fileHash;
+
+    if (req.file) {
+        try {
+            const result = await uploadFile(req.file.buffer, req.file.mimetype);
+            fileUrl = result.secure_url;
+        } catch {
+            return next(createError(500, 'Failed to upload file'));
+        }
+        fileName = req.file.originalname;
+        fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+    } else {
+        fileUrl = cloudUrl;
+        fileName = cloudUrl.split('/').pop().split('?')[0] || 'cv-document';
     }
 
-    const fileHash = crypto
-        .createHash('sha256')
-        .update(req.file.buffer)
-        .digest('hex');
-
     const document = await Document.create({
-        application: applicationId,
+        ...(applicationId && { application: applicationId }),
         type,
         fileUrl,
-        fileName: req.file.originalname,
+        fileName,
         uploadedBy: req.user._id,
-        fileHash,
+        ...(fileHash && { fileHash }),
     });
 
     res.status(201).json({ success: true, document });
