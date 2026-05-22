@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getAllJobs, getMyJobs, getSavedJobs, getJobById, createJob, toggleSaveJob, updateJob, deleteJob, getRecommendedJobs } = require("./jobController");
+const { getAllJobs, getMyJobs, getSavedJobs, getJobById, createJob, toggleSaveJob, updateJob, deleteJob, getRecommendedJobs, generateCoverLetterSuggestion } = require("./jobController");
 const { applyToJob, getJobApplicants } = require("../application/applicationController");
 const { protect, authorize } = require("../../middleware/auth");
 
@@ -296,6 +296,28 @@ router.post("/:id/save", protect, authorize("jobSeeker"), toggleSaveJob);
  *         description: Job not found
  */
 router.post("/:jobId/apply", protect, authorize("jobSeeker"), applyToJob);
+
+/**
+ * @swagger
+ * /jobs/{id}/cover-letter-suggestion:
+ *   post:
+ *     summary: Generate an AI cover letter suggestion for a job (job seeker only, BONUS)
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: AI-generated cover letter suggestion
+ *       400:
+ *         description: Profile bio/skills missing
+ *       503:
+ *         description: AI service unavailable
+ */
+router.post("/:id/cover-letter-suggestion", protect, authorize("jobSeeker"), generateCoverLetterSuggestion);
 
 /**
  * @swagger
