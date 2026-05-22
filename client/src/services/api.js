@@ -130,4 +130,5 @@ export const savedSearchesAPI = {
   deleteSavedSearch: (id) => api.delete(`/saved-searches/${id}`),
 };
 
+
 export default api;
