@@ -39,7 +39,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import ConversationsPage from "./pages/ConversationsPage";
 import MessagesPage from "./pages/MessagesPage";
 import ReferralsPage from "./pages/ReferralsPage";
-// import DocumentsPage from "./pages/DocumentsPage";
+import DocumentsPage from "./pages/DocumentsPage";
 import SavedSearchesPage from "./pages/SavedSearchesPage";
 import TotpSetupPage from "./pages/TotpSetupPage";
 
@@ -68,7 +68,7 @@ const App = () => {
             <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
             <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
             {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
-            {/* <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} /> */}
+            <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} />
             {/* <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} /> */}
             <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
             <Route path="/profile/totp-setup" element={<PrivateRoute><TotpSetupPage /></PrivateRoute>} />
