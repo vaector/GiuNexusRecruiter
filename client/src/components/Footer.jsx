@@ -75,23 +75,25 @@ export default function Footer() {
         }}
       />
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "64px 6% 40px",
-        }}
-      >
-        <div
+<div
+          className="footer-inner"
           style={{
-            display: "grid",
-            gridTemplateColumns: "2fr repeat(4, 1fr)",
-            gap: "48px",
-            marginBottom: "56px",
+            position: "relative",
+            zIndex: 2,
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "64px 6% 40px",
           }}
         >
+          <div
+            className="footer-columns"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr repeat(4, 1fr)",
+              gap: "48px",
+              marginBottom: "56px",
+            }}
+          >
           <div>
             <Link
               to="/"
@@ -201,6 +203,27 @@ export default function Footer() {
           </div>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 767px) {
+          .footer-columns {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 28px !important;
+            margin-bottom: 32px !important;
+          }
+          .footer-columns > div:first-child {
+            grid-column: 1 / -1 !important;
+          }
+          .footer-inner {
+            padding: 40px 4% 28px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .footer-columns {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
+      `}</style>
     </footer>
   );
 }

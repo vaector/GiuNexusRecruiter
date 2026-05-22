@@ -101,10 +101,12 @@ export default function ProjectionScene({ zoomTargetRef: externalZoomTargetRef }
       <CornerFrame visible={true} />
 
       <span
+        className="projection-status-text"
         style={{
           position: "absolute",
           bottom: "24px",
           left: "36px",
+          right: "36px",
           fontFamily: "'Courier New', monospace",
           fontSize: "8px",
           letterSpacing: "1.5px",
@@ -118,6 +120,14 @@ export default function ProjectionScene({ zoomTargetRef: externalZoomTargetRef }
       >
         LATENCY: 22MS // SYS_STATUS: OPERATIONAL
       </span>
+
+      <style>{`
+        @media (max-width: 1155px) {
+          .projection-status-text {
+            text-align: center !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

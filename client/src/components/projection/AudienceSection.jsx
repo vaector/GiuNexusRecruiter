@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import RotatingText from "./RotatingText";
 
@@ -91,6 +91,14 @@ const FEATURES = [
 ];
 
 export default function AudienceSection() {
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   return (
     <section style={{
       minHeight: "100vh",
@@ -136,7 +144,7 @@ export default function AudienceSection() {
         zIndex: 10,
         width: "100%",
         maxWidth: "1100px",
-        padding: "80px 6%",
+        padding: isMobile ? "40px 4% 32px" : "80px 6%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -201,7 +209,7 @@ export default function AudienceSection() {
           fontSize: "clamp(1.4rem, 2.5vw, 2.2rem)",
           fontWeight: 700,
           lineHeight: 1.3,
-          margin: "0 0 48px 0",
+          margin: isMobile ? "0 0 28px 0" : "0 0 48px 0",
           textAlign: "center",
           letterSpacing: "-0.02em",
         }}>
@@ -210,10 +218,10 @@ export default function AudienceSection() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "20px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: isMobile ? "12px" : "20px",
           width: "100%",
-          marginBottom: "64px",
+          marginBottom: isMobile ? "36px" : "64px",
         }}>
           {FEATURES.map((feat, i) => (
             <div key={i} style={{
@@ -304,7 +312,7 @@ export default function AudienceSection() {
           position: "relative",
           display: "inline-flex",
           alignItems: "center",
-          padding: "24px 48px",
+          padding: isMobile ? "16px 24px" : "24px 48px",
           background: "rgba(0,229,204,0.03)",
           border: "1px solid rgba(0,229,204,0.25)",
         }}>
@@ -312,15 +320,18 @@ export default function AudienceSection() {
 
           <h2 style={{
             fontFamily: "'Syncopate', sans-serif",
-            fontSize: "clamp(2rem, 4vw, 4rem)",
+            fontSize: "clamp(1.2rem, 4vw, 4rem)",
             fontWeight: 800,
             color: "#fff",
             margin: 0,
             display: "inline-flex",
             alignItems: "center",
-            gap: "16px",
+            gap: isMobile ? "8px" : "16px",
             textShadow: "0 0 30px rgba(0,229,204,0.3)",
-            whiteSpace: "nowrap",
+            whiteSpace: isMobile ? "normal" : "nowrap",
+            textAlign: "center",
+            flexWrap: "wrap",
+            justifyContent: "center",
           }}>
             FOR{" "}
             <RotatingText

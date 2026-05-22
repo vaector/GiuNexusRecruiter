@@ -1,9 +1,8 @@
   import React, { useEffect, useRef, useState } from "react";
 
   const SECTION_VH = 400;
-  //const PATH = "M 85 74 H 915 C 970 74 970 217 915 217 H 85 C 310 217 10 360 85 360 H 915";
 
-  const PATH = "M 85 74 H 995 C 1100 74 1100 265 995 265 H 15 C -90 265 -90 465 15 465 H 915";
+  const PATH_DESKTOP = "M 85 74 H 995 C 1100 74 1100 265 995 265 H 15 C -90 265 -90 465 15 465 H 915";
 
   const STEPS = [
     {
@@ -224,11 +223,86 @@
     return { x: pts[pts.length - 1].x, y: pts[pts.length - 1].y };
   }
 
+  function MobileStepBadge({ step }) {
+    return (
+      <div
+        style={{
+          width: 72,
+          minHeight: 72,
+          border: "1px solid rgba(0,229,204,0.45)",
+          background: "rgba(0,229,204,0.055)",
+          boxShadow: "0 0 24px rgba(0,229,204,0.12), inset 0 0 18px rgba(0,229,204,0.03)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 3,
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 8, letterSpacing: "0.2em", color: "#00e5cc" }}>STEP</span>
+        <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 22, lineHeight: 1, fontWeight: 800, color: "#fff" }}>{step.num}</span>
+        <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 7, letterSpacing: "0.15em", color: "rgba(0,229,204,0.72)" }}>{step.eyebrow}</span>
+      </div>
+    );
+  }
+
+  function MobileStepCard({ step }) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          minHeight: 90,
+          border: "1px solid rgba(0,229,204,0.36)",
+          background: "rgba(0,229,204,0.035)",
+          boxShadow: "0 0 28px rgba(0,229,204,0.11), inset 0 0 22px rgba(0,229,204,0.02)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 8,
+          padding: "14px 16px",
+          position: "relative",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 18, color: "#00e5cc", lineHeight: 1 }}>{step.icon}</span>
+          <h3 style={{ margin: 0, fontFamily: "'Syncopate',sans-serif", fontSize: "clamp(11px,2.5vw,14px)", letterSpacing: "0.06em", color: "#fff" }}>{step.title}</h3>
+        </div>
+        <p style={{ margin: 0, fontFamily: "'Inter',sans-serif", fontSize: 12, lineHeight: 1.55, color: "rgba(255,255,255,0.58)" }}>{step.desc}</p>
+      </div>
+    );
+  }
+
+  function MobileStep({ step }) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "stretch",
+          gap: 14,
+          width: "100%",
+        }}
+      >
+        <MobileStepBadge step={step} />
+        <MobileStepCard step={step} />
+      </div>
+    );
+  }
+
   export default function HowItWorksSection() {
     const sectionRef = useRef(null);
     const [progress, setProgress] = useState(0);
     const [activeStep, setActiveStep] = useState(-1);
     const [coordVal, setCoordVal] = useState("000000");
+    const [isCompact, setIsCompact] = useState(typeof window !== "undefined" ? window.innerWidth <= 1155 : false);
+
+    useEffect(() => {
+      const onResize = () => setIsCompact(window.innerWidth <= 1155);
+      window.addEventListener("resize", onResize, { passive: true });
+      return () => window.removeEventListener("resize", onResize);
+    }, []);
 
     useEffect(() => {
       const section = sectionRef.current;
@@ -240,8 +314,6 @@
         const p = Math.min(Math.max(-rect.top / (sectionH - vh), 0), 1);
         setProgress(p);
 
-        // Adjust these thresholds to fine-tune when cards activate.
-        // We've lowered them so the cards activate earlier as the dot approaches or passes them.
         setActiveStep(
           p < 0.0 ? -1 : 
           p < 0.52 ? 0 : 
@@ -258,6 +330,30 @@
 
     const dot = getDotPosition(progress);
 
+    if (isCompact) {
+      return (
+        <section
+          style={{
+            position: "relative",
+            background: "rgba(3,3,3,0.95)",
+            zIndex: 1,
+            padding: "60px 4% 48px",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle, transparent 30%, rgba(0,0,0,0.6) 120%)", pointerEvents: "none", zIndex: 0 }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto" }}>
+            <h2 style={{ margin: "0 0 32px", textAlign: "left", fontFamily: "'Syncopate',sans-serif", fontSize: "clamp(1.4rem,4vw,2rem)", lineHeight: 1, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>HOW IT WORKS</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {STEPS.map((step) => (
+                <MobileStep key={step.num} step={step} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section ref={sectionRef} style={{ height: SECTION_VH + "vh", position: "relative", background: "rgba(3,3,3,0.75)", zIndex: 1 }}>
         <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", cursor: "crosshair" }}>
@@ -266,27 +362,13 @@
           <div style={{ position: "absolute", inset: 0, opacity: 0.045, pointerEvents: "none", zIndex: 6, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
           <CornerBrackets />
 
-          {/* <div style={{ position: "absolute", top: "2rem", left: "2.5rem", zIndex: 20, pointerEvents: "none", display: "flex", alignItems: "center", gap: "1rem" }}>
-            <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>PROC_03 // HOW IT WORKS</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)", position: "relative" }}>
-              <span style={{ position: "absolute", right: 0, top: -2, width: 5, height: 5, background: "#00e5cc" }} />
-            </div>
-            <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 10, letterSpacing: "0.12em", color: "rgba(0,229,204,0.7)", textTransform: "uppercase" }}>STEP_{String(Math.max(activeStep + 1, 0)).padStart(2, "0")}</span>
-          </div> */}
-
-          {/* <div style={{ position: "absolute", top: "2rem", right: "2.5rem", zIndex: 20, pointerEvents: "none" }}>
-            <span style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
-              STATUS: <span style={{ color: activeStep >= 0 ? "#00e5cc" : "rgba(255,255,255,0.3)" }}>{activeStep >= 0 ? "ACTIVE" : "STANDBY"}</span>
-            </span>
-          </div> */}
-
           <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: "88px 7% 74px" }}>
             <div style={{ width: "100%", maxWidth: 980 }}>
               <h2 style={{ margin: "0 0 42px", textAlign: "center", fontFamily: "'Syncopate',sans-serif", fontSize: "clamp(1.7rem,4vw,5rem)", lineHeight: 1, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>HOW IT WORKS</h2>
               <div style={{ position: "relative", height: 512 }}>
                 <svg viewBox="0 0 1000 512" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, zIndex: 1, overflow: "visible", pointerEvents: "none" }}>
-                  <path d={PATH} fill="none" stroke="rgba(0,229,204,0.2)" strokeWidth="2" strokeDasharray="8 10" strokeLinecap="round" />
-                  <path d={PATH} fill="none" stroke="rgba(0,229,204,0.72)" strokeWidth="2" strokeLinecap="round" pathLength="1" strokeDashoffset={1 - progress} strokeDasharray="1" style={{ filter: "drop-shadow(0 0 8px rgba(0,229,204,0.35))" }} />
+                  <path d={PATH_DESKTOP} fill="none" stroke="rgba(0,229,204,0.2)" strokeWidth="2" strokeDasharray="8 10" strokeLinecap="round" />
+                  <path d={PATH_DESKTOP} fill="none" stroke="rgba(0,229,204,0.72)" strokeWidth="2" strokeLinecap="round" pathLength="1" strokeDashoffset={1 - progress} strokeDasharray="1" style={{ filter: "drop-shadow(0 0 8px rgba(0,229,204,0.35))" }} />
                   <circle cx={dot.x} cy={dot.y} r="7" fill="#00e5cc" style={{ filter: "drop-shadow(0 0 8px rgba(0,229,204,0.9)) drop-shadow(0 0 22px rgba(0,229,204,0.45))" }} />
                   <circle cx={dot.x} cy={dot.y} r="16" fill="rgba(0,229,204,0.13)" />
                 </svg>

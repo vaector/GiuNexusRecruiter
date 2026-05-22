@@ -134,9 +134,16 @@ export default function AiMatchDemoSection() {
   const [scenarioIdx, setScenarioIdx] = useState(0);
   const [phase, setPhase] = useState("typing");
   const [typedText, setTypedText] = useState("");
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
   const currScenario = SCENARIOS[scenarioIdx];
   const typingTimer = useRef(null);
   const flowTimer = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     startScenario();
@@ -187,6 +194,7 @@ export default function AiMatchDemoSection() {
         justifyContent: "center",
         overflow: "hidden",
         cursor: "crosshair",
+        padding: isMobile ? "40px 0" : "0",
       }}
     >
       <div
@@ -228,7 +236,7 @@ export default function AiMatchDemoSection() {
           zIndex: 10,
           width: "100%",
           maxWidth: "1100px",
-          padding: "80px 6%",
+          padding: isMobile ? "40px 4% 32px" : "80px 6%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -307,17 +315,19 @@ export default function AiMatchDemoSection() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "20px",
+            gap: isMobile ? "10px" : "20px",
             width: "100%",
-            marginBottom: "40px",
+            marginBottom: isMobile ? "24px" : "40px",
+            flexWrap: "wrap",
           }}
         >
           <div
             style={{
-              flex: 1,
+              flex: isMobile ? "0 0 0" : 1,
               height: 1,
               background: `linear-gradient(to right, transparent, ${currScenario.glowColor}30)`,
               transition: "background 0.6s ease",
+              minWidth: isMobile ? 0 : 40,
             }}
           />
           <div
@@ -325,7 +335,7 @@ export default function AiMatchDemoSection() {
               position: "relative",
               display: "inline-flex",
               alignItems: "center",
-              padding: "20px 40px",
+              padding: isMobile ? "14px 20px" : "20px 40px",
               background: `rgba(${hexToRgb(currScenario.glowColor)}, 0.03)`,
               border: `1px solid rgba(${hexToRgb(currScenario.glowColor)}, 0.25)`,
               transition: "background 0.6s ease, border-color 0.6s ease",
@@ -335,7 +345,7 @@ export default function AiMatchDemoSection() {
             <h2
               style={{
                 fontFamily: "'Syncopate', sans-serif",
-                fontSize: "clamp(1.4rem, 2.5vw, 2.2rem)",
+                fontSize: "clamp(1.2rem, 2.5vw, 2.2rem)",
                 fontWeight: 800,
                 color: "#fff",
                 margin: 0,
@@ -343,7 +353,8 @@ export default function AiMatchDemoSection() {
                 alignItems: "center",
                 gap: "16px",
                 textShadow: `0 0 30px rgba(${hexToRgb(currScenario.glowColor)}, 0.3)`,
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
+                textAlign: "center",
                 transition: "text-shadow 0.6s ease",
               }}
             >
@@ -364,10 +375,11 @@ export default function AiMatchDemoSection() {
           </div>
           <div
             style={{
-              flex: 1,
+              flex: isMobile ? "0 0 0" : 1,
               height: 1,
               background: `linear-gradient(to left, transparent, ${currScenario.glowColor}30)`,
               transition: "background 0.6s ease",
+              minWidth: isMobile ? 0 : 40,
             }}
           />
         </div>
@@ -376,8 +388,8 @@ export default function AiMatchDemoSection() {
           style={{
             width: "100%",
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "40px",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? "16px" : "40px",
             alignItems: "stretch",
           }}
         >
@@ -386,7 +398,7 @@ export default function AiMatchDemoSection() {
               position: "relative",
               background: "rgba(255,255,255,0.012)",
               border: "1px solid rgba(255,255,255,0.065)",
-              padding: "32px",
+              padding: isMobile ? "20px 16px" : "32px",
               transition: "border-color 0.45s ease, background 0.45s ease, box-shadow 0.45s ease",
             }}
           >
@@ -394,9 +406,9 @@ export default function AiMatchDemoSection() {
             <div
               style={{
                 fontFamily: "'JetBrains Mono','Fira Code',monospace",
-                fontSize: 12,
+                fontSize: isMobile ? 10 : 12,
                 color: "rgba(255,255,255,0.4)",
-                marginBottom: "20px",
+                marginBottom: isMobile ? "12px" : "20px",
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
               }}
@@ -406,7 +418,7 @@ export default function AiMatchDemoSection() {
             <div
               style={{
                 fontFamily: "'JetBrains Mono','Fira Code',monospace",
-                fontSize: 14,
+                fontSize: isMobile ? 12 : 14,
                 color: "rgba(255,255,255,0.7)",
                 lineHeight: 1.8,
               }}
@@ -576,7 +588,9 @@ export default function AiMatchDemoSection() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginTop: "48px",
+            marginTop: isMobile ? "24px" : "48px",
+            flexWrap: "wrap",
+            gap: "8px",
           }}
         >
           <span

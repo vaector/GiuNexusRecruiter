@@ -60,6 +60,13 @@ export default function CardTunnel({ embedded }) {
     const viewport = viewportRef.current;
     if (!world || !viewport) return;
 
+    const vw = window.innerWidth;
+    const isMobile = vw < 768;
+    const cardW = isMobile ? Math.min(260, Math.floor(vw * 0.7)) : 320;
+    const cardH = isMobile ? Math.min(350, Math.floor(vw * 0.92)) : 420;
+    const spreadX = isMobile ? 0.12 : 0.25;
+    const spreadY = isMobile ? 0.15 : 0.25;
+
     const items = [];
     let jobIdx = 0;
 
@@ -82,8 +89,8 @@ export default function CardTunnel({ embedded }) {
 
         const card = document.createElement("div");
         card.style.cssText = [
-          "width:320px",
-          "height:420px",
+          "width:" + cardW + "px",
+          "height:" + cardH + "px",
           "background:rgba(10,10,10,0.55)",
           "border:1px solid rgba(255,255,255,0.08)",
           "position:relative",
@@ -119,8 +126,8 @@ export default function CardTunnel({ embedded }) {
         el.appendChild(card);
 
         const angle = (i / SEQUENCE.length) * Math.PI * 6;
-        const x = Math.cos(angle) * (window.innerWidth * 0.25);
-        const y = Math.sin(angle) * (window.innerHeight * 0.25);
+        const x = Math.cos(angle) * (window.innerWidth * spreadX);
+        const y = Math.sin(angle) * (window.innerHeight * spreadY);
         const rot = (Math.random() - 0.5) * 16;
 
         items.push({ el, type: "card", x, y, rot, baseZ: -i * CONFIG.zGap });
@@ -242,9 +249,11 @@ export default function CardTunnel({ embedded }) {
   return (
     <section
       ref={sectionRef}
+      className="card-tunnel-section"
       style={{ height: embedded ? "100%" : SECTION_VH + "vh", position: "relative", background: "#030303" }}
     >
       <div
+        className="card-tunnel-viewport"
         style={{
           position: "sticky",
           top: 0,
@@ -308,6 +317,7 @@ export default function CardTunnel({ embedded }) {
         </div>
 
         <div
+          className="card-tunnel-hud"
           style={{
             position: "absolute",
             inset: "2rem",
@@ -384,6 +394,18 @@ export default function CardTunnel({ embedded }) {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 767px) {
+          .card-tunnel-hud {
+            inset: 0.75rem !important;
+            font-size: 8px !important;
+          }
+          .card-tunnel-hud > div:nth-child(2) {
+            display: none !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
