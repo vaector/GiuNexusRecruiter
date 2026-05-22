@@ -522,7 +522,7 @@ const Navbar = () => {
 
     return (
       <>
-        {(user?.role === "jobSeeker" || user?.role === "admin") && (
+        {(user?.role === "jobSeeker" || user?.role === "admin" || user?.role === "recruiter") && (
           <div className="nav-right-actions" ref={notifPanelRef}>
             <button
               className="nav-notif-bell"
