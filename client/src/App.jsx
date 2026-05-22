@@ -29,7 +29,7 @@ import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 // import AdminJobsPage from "./pages/AdminJobsPage";
 // import AdminUsersPage from "./pages/AdminUsersPage";
 // import AdminReportsPage from "./pages/AdminReportsPage";
-// import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
+import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 // import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 // import ConversationsPage from "./pages/ConversationsPage";
@@ -76,7 +76,7 @@ const App = () => {
             {/* <Route path="/admin/jobs" element={<RoleRoute allowedRoles={["admin"]}><AdminJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/users" element={<RoleRoute allowedRoles={["admin"]}><AdminUsersPage /></RoleRoute>} /> */}
             {/* <Route path="/admin/reports" element={<RoleRoute allowedRoles={["admin"]}><AdminReportsPage /></RoleRoute>} /> */}
-            {/* <Route path="/admin/audit-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminAuditLogsPage /></RoleRoute>} /> */}
+            <Route path="/admin/audit-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminAuditLogsPage /></RoleRoute>} />
             {/* <Route path="/admin/request-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminRequestLogsPage /></RoleRoute>} /> */}
           </Routes>
         </main>

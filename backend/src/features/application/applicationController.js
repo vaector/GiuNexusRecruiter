@@ -267,6 +267,16 @@ const applyToJob = async (req, res, next) => {
       $set: { 'applicationStats.lastAppliedAt': new Date() },
     });
 
+    await AuditLog.record({
+      actor: req.user,
+      action: AuditAction.APPLICATION_CREATED,
+      targetModel: "Application",
+      targetId: application._id,
+      metadata: { jobId, jobTitle: job.title },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
     await Notification.send({
       recipient: job.createdBy,
       type: NotificationType.NEW_APPLICANT,

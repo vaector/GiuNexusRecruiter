@@ -1,6 +1,7 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const Report = require('./reports');
-const { ReportReason, ReportStatus } = require("../../enums");
+const AuditLog = require("../auditLog/auditLog");
+const { ReportReason, ReportStatus, AuditAction } = require("../../enums");
 
 const createError = (statusCode, message) => {
   const error = new Error(message);
@@ -97,6 +98,27 @@ const reviewReport = asyncHandler(async (req, res, next) => {
   report.reviewedAt = new Date();
 
   await report.save();
+
+  const auditAction = status === ReportStatus.DISMISSED
+    ? AuditAction.REPORT_DISMISSED
+    : AuditAction.REPORT_ACTIONED;
+
+  await AuditLog.record({
+    actor: req.user,
+    action: auditAction,
+    targetModel: "Report",
+    targetId: report._id,
+    metadata: {
+      reason: report.reason,
+      reportedTargetModel: report.targetModel,
+      reportedTargetId: report.targetId,
+      adminNote: adminNote || null,
+      from: ReportStatus.OPEN,
+      to: status,
+    },
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
 
   res.status(200).json({ success: true, report });
 });
