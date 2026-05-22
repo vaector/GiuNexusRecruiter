@@ -245,6 +245,26 @@ a:hover {
   transform: scale(1.05);
 }
 
+.nexus-btn.danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.nexus-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--accent-dim);
+  background: rgba(0, 229, 204, 0.06);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
 /* ─── Inputs ─────────────────────────────────────────────────────── */
 
 .nexus-input {
