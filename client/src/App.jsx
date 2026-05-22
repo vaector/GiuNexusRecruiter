@@ -10,12 +10,12 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-// import ProfilePage from "./pages/ProfilePage";
+import ProfilePage from "./pages/ProfilePage";
 // import EditProfilePage from "./pages/EditProfilePage";
 // import ChangePasswordPage from "./pages/ChangePasswordPage";
 import JobListPage from "./pages/JobListPage";
 // import JobDetailPage from "./pages/JobDetailPage";
-// import RecommendedJobsPage from "./pages/RecommendedJobsPage";
+import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 // import SavedJobsPage from "./pages/SavedJobsPage";
 // import MyApplicationsPage from "./pages/MyApplicationsPage";
 // import ApplicationDetailPage from "./pages/ApplicationDetailPage";
@@ -52,10 +52,10 @@ const App = () => {
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             {<Route path="/jobs" element={<JobListPage />} />}
-            {/* <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} /> */}
+            <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} />
             {/* <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/jobs/:id" element={<JobDetailPage />} /> */}
-            {/* <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} /> */}
+            <Route path="/profile" element={<RoleRoute allowedRoles={["jobSeeker"]}><ProfilePage /></RoleRoute>} />
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
             <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
