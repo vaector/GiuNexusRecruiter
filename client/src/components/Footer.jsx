@@ -6,16 +6,16 @@ const MONO = "'JetBrains Mono','Fira Code',monospace";
 const SANS = "'Inter',sans-serif";
 
 const TEAM_MEMBERS = [
-  { name: "Mohab", url: "https://github.com/MohabHindawy" },
-  { name: "Yassin", url: "https://github.com/Yassin-Hegazy" },
+  { name: "Mohab Khaled", url: "https://github.com/MohabHindawy" },
+  { name: "Yassin Amr", url: "https://github.com/Yassin-Hegazy" },
   { name: "Amro Taha", url: "https://github.com/aequate" },
-  { name: "Taher", url: "https://github.com/gasTSK" },
-  { name: "Ziad", url: "https://github.com/vaector" },
-  { name: "Tarek", url: "https://github.com/Tarek16006923" },
-  { name: "Mohamed", url: "https://github.com/mohammedrizk16008623" },
-  { name: "Fares", url: "https://github.com/FaresEl-Sonbaty" },
-  { name: "Youssef", url: "https://github.com/youssefkhaleel0689" },
-  { name: "Ahmed", url: "https://github.com/AhmedSoliman1023" },
+  { name: "Taher Khalaf", url: "https://github.com/gasTSK" },
+  { name: "Zeyad Amr", url: "https://github.com/vaector" },
+  { name: "Tarek Ahmed", url: "https://github.com/Tarek16006923" },
+  { name: "Mohammed Fady", url: "https://github.com/mohammedrizk16008623" },
+  { name: "Fares Mostafa", url: "https://github.com/FaresEl-Sonbaty" },
+  { name: "Youssef Hassan", url: "https://github.com/youssefkhaleel0689" },
+  { name: "Ahmed Bahaa", url: "https://github.com/AhmedSoliman1023" },
 ];
 
 const COLUMNS = [
