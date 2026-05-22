@@ -108,7 +108,7 @@ export default function Footer() {
           className="footer-columns"
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr repeat(4, 1fr)",
+            gridTemplateColumns: "2fr repeat(4, 1fr) auto", 
             gap: "48px",
             marginBottom: "56px",
           }}
@@ -140,35 +140,6 @@ export default function Footer() {
             >
               AI-powered career & talent matching platform. Connecting the right people with the right opportunities.
             </p>
-
-            {/* --- TEAM SECTION --- */}
-            <div style={{ marginTop: "24px" }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.25)", display: "block", marginBottom: "8px", letterSpacing: "0.1em" }}>
-                DEVELOPED BY:
-              </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                {TEAM_MEMBERS.map((member) => (
-                  <a
-                    key={member.name}
-                    href={member.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 11,
-                      color: "rgba(255,255,255,0.45)",
-                      textDecoration: "none",
-                      transition: "color 0.25s ease",
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.color = ACCENT)}
-                    onMouseOut={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
-                  >
-                    {member.name}
-                  </a>
-                ))}
-              </div>
-            </div>
-            
           </div>
 
           {COLUMNS.map((col) => (
@@ -203,6 +174,69 @@ export default function Footer() {
               ))}
             </div>
           ))}
+
+          {/* --- NEW SPLIT TEAM COLUMN --- */}
+          <div>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 10,
+                letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.25)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: "16px",
+              }}
+            >
+              TEAM
+            </span>
+            <div style={{ display: "flex", gap: "32px" }}>
+              
+              {/* Left Column (First 5 members) */}
+              <div>
+                {TEAM_MEMBERS.slice(0, 5).map((member) => (
+                  <a
+                    key={member.name}
+                    href={member.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = ACCENT;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                    }}
+                  >
+                    {member.name}
+                  </a>
+                ))}
+              </div>
+
+              {/* Right Column (Remaining 5 members) */}
+              <div>
+                {TEAM_MEMBERS.slice(5, 10).map((member) => (
+                  <a
+                    key={member.name}
+                    href={member.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = ACCENT;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                    }}
+                  >
+                    {member.name}
+                  </a>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         <div
