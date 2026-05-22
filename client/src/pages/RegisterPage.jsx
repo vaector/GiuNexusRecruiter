@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { authAPI } from "../services/api";
+import SpookyGhost from "../components/SpookyGhost";
 
 const roleOptions = [
   {
@@ -24,6 +25,7 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -81,6 +83,7 @@ const RegisterPage = () => {
   return (
     <section className="register-page">
       <div className="register-grid" aria-hidden="true" />
+      <SpookyGhost passwordFocused={passwordFocused} />
       <div className="register-shell">
         <aside className="register-intro">
           <div>
@@ -159,6 +162,8 @@ const RegisterPage = () => {
                 placeholder="At least 6 characters"
                 value={form.password}
                 onChange={handleChange}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 required
               />
             </label>
@@ -221,7 +226,7 @@ const RegisterStyles = () => (
       gap: clamp(1rem, 4vw, 3rem);
       align-items: stretch;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .register-intro {
@@ -229,13 +234,15 @@ const RegisterStyles = () => (
       border: 1px solid var(--border-glow);
       border-radius: var(--rounded-md);
       background:
-        linear-gradient(145deg, rgba(6, 12, 24, 0.78), rgba(6, 12, 24, 0.35)),
-        linear-gradient(90deg, rgba(0, 229, 204, 0.12), transparent);
+        linear-gradient(145deg, rgba(6, 12, 24, 0.55), rgba(6, 12, 24, 0.22)),
+        linear-gradient(90deg, rgba(0, 229, 204, 0.08), transparent);
       padding: clamp(2rem, 5vw, 3.5rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       box-shadow: 0 22px 70px rgba(0, 0, 0, 0.48);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .register-intro h1,
@@ -303,11 +310,11 @@ const RegisterStyles = () => (
     .register-pending-card {
       border: 1px solid var(--border-glow);
       border-radius: var(--rounded-md);
-      background: var(--bg-surface-solid);
+      background: rgba(6, 12, 24, 0.35);
       box-shadow: 0 22px 70px rgba(0, 0, 0, 0.56), 0 0 1px rgba(0, 229, 204, 0.3);
       padding: clamp(1.5rem, 4vw, 2.4rem);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .register-card {
