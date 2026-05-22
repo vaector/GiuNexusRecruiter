@@ -1,537 +1,273 @@
----
-version: alpha
-name: Zapier-design-analysis
-description: An inspired interpretation of Zapier's design language — a workflow-automation platform whose surface combines warm-cream neutrals (`#fffefb` canvas, `#f8f4f0` soft cream) with deep coffee ink (`#201515`) and a single saturated orange CTA accent (`#ff4f00`); typography pairs the proprietary Degular Display family at hero scale with Inter for sub-displays and body, giving the brand a confident-warm rather than cool-tech voice.
+# NEXUS Design Principles
 
-colors:
-  primary: "#ff4f00"
-  on-primary: "#fffefb"
-  ink: "#201515"
-  ink-soft: "#2f2a26"
-  ink-mid: "#36342e"
-  body: "#605d52"
-  body-mid: "#939084"
-  mute: "#c5c0b1"
-  canvas: "#fffefb"
-  canvas-soft: "#f8f4f0"
-
-typography:
-  display-xl:
-    fontFamily: Degular Display, Inter, system-ui, -apple-system, sans-serif
-    fontSize: 56px
-    fontWeight: 500
-    lineHeight: 56px
-  display-lg:
-    fontFamily: Degular Display, Inter, system-ui, sans-serif
-    fontSize: 48px
-    fontWeight: 500
-    lineHeight: 48px
-  display-md:
-    fontFamily: Degular Display, Inter, system-ui, sans-serif
-    fontSize: 32px
-    fontWeight: 500
-    lineHeight: 36px
-    letterSpacing: 1px
-  display-sub-lg:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 48px
-    fontWeight: 500
-    lineHeight: 49.92px
-  display-sub-md:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 32px
-    fontWeight: 400
-    lineHeight: 40px
-  display-sub-sm:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 24px
-    fontWeight: 600
-    lineHeight: 30px
-    letterSpacing: -0.6px
-  display-xs:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 20px
-    fontWeight: 700
-    lineHeight: 25px
-    letterSpacing: -0.5px
-  body-lg:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 20px
-    fontWeight: 400
-    lineHeight: 30px
-    letterSpacing: -0.2px
-  body-md:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 18px
-    fontWeight: 400
-    lineHeight: 27px
-  body-md-strong:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 18px
-    fontWeight: 600
-    lineHeight: 27px
-  body-sm:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 16px
-    fontWeight: 400
-    lineHeight: 24px
-  body-sm-strong:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 16px
-    fontWeight: 600
-    lineHeight: 24px
-  caption:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 14px
-    fontWeight: 400
-    lineHeight: 21px
-  eyebrow-uppercase:
-    fontFamily: Degular Display, Inter, system-ui, sans-serif
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 14px
-    letterSpacing: 1px
-  button-md:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 18px
-    fontWeight: 600
-    lineHeight: 27px
-  button-sm:
-    fontFamily: Inter, system-ui, sans-serif
-    fontSize: 14.4px
-    fontWeight: 700
-    lineHeight: 14.4px
-    letterSpacing: 0.144px
-
-rounded:
-  none: 0px
-  sm: 6px
-  md: 12px
-  pill: 9999px
-  full: 9999px
-
-spacing:
-  xxs: 2px
-  xs: 4px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  2xl: 32px
-  3xl: 48px
-  4xl: 64px
-
-components:
-  nav-bar:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-sm}"
-    padding: "{spacing.md} {spacing.xl}"
-  nav-link:
-    textColor: "{colors.ink}"
-    typography: "{typography.body-sm}"
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.md} {spacing.xl}"
-  button-secondary:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.md} {spacing.xl}"
-  button-tertiary:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    borderColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.md} {spacing.xl}"
-  button-text:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-sm}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.sm} {spacing.lg}"
-  text-input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    borderColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
-    padding: "{spacing.md} {spacing.lg}"
-  card-content:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  card-feature-cream:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  card-feature-dark:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  pricing-card:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    borderColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  pricing-card-featured:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  hero-band:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.display-xl}"
-    padding: "{spacing.4xl} {spacing.xl}"
-  hero-band-dark:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.display-xl}"
-    padding: "{spacing.4xl} {spacing.xl}"
-  content-band-cream:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.display-lg}"
-    padding: "{spacing.4xl} {spacing.xl}"
-  content-band-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.display-lg}"
-    padding: "{spacing.4xl} {spacing.xl}"
-  eyebrow-uppercase:
-    textColor: "{colors.ink}"
-    typography: "{typography.eyebrow-uppercase}"
-  badge-pill:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-sm}"
-    rounded: "{rounded.pill}"
-    padding: "{spacing.xs} {spacing.md}"
-  footer:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.canvas-soft}"
-    typography: "{typography.body-sm}"
-    padding: "{spacing.3xl} {spacing.xl}"
-
-  # ─── Examples (illustrative) — auto-derived; resolve any TO_FILL markers below ───
-  ex-pricing-tier:
-    description: "Default Pricing tier card. Re-uses feature-card chrome with brand canvas-soft surface."
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    borderColor: "{colors.mute}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  ex-pricing-tier-featured:
-    description: "Featured/highlighted tier — polarity-flipped surface (dark fill + light text in light mode, light fill + dark text in dark mode)."
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-primary}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  ex-product-selector:
-    description: "What's Included summary card — re-purposed for SaaS / B2B verticals (NOT a literal product gallery)."
-    backgroundColor: "{colors.canvas-soft}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  ex-cart-drawer:
-    description: "Subscription summary — re-purposed for SaaS / B2B (line items per add-on, not literal cart)."
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-    item-divider: "{colors.mute}"
-  ex-app-shell-row:
-    description: "Sidebar nav row inside the App Shell example. Active state uses brand primary as the indicator."
-    backgroundColor: "{colors.canvas}"
-    activeIndicator: "{colors.primary}"
-    rounded: "{rounded.sm}"
-    padding: "{spacing.md} {spacing.lg}"
-  ex-data-table-cell:
-    description: "Default data-table th + td chrome. Header uses mono-caps eyebrow typography; body uses body-sm."
-    headerBackground: "{colors.canvas-soft}"
-    headerTypography: "{typography.caption}"
-    bodyTypography: "{typography.body-sm}"
-    cellPadding: "{spacing.md} {spacing.lg}"
-    rowBorder: "{colors.mute}"
-  ex-auth-form-card:
-    description: "Sign-in / sign-up card. Re-uses feature-card chrome with text-input primitives inside."
-    backgroundColor: "{colors.canvas-soft}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  ex-modal-card:
-    description: "Modal dialog surface — same chrome as feature-card with elevated shadow."
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-  ex-empty-state-card:
-    description: "Empty-state illustration frame."
-    backgroundColor: "{colors.canvas-soft}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.3xl}"
-    captionTypography: "{typography.body-md}"
-  ex-toast:
-    description: "Toast notification surface — feature-card shape + medium shadow."
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.md} {spacing.lg}"
-    typography: "{typography.body-sm}"
+Every page must inherit the visual DNA established on the home page. The following principles are law — deviation requires an explicit design decision documented in code comments.
 
 ---
 
+## 1. Dark Canvas
 
-## Overview
-
-Zapier is the original "connect your apps" workflow automation platform — and the marketing surface today reads as confidently-mature. The brand pairs a warm-cream canvas `{colors.canvas}` (`#fffefb`) with a deep coffee-ink `{colors.ink}` (`#201515`) and a single saturated orange `{colors.primary}` (`#ff4f00`) CTA. The warmth in the neutrals — slightly cream rather than pure white — is the brand's defining temperature signal.
-
-Type carries the second voice. The proprietary `Degular Display` family carries hero displays at weight 500. The brand uses `Inter` for everything else — sub-displays, body, button, eyebrow. The two-face pairing reads as "the brand has its own typeface for the loud moments and uses the workhorse for the rest" — modest and unflashy.
-
-Cards are universally `{rounded.md}` 12 px. Buttons share the same 12 px radius — not pills, not square. The brand sits between the friendly-rounded and the technical-square camps with a deliberate middle position.
-
-**Key Characteristics:**
-- A single primary CTA color `{colors.primary}` (`#ff4f00`) — saturated orange. The brand's conversion signature.
-- Warm-cream canvas `{colors.canvas}` (`#fffefb`) — not pure white. The temperature IS the brand voice.
-- Deep coffee ink `{colors.ink}` (`#201515`) — not pure black. Warmth carries through to text.
-- Proprietary Degular Display for hero-scale, Inter for everything else. Two-face system.
-- `{rounded.md}` 12 px for buttons and cards — the brand's middle-radius signature.
-- A muted cream / coffee neutral ladder — `{colors.canvas-soft}` (`#f8f4f0`), `{colors.mute}` (`#c5c0b1`), `{colors.body-mid}` (`#939084`), `{colors.body}` (`#605d52`) — every neutral carries warmth, none are cool grey.
-
-## Colors
-
-### Brand & Accent
-- **Zapier Orange** (`{colors.primary}` — `#ff4f00`): The single brand accent. Every primary CTA pill, every conversion target. The saturated orange IS the brand.
-
-### Surface
-- **Canvas** (`{colors.canvas}` — `#fffefb`): Warm off-white page background.
-- **Canvas Soft** (`{colors.canvas-soft}` — `#f8f4f0`): Cream-tinted soft surface for cards / inset regions.
-
-### Text
-- **Ink** (`{colors.ink}` — `#201515`): Deep coffee — every heading and primary text.
-- **Ink Soft** (`{colors.ink-soft}` — `#2f2a26`): Near-black with brown warmth.
-- **Ink Mid** (`{colors.ink-mid}` — `#36342e`): Mid-emphasis text.
-- **Body** (`{colors.body}` — `#605d52`): Default body text color.
-- **Body Mid** (`{colors.body-mid}` — `#939084`): Secondary body / metadata.
-- **Mute** (`{colors.mute}` — `#c5c0b1`): Lowest-priority text — fine print, low-emphasis captions.
-
-### Semantic
-The brand doesn't surface a separate semantic palette on its marketing pages. Status / validation cues borrow from the ink + orange hierarchy.
-
-## Typography
-
-### Font Family
-Two faces ladder the system:
-1. **Degular Display** — proprietary geometric display sans used for hero headlines at weight 500. The brand's typographic signature.
-2. **Inter** — used for sub-displays, body, links, buttons, and eyebrows. Weights 400 / 500 / 600 / 700 are present.
-
-### Hierarchy
-
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xl}` | 56px | 500 | 56px | 0 | Hero headline (Degular Display). |
-| `{typography.display-lg}` | 48px | 500 | 48px | 0 | Sub-hero displays (Degular Display). |
-| `{typography.display-md}` | 32px | 500 | 36px | 1px | Section displays (Degular Display, positive tracking). |
-| `{typography.display-sub-lg}` | 48px | 500 | 49.92px | 0 | Inter-rendered sub-display. |
-| `{typography.display-sub-md}` | 32px | 400 | 40px | 0 | Inter sub-display. |
-| `{typography.display-sub-sm}` | 24px | 600 | 30px | -0.6px | Card titles (Inter, semibold). |
-| `{typography.display-xs}` | 20px | 700 | 25px | -0.5px | Inline display micro-headings. |
-| `{typography.body-lg}` | 20px | 400 | 30px | -0.2px | Lead paragraphs. |
-| `{typography.body-md}` | 18px | 400 | 27px | 0 | Default body. |
-| `{typography.body-md-strong}` | 18px | 600 | 27px | 0 | Bolded inline body. |
-| `{typography.body-sm}` | 16px | 400 | 24px | 0 | Secondary body. |
-| `{typography.body-sm-strong}` | 16px | 600 | 24px | 0 | Bold caption. |
-| `{typography.caption}` | 14px | 400 | 21px | 0 | Fine print. |
-| `{typography.eyebrow-uppercase}` | 14px | 500 | 14px | 1px | UPPERCASE eyebrow (Degular Display, positive tracking). |
-| `{typography.button-md}` | 18px | 600 | 27px | 0 | Primary button label. |
-| `{typography.button-sm}` | 14.4px | 700 | 14.4px | 0.144px | Small button label. |
-
-### Principles
-- **Degular Display 500 for hero, Inter for everything else.** Strict role separation.
-- **Positive tracking on the Degular eyebrow** — `1 px` at 14 px is the brand's signature label style.
-- **Sentence-case headlines.** The brand never uppercases display sizes.
-
-### Note on Font Substitutes
-Degular Display is proprietary. Open-source substitutes:
-- **Display** — *Inter* weight 500 at hero scale comes closest. *Mona Sans* weight 500 is a softer alternative.
-- **Sub-display + body** — *Inter* is the brand's actual second face.
-
-## Layout
-
-### Spacing System
-- **Base unit**: 4 px.
-- **Tokens**: `{spacing.xxs}` 2 px · `{spacing.xs}` 4 px · `{spacing.sm}` 8 px · `{spacing.md}` 12 px · `{spacing.lg}` 16 px · `{spacing.xl}` 24 px · `{spacing.2xl}` 32 px · `{spacing.3xl}` 48 px · `{spacing.4xl}` 64 px.
-- **Section padding**: bands use `{spacing.4xl}` 64 px top/bottom.
-- **Card interior**: cards at `{spacing.xl}` 24 px.
-
-### Grid & Container
-- Marketing container ~1280 px wide; centred with gutters.
-- Hero: split at desktop (headline left, illustration right); stacked at mobile.
-- Pricing tier grid: 3 / 4-up at desktop.
-
-### Responsive Strategy
-
-#### Breakpoints
-
-| Name | Width | Key Changes |
-|---|---|---|
-| Mobile | < 768px | Hero stacks; grids 1-up; hamburger nav. |
-| Tablet | 768–1023px | 2-up grids. |
-| Desktop | ≥ 1024px | Full grids; hero split. |
-
-#### Touch Targets
-Buttons render ~48 px tall (12 vertical padding + 27 line). WCAG AAA met.
-
-#### Image Behavior
-The brand uses illustrative SVGs of zaps / workflows + product screenshots inside `{rounded.md}` framed cards. Photography is rare.
-
-## Elevation & Depth
-
-| Level | Treatment | Use |
-|---|---|---|
-| Level 0 — Flat | No shadow, no border. | Default for hero. |
-| Level 1 — Hairline | 1 px solid `{colors.ink}` border. | Pricing-tier card chrome, outline buttons. |
-| Level 2 — Soft Card | `{colors.canvas-soft}` cream fill against `{colors.canvas}` page. | Default content cards — surface contrast carries elevation. |
-
-## Shapes
-
-### Border Radius Scale
+The base surface is **near-black**.
 
 | Token | Value | Use |
 |---|---|---|
-| `{rounded.none}` | 0px | Full-bleed bands. |
-| `{rounded.sm}` | 6px | Inline pills, form inputs. |
-| `{rounded.md}` | 12px | The brand's canonical button + card radius. |
-| `{rounded.pill}` | 9999px | Status pills, badges. |
-| `{rounded.full}` | 9999px | Circular icon containers. |
+| `bg-base` | `#030303` | Page background. Set on `<body>` or root container. |
+| `bg-surface` | `rgba(8, 12, 24, 0.4)` | Unscrolled glass panels (nav, cards). |
+| `bg-surface-solid` | `rgba(6, 12, 24, 0.92)` | Scrolled / elevated panels (dropdowns, modals). |
+| `bg-surface-raised` | `rgba(8, 12, 24, 0.88)` | Scrolled nav, sticky headers. |
 
-## Components
+Never use pure white (`#fff`) as a background. Never use pure black (`#000`) for text on dark surfaces — use `#eaf2ff`.
 
-### Buttons
+---
 
-**`button-primary`** — the orange CTA.
-- Background `{colors.primary}`, text `{colors.on-primary}` (warm white), label `{typography.button-md}`, padding `{spacing.md} {spacing.xl}`, shape `{rounded.md}` 12 px.
+## 2. Layer Stack
 
-**`button-secondary`** — the dark coffee-ink CTA.
-- Background `{colors.ink}`, text `{colors.on-primary}`, same typography / padding / shape.
+Every section renders layers bottom-to-top:
 
-**`button-tertiary`** — the outline CTA.
-- Background `{colors.canvas}`, text `{colors.ink}`, 1 px solid `{colors.ink}` border, same typography / padding / shape.
+1. **Base** — `bg-base` (`#030303`) solid fill.
+2. **Fluid / Ambient** — WebGL fluid simulation or CSS radial glows (optional for content pages).
+3. **Content** — Actual UI elements at the highest z-index.
+4. **Grain Overlay** — SVG `feTurbulence` fractal noise at opacity `0.03`–`0.07`, `pointer-events: none`.
+5. **Vignette Overlay** — `radial-gradient(circle, transparent 30%, rgba(0,0,0,0.6) 120%)`, `pointer-events: none`.
+6. **Scanlines** (optional) — `linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.03) 50%)` at `backgroundSize: 100% 4px`, `pointer-events: none`.
 
-**`button-text`** — text-only CTA used inside cards / nav.
-- Background `{colors.canvas}`, text `{colors.ink}`, body in `{typography.button-sm}`, padding `{spacing.sm} {spacing.lg}`, shape `{rounded.md}`.
+Grain SVG (use verbatim):
+```
+url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+```
 
-### Cards & Containers
+Both grain and vignette overlays are **required** on every full-page section and on glass panels / cards.
 
-**`card-content`** — the default cream content card.
-- Background `{colors.canvas-soft}`, text `{colors.ink}`, padding `{spacing.xl}`, shape `{rounded.md}`.
+---
 
-**`card-feature-cream`** — the cream feature card.
-- Same chrome as `card-content`. Hosts headline + body + illustration.
+## 3. Color System
 
-**`card-feature-dark`** — the polarity-flipped dark coffee card.
-- Background `{colors.ink}`, text `{colors.on-primary}`, padding `{spacing.xl}`, shape `{rounded.md}`.
+### Accent
 
-**`pricing-card`** — the default pricing tier card.
-- Background `{colors.canvas}`, text `{colors.ink}`, 1 px solid `{colors.ink}` border, padding `{spacing.xl}`, shape `{rounded.md}`.
+| Token | Value | Use |
+|---|---|---|
+| `accent` | `#00e5cc` | **The single accent color.** Active states, unread indicators, CTAs, links, progress bars, glowing borders. |
+| `accent-dim` | `rgba(0, 229, 204, 0.12)` | Borders on glass panels, hover backgrounds. |
+| `accent-mid` | `rgba(0, 229, 204, 0.4)` | Left-border highlights, hover states. |
+| `accent-glow` | `rgba(0, 229, 204, 0.25)` | `box-shadow` glow on active elements. |
 
-**`pricing-card-featured`** — the polarity-flipped featured pricing tier.
-- Background `{colors.ink}`, text `{colors.on-primary}`, same shape / padding.
+**Do not** introduce a second chromatic accent. The teal IS the brand.
 
-### Inputs & Forms
+### Text Hierarchy
 
-**`text-input`** — the canonical text input.
-- Background `{colors.canvas}`, text `{colors.ink}`, 1 px solid `{colors.ink}` border, body in `{typography.body-md}`, padding `{spacing.md} {spacing.lg}`, shape `{rounded.sm}` 6 px.
+| Token | Value | Use |
+|---|---|---|
+| `text-primary` | `#eaf2ff` | Headings, primary labels. |
+| `text-secondary` | `rgba(234, 242, 255, 0.45)` | Body text, nav links (inactive). |
+| `text-tertiary` | `rgba(234, 242, 255, 0.3)` | Metadata, timestamps, fine print. |
+| `text-muted` | `rgba(234, 242, 255, 0.6)` | Secondary interactive labels. |
+| `text-accent` | `#00e5cc` | Accent text, links, badges, active indicators. |
 
-### Navigation
+### Glass Borders
 
-**`nav-bar`** — the sticky top nav.
-- Background `{colors.canvas}`, text `{colors.ink}`, padding `{spacing.md} {spacing.xl}`.
+| Token | Value | Use |
+|---|---|---|
+| `border-glass` | `rgba(255, 255, 255, 0.06)` | Dividers within panels. |
+| `border-glass-hover` | `rgba(0, 229, 204, 0.5)` | Left inset on hover states. |
+| `border-glow` | `rgba(0, 229, 204, 0.12)` | Panel outer borders. |
 
-**`nav-link`** — link items inside nav.
-- Text `{colors.ink}`, set in `{typography.body-sm}`.
+---
 
-**`footer`** — the dark coffee footer.
-- Background `{colors.ink}`, text `{colors.canvas-soft}`, padding `{spacing.3xl} {spacing.xl}`. Body in `{typography.body-sm}`.
+## 4. Typography
 
-### Signature Components
+### Font Stack
 
-**`hero-band`** — the cream hero band.
-- Background `{colors.canvas}`, text `{colors.ink}`, padding `{spacing.4xl} {spacing.xl}`. Headline in `{typography.display-xl}` (Degular Display 56 px / 500).
+| Role | Font | Fallback |
+|---|---|---|
+| **HUD / Monospace** | `'JetBrains Mono'` | `'Fira Code', monospace` |
+| **Display** | `'Syncopate'` | `Inter, system-ui, sans-serif` |
+| **Body** | `'Inter'` | `system-ui, -apple-system, sans-serif` |
 
-**`hero-band-dark`** — the polarity-flipped dark coffee hero.
-- Background `{colors.ink}`, text `{colors.on-primary}`, same scale.
+### Size Scale
 
-**`content-band-cream`** — the cream content band that follows hero.
-- Background `{colors.canvas-soft}`, text `{colors.ink}`, padding `{spacing.4xl} {spacing.xl}`. Section headline in `{typography.display-lg}`.
+| Token | Size | Weight | Tracking | Case | Use |
+|---|---|---|---|---|---|
+| `display-hero` | 3.5–5rem | 500–700 | -1px to 0 | Uppercase | Page titles, hero text. |
+| `display-lg` | 2.5–3rem | 600 | -0.5px | Uppercase | Section headings. |
+| `display-md` | 1.5–2rem | 600 | 0 | — | Card titles, sub-sections. |
+| `body-lg` | 1rem (16px) | 400 | 0 | — | Primary body text. |
+| `body-sm` | 0.72rem | 400 | 0.06em | — | Secondary text, metadata. |
+| `caption` | 0.6rem | 400 | 0.03em | — | Timestamps, fine print. |
+| `eyebrow` | 0.72rem | 400 | 0.14em | Uppercase | Nav links, labels, HUD tags. |
+| `mono-sm` | 0.68rem | 500 | 0.06em | — | Mono labels, timestamps, HUD readouts. |
 
-**`content-band-light`** — the white content band.
-- Background `{colors.canvas}`, text `{colors.ink}`, same padding / scale.
+### Rules
 
-**`eyebrow-uppercase`** — the small UPPERCASE Degular eyebrow above section headlines.
-- Text `{colors.ink}`, set in `{typography.eyebrow-uppercase}` (14 px / 500 / `1 px` tracking).
+- **HUD text** must use `JetBrains Mono` (or `Fira Code`). No exceptions.
+- **Section headings** are uppercase with wide tracking (`0.08em`–`0.14em`).
+- **Never use sentence-case for HUD labels.** Always uppercase with tracking.
 
-**`badge-pill`** — the inline pill for metadata / tag.
-- Background `{colors.canvas-soft}`, text `{colors.ink}`, body in `{typography.body-sm}`, padding `{spacing.xs} {spacing.md}`, shape `{rounded.pill}`.
+---
 
-### Examples (illustrative)
+## 5. Effects & Motion
 
-> Auto-derived kit-mirror demonstration surfaces (`scripts/derive-examples-block.mjs`). Each `ex-*` entry references brand-native primitives so downstream consumers (`/preview-design`, `/generate-kit`) re-skin the same 10 surfaces consistently. `TO_FILL` markers indicate missing primitives — resolve in the LLM judgment pass.
+### Smooth Scrolling
 
-**`ex-pricing-tier`** — Default Pricing tier card. Re-uses feature-card chrome with brand canvas-soft surface.
-- Properties: `backgroundColor`, `textColor`, `borderColor`, `rounded`, `padding`
+Use Lenis with `lerp: 0.07` on pages with scroll-driven animation. For content pages, Lenis is optional but recommended for consistency.
 
-**`ex-pricing-tier-featured`** — Featured/highlighted tier — polarity-flipped surface (dark fill + light text in light mode, light fill + dark text in dark mode).
-- Properties: `backgroundColor`, `textColor`, `rounded`, `padding`
+### Spotlight / Pointer Follow
 
-**`ex-product-selector`** — What's Included summary card — re-purposed for SaaS / B2B verticals (NOT a literal product gallery).
-- Properties: `backgroundColor`, `rounded`, `padding`
+Glass panels (nav, cards) must include a radial gradient that follows the pointer:
+```css
+background: radial-gradient(
+  280px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+  rgba(255, 255, 255, 0.07),
+  transparent 70%
+);
+```
+Track `pointermove` and update `--spotlight-x` / `--spotlight-y` CSS custom properties.
 
-**`ex-cart-drawer`** — Subscription summary — re-purposed for SaaS / B2B (line items per add-on, not literal cart).
-- Properties: `backgroundColor`, `rounded`, `padding`, `item-divider`
+### Gooey Cursor
 
-**`ex-app-shell-row`** — Sidebar nav row inside the App Shell example. Active state uses brand primary as the indicator.
-- Properties: `backgroundColor`, `activeIndicator`, `rounded`, `padding`
+On pages where full immersion is desired, include `<GooeyCursor />`. Hidden on mobile / touch (`@media (max-width: 768px)` and `@media (pointer: coarse)`).
 
-**`ex-data-table-cell`** — Default data-table th + td chrome. Header uses mono-caps eyebrow typography; body uses body-sm.
-- Properties: `headerBackground`, `headerTypography`, `bodyTypography`, `cellPadding`, `rowBorder`
+### Corner Frame
 
-**`ex-auth-form-card`** — Sign-in / sign-up card. Re-uses feature-card chrome with text-input primitives inside.
-- Properties: `backgroundColor`, `rounded`, `padding`
+Use `<CornerFrame visible />` for focus frames with mouse-following parallax and color cycling.
+- Border: `2px solid rgba(100,200,220,0.6)` with mask-clipped corners (80px × 80px).
+- Lerp mouse position at `0.03` rate for smooth parallax.
+- Color cycles between teal and warm tones over time.
 
-**`ex-modal-card`** — Modal dialog surface — same chrome as feature-card with elevated shadow.
-- Properties: `backgroundColor`, `rounded`, `padding`
+### Hover States
 
-**`ex-empty-state-card`** — Empty-state illustration frame.
-- Properties: `backgroundColor`, `rounded`, `padding`, `captionTypography`
+- Interactive elements scale on hover: `transform: scale(1.02)`–`scale(1.1)`.
+- Glow on hover: `box-shadow: 0 0 8px rgba(0,229,204,0.25)` or `text-shadow`.
+- Transitions use `cubic-bezier(0.16, 1, 0.3, 1)` for snappy entrance / `0.45s cubic-bezier(0.4, 0, 0.2, 1)` for state changes.
+- Left inset accent on card hover: `box-shadow: inset 2px 0 0 rgba(0, 229, 204, 0.5)`.
 
-**`ex-toast`** — Toast notification surface — feature-card shape + medium shadow.
-- Properties: `backgroundColor`, `rounded`, `padding`, `typography`
+### Custom Scrollbar
 
+Pages with scrollable content must render a right-side teal progress scrollbar:
+- Track: `rgba(255,255,255,0.04)`, 3px wide.
+- Thumb: `rgba(0,229,204,0.5)`, 36px tall, with `box-shadow: 0 0 8px rgba(0,229,204,0.25)`.
+- Position: `fixed`, right 6px, top 12%, bottom 12%.
 
-## Do's and Don'ts
+---
 
-### Do
-- Reserve `{colors.primary}` Zapier orange for every primary CTA. The saturated orange IS the conversion signature.
-- Keep canvas WARM — `{colors.canvas}` `#fffefb` cream, not pure white. The temperature is the brand voice.
-- Set hero headlines in `{typography.display-xl}` Degular Display weight 500. Sentence-case, no uppercase.
-- Pair Degular Display (hero, eyebrow) with Inter (everything else). Two faces, two roles.
-- Use `{rounded.md}` 12 px for buttons + cards. The middle radius is the brand's signature.
-- Pair orange CTA with ink-dark text on cream backgrounds — the three-token rhythm is the brand's whole conversion story.
+## 6. Glass Panel / Card Pattern
 
-### Don't
-- Don't replace cream canvas with pure white. The warmth is the brand.
-- Don't use pure black ink. The coffee-warmth in `#201515` carries through every text color.
-- Don't render CTAs as pills. The brand's button is 12 px rounded rectangle.
-- Don't introduce a second chromatic accent. Orange + cream + coffee is the entire palette.
-- Don't substitute Degular Display with a cool geometric sans (e.g., generic Helvetica) — the brand's display face has warm proportions that the substitute doesn't capture.
+All panels, dropdowns, and cards follow this chrome:
+
+```css
+background: rgba(6, 12, 24, 0.92);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(0, 229, 204, 0.12);
+border-radius: 4px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 229, 204, 0.2);
+```
+
+### Card Variants
+
+| Variant | Border Left | Hover | Use |
+|---|---|---|---|
+| **unread** | `2px solid rgba(0,229,204,0.4)` | `background: rgba(0,229,204,0.04)` | Unread notification items. |
+| **read** | none | `background: rgba(0,229,204,0.02)` | Read notification items. |
+| **active** | `2px solid #00e5cc` | `box-shadow: 0 0 12px rgba(0,229,204,0.15)` | Selected state. |
+
+### Panel Entry Animation
+
+Panels must animate in with:
+```css
+transform: translateY(6px) scale(0.97);
+opacity: 0;
+/* → visible */
+transform: translateY(0) scale(1);
+opacity: 1;
+transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+```
+
+---
+
+## 7. HUD Telemetry Overlays
+
+Pages render fixed telemetry readouts in `JetBrains Mono`, right-aligned:
+
+- **Progress**: `PROGRESS: 0.0%` — top-right, `fontSize: 9px`, `tracking: 0.14em`, `color: rgba(140,230,240,0.38)`, accent value in `#00e5cc`.
+- **System status**: `SYS.READY`, `COORD: x, y` — top-left or contextual, same style.
+
+These overlays are `pointer-events: none`, `z-index: 60`.
+
+---
+
+## 8. Badge & Count Pattern
+
+Unread counts render as:
+```css
+background: #00e5cc;
+color: #050a14;
+font-size: 0.55rem;
+font-weight: 700;
+border-radius: 2px;
+padding: 0.1rem 0.25rem;
+min-width: 14px;
+box-shadow: 0 0 6px rgba(0,229,204,0.4);
+animation: bellPulse 2s ease-in-out infinite;
+```
+
+`bellPulse` keyframes pulse `box-shadow` between `0 0 3px rgba(0,229,204,0.3)` and `0 0 8px rgba(0,229,204,0.6)`.
+
+---
+
+## 9. Filter / Tab Bar Pattern
+
+Category filters render as uppercase pill buttons:
+```css
+font-family: 'JetBrains Mono', 'Fira Code', monospace;
+font-size: 0.68rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+padding: 0.4rem 0.75rem;
+border-radius: 2px;
+border: 1px solid rgba(255,255,255,0.08);
+background: transparent;
+color: rgba(234,242,255,0.45);
+transition: all 0.18s ease;
+```
+
+Active state:
+```css
+background: rgba(0,229,204,0.1);
+border-color: rgba(0,229,204,0.3);
+color: #00e5cc;
+box-shadow: 0 0 6px rgba(0,229,204,0.1);
+```
+
+---
+
+## 10. Responsive Breakpoints
+
+| Name | Width | Key Changes |
+|---|---|---|
+| Mobile | < 768px | Single column, stacked cards, hamburger nav, hide HUD overlays, hide gooey cursor. |
+| Tablet | 768–1023px | Two-column grids where applicable. |
+| Desktop | ≥ 1024px | Full layout. |
+
+---
+
+## 11. Accessibility
+
+- All interactive elements have `tabIndex`, `aria-label`, `role` attributes.
+- Focus rings use `box-shadow: 0 0 0 2px rgba(0,229,204,0.5)`.
+- Unread indicators are not color-only — combine left border + background tint.
+- Reduced-motion: wrap lerp animations in `prefers-reduced-motion` check.
+
+---
+
+## 12. Mandatory Checklist (Every Page)
+
+- [ ] Body / root `background: #030303`
+- [ ] Grain texture overlay (SVG `feTurbulence` at `opacity: 0.03`–`0.07`)
+- [ ] Radial vignette overlay
+- [ ] HUD monospace font for labels, counts, readouts
+- [ ] Single accent color `#00e5cc` (no secondary chromatic accents)
+- [ ] Glass panel chrome (`backdrop-filter: blur(20px)`, teal border)
+- [ ] Teal scrollbar on scrollable containers
+- [ ] Smooth transitions (`cubic-bezier(0.16, 1, 0.3, 1)` for enters)
+- [ ] Responsive: hide HUD overlays and cursor effects on mobile
+- [ ] Focus-visible rings on all interactive elements

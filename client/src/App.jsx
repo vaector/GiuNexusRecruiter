@@ -13,7 +13,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 // import ProfilePage from "./pages/ProfilePage";
 // import EditProfilePage from "./pages/EditProfilePage";
 // import ChangePasswordPage from "./pages/ChangePasswordPage";
-// import JobListPage from "./pages/JobListPage";
+import JobListPage from "./pages/JobListPage";
 // import JobDetailPage from "./pages/JobDetailPage";
 // import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 // import SavedJobsPage from "./pages/SavedJobsPage";
@@ -31,7 +31,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 // import AdminReportsPage from "./pages/AdminReportsPage";
 // import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 // import AdminRequestLogsPage from "./pages/AdminRequestLogsPage";
-// import NotificationsPage from "./pages/NotificationsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 // import ConversationsPage from "./pages/ConversationsPage";
 // import MessagesPage from "./pages/MessagesPage";
 // import ReferralsPage from "./pages/ReferralsPage";
@@ -51,14 +51,14 @@ const App = () => {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            {/* <Route path="/jobs" element={<JobListPage />} /> */}
+            {<Route path="/jobs" element={<JobListPage />} />}
             {/* <Route path="/jobs/recommended" element={<RoleRoute allowedRoles={["jobSeeker"]}><RecommendedJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/jobs/saved" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedJobsPage /></RoleRoute>} /> */}
             {/* <Route path="/jobs/:id" element={<JobDetailPage />} /> */}
             {/* <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/edit" element={<PrivateRoute><EditProfilePage /></PrivateRoute>} /> */}
             {/* <Route path="/profile/change-password" element={<PrivateRoute><ChangePasswordPage /></PrivateRoute>} /> */}
-            {/* <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} /> */}
+            <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
             {/* <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} /> */}
             {/* <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} /> */}
             {/* <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} /> */}
