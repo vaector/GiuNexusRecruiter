@@ -58,14 +58,11 @@ const SavedSearchSchema = new mongoose.Schema(
   }
 );
 
-SavedSearchSchema.index({ user: 1 });
-SavedSearchSchema.index({ active: 1, lastCheckedAt: 1 });
-SavedSearchSchema.pre('save', async function (next) {
+SavedSearchSchema.pre('save', async function () {
   if (this.isNew) {
     const count = await this.constructor.countDocuments({ user: this.user, active: true });
-    if (count >= 10) return next(new Error('Maximum of 10 active saved searches allowed'));
+    if (count >= 10) throw new Error('Maximum of 10 active saved searches allowed');
   }
-  next();
 });
 
 module.exports =
