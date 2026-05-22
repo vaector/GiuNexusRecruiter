@@ -4,13 +4,13 @@
 // Status change via PATCH /api/v1/users/:id/status
 // Admin only
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import Lenis from "lenis";
+import React, { useState, useEffect, useCallback } from "react";
 import { usersAPI } from "../services/api";
 import { Spinner } from "../components/Spinner";
 import Modal from "../components/Modal";
 import GooeyCursor from "../components/GooeyCursor";
 import Navbar from "../components/Navbar";
+import useAdminEffects from "../utils/useAdminEffects";
 
 const ROLES = ["", "jobSeeker", "recruiter", "admin"];
 const STATUSES = ["", "approved", "pending", "rejected"];
@@ -40,11 +40,7 @@ export default function AdminUsersPage() {
   const [statusModal, setStatusModal] = useState(null);
   const LIMIT = 20;
 
-  // HUD & Scroll tracking
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const scrollbarRef = useRef(null);
-  const scrollbarTrackRef = useRef(null);
-  const pctRef = useRef(null);
+  const { coords, scrollbarRef, scrollbarTrackRef, pctRef } = useAdminEffects();
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -61,7 +57,7 @@ export default function AdminUsersPage() {
       const res = await usersAPI.getAllUsers(params);
       setUsers(res.data.users || []);
       setTotal(res.data.total || 0);
-      setPages(res.data.pages || 1);
+      setPages(Math.ceil((res.data.total || 0) / LIMIT));
     } catch (err) {
       setError("SYS.ERR: FAILED_TO_LOAD_USERS");
     } finally {
@@ -72,41 +68,6 @@ export default function AdminUsersPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   // Robust Scroll Engine
-  useEffect(() => {
-    if (typeof history !== "undefined") history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
-
-    const lenis = new Lenis({ lerp: 0.07, smoothWheel: true });
-    
-    lenis.on('scroll', (e) => {
-      const pct = e.progress;
-      if (pctRef.current) {
-        pctRef.current.textContent = (pct * 100).toFixed(1) + "%";
-      }
-      if (scrollbarRef.current && scrollbarTrackRef.current) {
-        const trackH = scrollbarTrackRef.current.offsetHeight - scrollbarRef.current.offsetHeight;
-        scrollbarRef.current.style.transform = `translateY(${pct * Math.max(trackH, 0)}px)`;
-        const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
-        scrollbarTrackRef.current.style.opacity = isScrollable ? "1" : "0";
-      }
-    });
-
-    let raf;
-    function tick(time) {
-      lenis.raf(time);
-      raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-
-    const trackMouse = (e) => setCoords({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", trackMouse);
-
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", trackMouse);
-    };
-  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

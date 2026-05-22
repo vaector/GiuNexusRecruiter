@@ -15,7 +15,6 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
 import { jobsAPI, applicationsAPI } from "../services/api";
-import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { CATEGORY_COLORS } from "../components/JobCard";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
@@ -301,7 +300,7 @@ const JobDetailPage = () => {
     if (saveLoading || (job?.status !== "open" && !isSaved)) return;
     setSaveLoading(true);
     try {
-      const res = await api.post(`/jobs/${id}/save`);
+      const res = await jobsAPI.saveJob(id);
       setIsSaved(res.data.saved);
     } catch { /* silent */ }
     finally { setSaveLoading(false); }
@@ -314,7 +313,7 @@ const JobDetailPage = () => {
     setAiText("");
     setAiOpen(true);
     try {
-      const res = await api.post(`/jobs/${id}/cover-letter-suggestion`);
+      const res = await jobsAPI.coverLetterSuggestion(id);
       setAiText(res.data.suggestion || "");
     } catch (err) {
       setAiError(err.response?.data?.message || "AI service unavailable.");

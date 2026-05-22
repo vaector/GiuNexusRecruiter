@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { jobsAPI } from "../services/api";
 
 const formatSalary = (salary) => {
   if (!salary) return "Not specified";
@@ -122,7 +122,7 @@ const CreateJobPage = () => {
         experience: { minYears: form.experience.minYears === "" ? undefined : Number(form.experience.minYears) },
         requiredEducationField: form.requiredEducationField || undefined,
       };
-      const res = await api.post("/jobs", payload);
+      const res = await jobsAPI.createJob(payload);
       setCreatedJob(res.data.job);
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
@@ -195,6 +195,7 @@ const CreateJobPage = () => {
           <option value="full-time">Full-time</option>
           <option value="part-time">Part-time</option>
           <option value="internship">Internship</option>
+          <option value="contract">Contract</option>
         </select>
 
         <select value={form.workplaceType} onChange={(e) => setForm({ ...form, workplaceType: e.target.value })}>

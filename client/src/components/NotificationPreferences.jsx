@@ -1,11 +1,9 @@
-// Toggle switches for email and inApp notification preferences
-// Used on EditProfilePage or ProfilePage
 const NotificationPreferences = ({ preferences = {}, onChange }) => {
   const toggleStyle = (active) => ({
     width: 44,
     height: 24,
     borderRadius: 999,
-    background: active ? "var(--color-accent)" : "var(--color-border)",
+    background: active ? "var(--accent)" : "var(--border-glass)",
     position: "relative",
     cursor: "pointer",
     transition: "background 0.2s ease",
@@ -30,7 +28,7 @@ const NotificationPreferences = ({ preferences = {}, onChange }) => {
 
   return (
     <div>
-      <h3 style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: "0.5rem", color: "var(--color-text)" }}>
+      <h3 style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: "0.5rem", color: "var(--text-primary)" }}>
         Notification Preferences
       </h3>
 
@@ -43,11 +41,11 @@ const NotificationPreferences = ({ preferences = {}, onChange }) => {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "0.75rem 0",
-          borderBottom: i === 0 ? "1px solid var(--color-border)" : "none",
+          borderBottom: i === 0 ? "1px solid var(--border-glass)" : "none",
         }}>
           <div>
-            <p style={{ fontSize: "0.9rem", color: "var(--color-text)", fontWeight: 500 }}>{label}</p>
-            <p style={{ fontSize: "0.78rem", color: "var(--color-text-muted)", marginTop: "0.1rem" }}>{desc}</p>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", fontWeight: 500 }}>{label}</p>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{desc}</p>
           </div>
           <div style={toggleStyle(preferences[key])} onClick={() => handleToggle(key)}>
             <div style={knobStyle(preferences[key])} />

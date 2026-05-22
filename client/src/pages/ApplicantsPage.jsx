@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { jobsAPI, applicationsAPI } from "../services/api";
+import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
 import Spinner from "../components/Spinner";
-import LineShader from "../shadersZ/LineShader.jsx";
 
-const STATUS_OPTIONS = ["pending", "shortlisted", "rejected"];
-
-const STATUS_STYLE = {
-  pending:     { background: "#fef9c3", color: "#92400e" },
-  shortlisted: { background: "#dcfce7", color: "#15803d" },
-  rejected:    { background: "#fee2e2", color: "#b91c1c" },
-};
+const STATUS_OPTIONS = ["pending", "shortlisted", "interview", "offer", "contract_sent", "accepted", "rejected"];
 
 export default function ApplicantsPage() {
   const { jobId } = useParams();
@@ -54,7 +48,6 @@ export default function ApplicantsPage() {
 
   return (
     <div style={{ position: "relative", minHeight: "100vh" }}>
-      <LineShader />
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto", padding: "32px 16px" }}>
 
         <Link to="/recruiter/dashboard" style={styles.back}>← Back to Dashboard</Link>
@@ -99,16 +92,29 @@ export default function ApplicantsPage() {
                         : <span style={styles.noSkills}>—</span>}
                     </td>
                     <td style={styles.td}>
-                      <select
-                        value={app.status}
-                        disabled={updating === app._id}
-                        onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                        style={styles.select(app.status)}
-                      >
-                        {STATUS_OPTIONS.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <ApplicationStatusBadge status={app.status} />
+                        <select
+                          value={app.status}
+                          disabled={updating === app._id}
+                          onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                          style={{
+                            background: "rgba(0,0,0,0.25)",
+                            border: "1px solid var(--border-glass)",
+                            borderRadius: "2px",
+                            color: "#eaf2ff",
+                            fontSize: "11px",
+                            cursor: "pointer",
+                            fontFamily: "'JetBrains Mono', monospace",
+                            padding: "0.25rem 0.5rem",
+                            outline: "none",
+                          }}
+                        >
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>{s.replace("_", " ")}</option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -129,7 +135,7 @@ const styles = {
     fontSize: 14, 
     display: "inline-block", 
     marginBottom: 16,
-    marginTop: 70,  // add this
+    marginTop: 70,
     border: "1px solid rgba(255,255,255,0.2)",
     padding: "6px 14px",
     borderRadius: 8,
@@ -179,13 +185,4 @@ const styles = {
   },
   noSkills: { color: "rgba(255,255,255,0.3)", fontSize: 13 },
   coverSnippet: { color: "rgba(255,255,255,0.7)", cursor: "help" },
-  select: (status) => ({
-    border: "none", 
-    borderRadius: 20, 
-    padding: "4px 10px",
-    fontWeight: 600, 
-    cursor: "pointer", 
-    fontSize: 13,
-    ...STATUS_STYLE[status],
-  }),
 };

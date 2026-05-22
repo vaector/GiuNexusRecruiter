@@ -1,11 +1,6 @@
-// Bookmark toggle button
-// Calls POST /api/v1/jobs/:id/save
-// Updates state optimistically
-// Disabled when job status is not open
-// Props: jobId, initialSaved, jobStatus
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import api from "../services/api";
+import { jobsAPI } from "../services/api";
 
 const SaveJobButton = ({ jobId, initialSaved = false, jobStatus, onToggle }) => {
   const [saved, setSaved] = useState(initialSaved);
@@ -27,7 +22,7 @@ const SaveJobButton = ({ jobId, initialSaved = false, jobStatus, onToggle }) => 
 
     setLoading(true);
     try {
-      const res = await api.post(`/jobs/${jobId}/save`);
+      const res = await jobsAPI.saveJob(jobId);
       const newSaved = res.data.saved;
       setSaved(newSaved);
       if (onToggle) onToggle(jobId, newSaved);
@@ -55,12 +50,24 @@ const SaveJobButton = ({ jobId, initialSaved = false, jobStatus, onToggle }) => 
         display: "flex",
         alignItems: "center",
         gap: "0.25rem",
-        color: saved ? "var(--color-accent)" : "var(--color-text-muted)",
+        color: saved ? "var(--accent)" : "var(--text-muted)",
       }}
       onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.transform = "scale(1.1)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
     >
-      {loading ? "⏳" : saved ? "🔖" : "🏷️"}
+      {loading ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 0.7s linear infinite" }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+      ) : saved ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+      )}
       <span style={{ fontSize: "0.75rem", fontWeight: 500 }}>
         {saved ? "Saved" : "Save"}
       </span>

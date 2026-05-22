@@ -2,8 +2,8 @@ import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback, 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { gsap } from "gsap";
 import { AuthContext } from "../context/AuthContext";
-import NotificationBell from "./NotificationBell";
-import api from "../services/api";
+import { notificationsAPI } from "../services/api";
+import relativeTime from "../utils/relativeTime";
 
 const NAV_COLORS = ["#060c18", "#0a1628"];
 
@@ -80,21 +80,7 @@ const NAV_ICONS = {
   shield: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
 };
 
-const relativeTime = (dateStr) => {
-  if (!dateStr) return "";
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  return `${weeks}w ago`;
-};
+
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useContext(AuthContext);
@@ -129,7 +115,7 @@ const Navbar = () => {
     if (!isAuthenticated) return;
     const fetchNotifs = async () => {
       try {
-        const res = await api.get("/notifications?limit=10");
+        const res = await notificationsAPI.getNotifications({ limit: 10 });
         setNotifications(res.data.notifications || []);
         setUnreadCount(res.data.unreadCount || 0);
       } catch {
@@ -155,7 +141,7 @@ const Navbar = () => {
 
   const handleMarkRead = async (id) => {
     try {
-      await api.patch(`/notifications/${id}/read`);
+      await notificationsAPI.markRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, read: true } : n))
       );
@@ -167,7 +153,7 @@ const Navbar = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await api.patch("/notifications/read-all");
+      await notificationsAPI.markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (err) {

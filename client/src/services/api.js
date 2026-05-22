@@ -17,6 +17,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      window.dispatchEvent(new Event("auth:logout"));
       window.location.href = "/login";
     }
     return Promise.reject(error);
@@ -58,10 +59,12 @@ export const jobsAPI = {
   saveJob: (id) => api.post(`/jobs/${id}/save`),
   applyToJob: (id, data) => api.post(`/jobs/${id}/apply`, data),
   getApplicants: (jobId) => api.get(`/jobs/${jobId}/applicants`),
+  coverLetterSuggestion: (id) => api.post(`/jobs/${id}/cover-letter-suggestion`),
 };
 
 // Applications
 export const applicationsAPI = {
+  getApplication: (id) => api.get(`/applications/${id}`),
   getMyApplications: () => api.get("/applications/my"),
   getAllApplications: (params) => api.get("/applications", { params }),
   updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),

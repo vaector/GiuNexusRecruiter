@@ -30,7 +30,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
       .limit(limit)
       .sort({ createdAt: -1 }),
   ]);
-  res.status(200).json({ success: true, total, page, users });
+  res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), users });
 });
 
 // GET /api/v1/users/:id

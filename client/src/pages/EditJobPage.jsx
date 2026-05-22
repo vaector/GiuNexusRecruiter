@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../services/api";
+import { jobsAPI } from "../services/api";
 
 const formatSalary = (salary) => {
   if (!salary) return "Not specified";
@@ -60,8 +60,8 @@ const EditJobPage = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await api.get(`/jobs/${id}`);
-        const job = res.data.job;
+        const res = await jobsAPI.getJobById(id);
+        const job = res.data.job || res.data;
         setForm({
           title: job.title || "",
           company: job.company || "",
@@ -159,7 +159,7 @@ const EditJobPage = () => {
         experience: { minYears: form.experience.minYears === "" ? undefined : Number(form.experience.minYears) },
         requiredEducationField: form.requiredEducationField || undefined,
       };
-      const res = await api.patch(`/jobs/${id}`, payload);
+      const res = await jobsAPI.updateJob(id, payload);
       setUpdatedJob(res.data.job);
       setSuccess(true);
     } catch (err) {
@@ -235,6 +235,7 @@ const EditJobPage = () => {
           <option value="full-time">Full-time</option>
           <option value="part-time">Part-time</option>
           <option value="internship">Internship</option>
+          <option value="contract">Contract</option>
         </select>
 
         <select value={form.workplaceType} onChange={(e) => setForm({ ...form, workplaceType: e.target.value })}>

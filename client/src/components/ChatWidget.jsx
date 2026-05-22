@@ -2,21 +2,7 @@ import { useContext, useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { messagesAPI } from "../services/api";
-
-const relativeTime = (dateStr) => {
-  if (!dateStr) return "";
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d`;
-  return `${Math.floor(days / 7)}w`;
-};
+import relativeTime from "../utils/relativeTime";
 
 const truncate = (str, len) => {
   if (!str) return "";
@@ -32,15 +18,15 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const widgetRef = useRef(null);
 
+  const isOnMessagesPage = location.pathname.startsWith("/conversations");
+
   const totalUnread = conversations.reduce(
     (sum, c) => sum + (c.unreadCount || 0),
     0
   );
 
-  const isOnMessagesPage = location.pathname.startsWith("/conversations");
-
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isOnMessagesPage) return;
     let mounted = true;
     const fetch = async () => {
       setLoading(true);
@@ -58,10 +44,10 @@ export default function ChatWidget() {
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isOnMessagesPage]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isOnMessagesPage) return;
     const id = setInterval(async () => {
       try {
         const res = await messagesAPI.getConversations();
@@ -69,7 +55,7 @@ export default function ChatWidget() {
       } catch {}
     }, 15000);
     return () => clearInterval(id);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isOnMessagesPage]);
 
   useEffect(() => {
     const handler = (e) => {

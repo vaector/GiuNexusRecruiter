@@ -21,7 +21,7 @@ import RecommendedJobsPage from "./pages/RecommendedJobsPage";
 import SavedJobsPage from "./pages/SavedJobsPage";
 import ApplicantsPage from "./pages/ApplicantsPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
-// import ApplicationDetailPage from "./pages/ApplicationDetailPage";
+import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CreateJobPage from "./pages/CreateJobPage";
 import EditJobPage from "./pages/EditJobPage";
@@ -40,6 +40,7 @@ import ReferralsPage from "./pages/ReferralsPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import SavedSearchesPage from "./pages/SavedSearchesPage";
 import TotpSetupPage from "./pages/TotpSetupPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const App = () => {
   return (
@@ -66,7 +67,7 @@ const App = () => {
             <Route path="/referrals" element={<PrivateRoute><ReferralsPage /></PrivateRoute>} />
             <Route path="/conversations" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
             <Route path="/conversations/:jobId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
-            {/* <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} /> */}
+            <Route path="/applications/:id" element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} />
             <Route path="/documents/:applicationId" element={<PrivateRoute><DocumentsPage /></PrivateRoute>} />
             <Route path="/applications/my" element={<RoleRoute allowedRoles={["jobSeeker"]}><MyApplicationsPage /></RoleRoute>} />
             <Route path="/saved-searches" element={<RoleRoute allowedRoles={["jobSeeker"]}><SavedSearchesPage /></RoleRoute>} />
@@ -82,6 +83,7 @@ const App = () => {
             <Route path="/admin/reports" element={<RoleRoute allowedRoles={["admin"]}><AdminReportsPage /></RoleRoute>} />
             <Route path="/admin/audit-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminAuditLogsPage /></RoleRoute>} />
             <Route path="/admin/request-logs" element={<RoleRoute allowedRoles={["admin"]}><AdminRequestLogsPage /></RoleRoute>} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <ChatWidget />

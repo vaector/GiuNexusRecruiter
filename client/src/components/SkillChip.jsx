@@ -1,5 +1,3 @@
-// Small rounded chip for a single skill string
-// Props: skill
 const SkillChip = ({ skill, onRemove }) => {
   return (
     <span style={{
@@ -10,9 +8,9 @@ const SkillChip = ({ skill, onRemove }) => {
       borderRadius: "999px",
       fontSize: "0.8rem",
       fontWeight: 500,
-      background: "var(--color-accent-subtle)",
-      color: "var(--color-accent)",
-      border: "1px solid var(--color-accent-border)",
+      background: "var(--accent-dim)",
+      color: "var(--accent)",
+      border: "1px solid var(--accent-mid)",
     }}>
       {skill}
       {onRemove && (
@@ -22,7 +20,7 @@ const SkillChip = ({ skill, onRemove }) => {
             background: "none",
             border: "none",
             cursor: "pointer",
-            color: "var(--color-accent)",
+            color: "var(--accent)",
             padding: 0,
             lineHeight: 1,
             fontSize: "0.9rem",

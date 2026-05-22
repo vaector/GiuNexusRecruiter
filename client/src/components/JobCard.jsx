@@ -1,6 +1,3 @@
-// Compact job card component used across multiple pages
-// Shows: title, company, type, location, category badge, save button
-// Props: job, onSaveToggle
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -9,12 +6,12 @@ import SkillChip from "./SkillChip";
 import ReportButton from "./ReportButton";
 
 export const CATEGORY_COLORS = {
-  Frontend: { bg: "#dcfce7", color: "#166534" },
-  Backend: { bg: "#dbeafe", color: "#1e40af" },
-  "AI/ML": { bg: "#ede9fe", color: "#5b21b6" },
-  DevOps: { bg: "#ccfbf1", color: "#115e59" },
-  "Data Engineering": { bg: "#ffedd5", color: "#9a3412" },
-  Other: { bg: "#f1f5f9", color: "#475569" },
+  Frontend: { color: "#4ade80", border: "rgba(74, 222, 128, 0.35)", bg: "rgba(74, 222, 128, 0.08)" },
+  Backend: { color: "#60a5fa", border: "rgba(96, 165, 250, 0.35)", bg: "rgba(96, 165, 250, 0.08)" },
+  "AI/ML": { color: "#c084fc", border: "rgba(192, 132, 252, 0.35)", bg: "rgba(192, 132, 252, 0.08)" },
+  DevOps: { color: "#2dd4bf", border: "rgba(45, 212, 191, 0.35)", bg: "rgba(45, 212, 191, 0.08)" },
+  "Data Engineering": { color: "#fb923c", border: "rgba(251, 146, 60, 0.35)", bg: "rgba(251, 146, 60, 0.08)" },
+  Other: { color: "var(--text-secondary)", border: "var(--border-glass)", bg: "rgba(255, 255, 255, 0.04)" },
 };
 
 const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
@@ -23,8 +20,8 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
   const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.Other;
 
   const cardStyle = {
-    background: "var(--color-surface)",
-    border: "1px solid var(--color-border)",
+    background: "var(--bg-surface-solid)",
+    border: "1px solid var(--border-glass)",
     borderRadius: "12px",
     padding: "1.25rem",
     display: "flex",
@@ -36,13 +33,13 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
   const titleStyle = {
     fontSize: "1rem",
     fontWeight: 700,
-    color: "var(--color-text)",
+    color: "var(--text-primary)",
     textDecoration: "none",
   };
 
   const companyStyle = {
     fontSize: "0.85rem",
-    color: "var(--color-text-muted)",
+    color: "var(--text-muted)",
     fontWeight: 500,
   };
 
@@ -54,11 +51,12 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
     fontWeight: 600,
     background: colors.bg,
     color: colors.color,
+    border: `1px solid ${colors.border}`,
   };
 
   const metaStyle = {
     fontSize: "0.8rem",
-    color: "var(--color-text-muted)",
+    color: "var(--text-muted)",
     display: "flex",
     gap: "1rem",
     flexWrap: "wrap",
@@ -69,6 +67,19 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: "auto",
+  };
+
+  const statusBadge = (status) => {
+    const isOpen = status === "open";
+    return {
+      fontSize: "0.75rem",
+      fontWeight: 600,
+      padding: "0.15rem 0.5rem",
+      borderRadius: "999px",
+      border: `1px solid ${isOpen ? "rgba(74, 222, 128, 0.35)" : "rgba(239, 68, 68, 0.35)"}`,
+      color: isOpen ? "#4ade80" : "#ef4444",
+      background: isOpen ? "rgba(74, 222, 128, 0.08)" : "rgba(239, 68, 68, 0.08)",
+    };
   };
 
   return (
@@ -98,7 +109,7 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
           <span> {(job.salary?.min ?? job.salary?.amount)?.toLocaleString?.() ?? "—"} {job.salary?.currency || ""}</span>
         )}
         {job.score !== undefined && (
-          <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>
+          <span style={{ color: "var(--accent)", fontWeight: 600 }}>
              {Math.round(job.score * 100)}% match
           </span>
         )}
@@ -113,25 +124,20 @@ const JobCard = ({ job, onSaveToggle, initialSaved = false }) => {
       )}
 
       <div style={footerStyle}>
-        <span style={{
-          fontSize: "0.75rem",
-          color: job.status === "open" ? "#16a34a" : "#dc2626",
-          fontWeight: 600,
-          background: job.status === "open" ? "#dcfce7" : "#fee2e2",
-          padding: "0.15rem 0.5rem",
-          borderRadius: "999px",
-        }}>
+        <span style={statusBadge(job.status)}>
           {job.status}
         </span>
-{isAuthenticated && user?.role === "jobSeeker" && (
-           <SaveJobButton
-             jobId={job._id}
-             jobStatus={job.status}
-             initialSaved={initialSaved}
-             onToggle={onSaveToggle}
-           />
-         )}
-         <ReportButton targetModel="JobPost" targetId={job._id} />
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          {isAuthenticated && user?.role === "jobSeeker" && (
+            <SaveJobButton
+              jobId={job._id}
+              jobStatus={job.status}
+              initialSaved={initialSaved}
+              onToggle={onSaveToggle}
+            />
+          )}
+          <ReportButton targetModel="JobPost" targetId={job._id} />
+        </div>
       </div>
     </div>
   );
