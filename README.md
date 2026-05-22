@@ -2,10 +2,19 @@
 
 GIU Nexus is a Node.js/Express backend for a university career platform. It supports job seekers, recruiters, and admins with JWT authentication, role-based access control, job posting, applications, profile management, admin approval workflows, and Hugging Face AI integrations.
 
-The current implementation targets **Software Engineering Spring 2026 - Milestone 2** and also includes selected bonus and additive backend features.
+The current implementation targets **Software Engineering Spring 2026 - Milestone 3** and also includes selected bonus and additive backend features.
+
+## Live Demo
+
+**[https://giu-nexus-project.vercel.app/](https://giu-nexus-project.vercel.app/)**
+
+- Frontend: Deployed on Vercel
+- Backend: Deployed on Railway
+- Database: MongoDB Atlas
 
 ## Tech Stack
 
+- Frontend: React.js (Vite), React Router v6, Axios, Context API
 - Backend: Node.js, Express.js
 - Database: MongoDB with Mongoose
 - AI: Hugging Face Inference API
@@ -14,6 +23,25 @@ The current implementation targets **Software Engineering Spring 2026 - Mileston
 - API testing: Postman collection
 - Automated tests: Jest, Supertest, mongodb-memory-server
 - Docs: Swagger UI at `GET /api-docs`
+
+## Project Structure
+
+```
+/
+├── client/                   # React frontend (Milestone 3)
+│   └── src/
+│       ├── components/       # Reusable UI components (Navbar, JobCard, Modal, etc.)
+│       ├── pages/            # One file per route / view
+│       ├── context/          # AuthContext and any global state
+│       ├── services/         # axios instance and API call functions
+│       ├── utils/            # Helper functions (e.g., token management)
+│       ├── App.jsx           # Router setup
+│       └── main.jsx          # Entry point
+└── backend/                  # Node.js/Express backend (Milestone 2)
+    └── src/
+        └── services/
+            └── hfService.js  # Shared Hugging Face singleton
+```
 
 ## Milestone 2 Core Scope
 
@@ -56,6 +84,62 @@ Implemented Milestone 2 backend requirements:
   - `GET /api/v1/applications/my`
   - `PATCH /api/v1/applications/:id/status`
   - `GET /api/v1/applications`
+
+## Milestone 3 Core Scope
+
+Implemented Milestone 3 frontend requirements:
+
+### Authentication & Context
+
+- `AuthContext` wrapping the entire application, exposing `user`, `token`, `login()`, `logout()`, and `isAuthenticated`.
+- `services/api.js` axios instance with a request interceptor attaching `Authorization: Bearer <token>` on every request, and a response interceptor that detects 401 responses, calls `logout()`, and redirects to `/login`.
+- `PrivateRoute` component redirecting unauthenticated users to `/login`.
+- `RoleRoute` component restricting access based on `user.role`.
+
+### Pages
+
+| Route | Component | Access |
+|---|---|---|
+| `/` | HomePage — trending jobs + Recommended for You section for authenticated job seekers | Public / Job Seeker |
+| `/login` | LoginPage — email/password form, stores token + user via AuthContext | Public |
+| `/register` | RegisterPage — role selector (jobSeeker / recruiter only), pending approval notice for new recruiters | Public |
+| `/forgot-password` | ForgotPasswordPage — email input with generic success message | Public |
+| `/reset-password/:token` | ResetPasswordPage — new password form, logs user in with returned token on success | Public |
+| `/profile` | ProfilePage — displays name, bio, profile picture, skill chips, and Extract Skills from Bio button | Job Seeker |
+| `/profile/edit` | EditProfilePage — form to update name, bio, and profile picture | Private |
+| `/profile/change-password` | ChangePasswordPage — current password, new password, confirm new password | Private |
+| `/jobs` | JobListPage — browsable grid with keyword, location, type, status, page, and limit filters; category badge on each card | Public |
+| `/jobs/:id` | JobDetailPage — description, requirements, salary, category badge, Apply modal, Save/Unsave toggle, application status badge if already applied | Public |
+| `/jobs/recommended` | RecommendedJobsPage — AI-ranked jobs by cosine similarity score, score shown on each card | Job Seeker |
+| `/jobs/saved` | SavedJobsPage — bookmarked jobs grid with Unsave action | Job Seeker |
+| `/recruiter/dashboard` | RecruiterDashboard — own job posts with applicant counts; pending-approval banner shown when `status === "pending"` | Recruiter |
+| `/recruiter/jobs/create` | CreateJobPage — job creation form; category auto-assigned by AI and shown read-only on response | Recruiter |
+| `/recruiter/jobs/:id/edit` | EditJobPage — edit own job post; editing description re-triggers AI category classification | Recruiter |
+| `/recruiter/applicants/:jobId` | ApplicantsPage — applicant table with inline status updates (pending / shortlisted / rejected) | Recruiter |
+| `/applications/my` | MyApplicationsPage — applied jobs list with current status badges | Job Seeker |
+| `/admin/dashboard` | AdminDashboard — summary cards for users by role, jobs by status, applications by status, and topJobs leaderboard | Admin |
+| `/admin/recruiters` | PendingRecruitersPage — pending recruiter list with Approve / Reject actions | Admin |
+| `/admin/jobs` | AdminJobsPage — all jobs (open and closed) with admin delete | Admin |
+| `/admin/users` | AdminUsersPage — all users with role/status filtering, deletion, and status change | Admin |
+
+### Reusable Components
+
+- `Navbar` — role-aware navigation links based on auth state.
+- `Footer` — project name and team info.
+- `JobCard` — title, company, type, location, AI category badge, Save/Unsave bookmark for job seekers.
+- `ApplicationStatusBadge` — coloured badge for pending, shortlisted, and rejected statuses.
+- `SkillChip` — small chip/tag for a single skill string.
+- `SaveJobButton` — optimistic bookmark toggle; disabled on non-open jobs.
+- `PrivateRoute` — redirects unauthenticated users to `/login`.
+- `RoleRoute` — restricts access to pages by `user.role`.
+- `Spinner` / `Skeleton` — loading state indicators used across all pages.
+- `Modal` — reusable confirmation dialog for deletions and withdrawals.
+
+### AI Features in the UI
+
+- **Skill Chips (NER):** Skills extracted from the user's bio displayed as chips on ProfilePage. Extract Skills from Bio button calls `POST /api/v1/profile/extract-skills` and refreshes chips without a full page reload. Inline error shown if bio is empty, with a link to `/profile/edit`.
+- **Category Badge (Zero-shot):** AI-assigned category displayed as a coloured badge on every JobCard and JobDetailPage. Colour map: green (Frontend), blue (Backend), purple (AI/ML), teal (DevOps), orange (Data Engineering), grey (Other).
+- **Recommended Jobs (Embeddings):** Dedicated Recommended for You section on HomePage and full RecommendedJobsPage. Calls `GET /api/v1/jobs/recommended`, shows similarity score on each card, displays a skeleton/spinner while loading, and links to Extract Skills on empty-skills state.
 
 ## AI Integrations
 
@@ -112,9 +196,15 @@ Implemented Milestone 2 bonus features:
 - GitHub Actions CI workflow.
 - Dockerfile and docker-compose setup.
 
-## Additional Features Outside Milestone 2
+Implemented Milestone 3 bonus features:
 
-These are additive features and should not replace or weaken Milestone 2 requirements:
+- Deployment: Frontend on Vercel, backend on Railway, database on MongoDB Atlas.
+- Good UI/UX: Polished, responsive interface with a component library, consistent layout, and loading/error states throughout.
+- AI Cover Letter Suggestion: On the JobDetailPage, job seekers can click "Generate Cover Letter Suggestion" to produce a Hugging Face-generated draft cover letter based on their bio and the job description, displayed in an editable textarea.
+
+## Additional Features Beyond Spec
+
+These additive features span both milestones and should not replace or weaken any core requirements:
 
 - In-app notifications for account approval, applications, messages, referrals, and job closure.
 - Audit logs for selected admin, job, and application actions.
@@ -153,23 +243,18 @@ Required variables are documented in `backend/.env.example`:
 
 ### Frontend
 
-Create `client/.env` from the provided example before running the dev server:
+Create `client/.env` locally. Do not commit real secrets.
 
-```bash
-cp client/.env.example client/.env
-```
-
-Required variable:
-
-- `VITE_API_URL` — base URL of the backend API (e.g. `http://localhost:5000/api/v1`)
-
-> **Note:** Vite will not fall back to any default if this variable is missing. A blank `VITE_API_URL` means every API call silently targets an empty URL. Copy the example file first.
+- `VITE_API_URL` — base URL of the running backend (e.g., `http://localhost:5000` locally, or your Railway deployment URL in production)
 
 ## Running Locally
+
+### Backend
 
 Install dependencies:
 
 ```bash
+cd backend
 npm install
 ```
 
@@ -179,7 +264,7 @@ Start the backend:
 npm start
 ```
 
-Development mode:
+Development mode (with hot reload):
 
 ```bash
 npm run dev
@@ -199,6 +284,23 @@ node seed.js
 
 Admin accounts are intentionally not self-registered through `/auth/register`.
 
+### Frontend
+
+Install dependencies:
+
+```bash
+cd client
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The app runs on `http://localhost:5173` by default (Vite). Make sure the backend is running and `VITE_API_URL` is set correctly in `client/.env` before starting.
+
 ## Postman
 
 Use `GIUNexus.postman_collection.json` for end-to-end API testing. The collection includes:
@@ -210,13 +312,13 @@ Use `GIUNexus.postman_collection.json` for end-to-end API testing. The collectio
 
 ## Team Members
 
-- [youssefkhaleel0689](https://github.com/youssefkhaleel0689) **Youssef Hassan** - `16008386` - `T16`
-- [gasTSK](https://github.com/gasTSK) **Taher Khalaf** - `16007291` - `T16`
-- [Tarek16006923](https://github.com/Tarek16006923) **Tarek Ahmed** - `16006923` - `T9`
-- [Yassin-Hegazy](https://github.com/Yassin-Hegazy) **Yassin Amr** - `16001061` - `T16`
-- [Aequate](https://github.com/aequate) **Amro Taha** - `16007093` - `T11`
-- [ZeyadAmr-16005823](https://github.com/ZeyadAmr-16005823) **Zeyad Amr** - `16005823` - `T16`
-- [mohammedrizk16008623](https://github.com/mohammedrizk16008623) **Mohammed Fady Rizk** - `16008623` - `T20`
-- [FaresEl-Sonbaty](https://github.com/FaresEl-Sonbaty) **Fares Mostafa El Sonbaty** - `16006173` - `T18`
-- [AhmedSoliman1023](https://github.com/AhmedSoliman1023) **Ahmed Bahaa Eldein** - `16020317` - `T16`
-- [MohabHindawy](https://github.com/MohabHindawy) **Mohab Khaled** - `16006616` - `T9`
+- [Mohab Khaled](https://github.com/MohabHindawy/Software-Project/commits?author=MohabHindawy)
+- [Youssef Hassan](https://github.com/MohabHindawy/Software-Project/commits?author=youssefkhaleel0689)
+- [Taher Khalaf](https://github.com/MohabHindawy/Software-Project/commits?author=gasTSK)
+- [Tarek Ahmed](https://github.com/MohabHindawy/Software-Project/commits?author=Tarek16006923)
+- [Yassin Amr](https://github.com/MohabHindawy/Software-Project/commits?author=Yassin-Hegazy)
+- [Amro Taha](https://github.com/MohabHindawy/Software-Project/commits?author=Aequate)
+- [Zeyad Amr](https://github.com/MohabHindawy/Software-Project/commits?author=ZeyadAmr-16005823)
+- [Mohammed Fady Rizk](https://github.com/MohabHindawy/Software-Project/commits?author=mohammedrizk16008623)
+- [Fares Mostafa El Sonbaty](https://github.com/MohabHindawy/Software-Project/commits?author=FaresEl-Sonbaty)
+- [Ahmed Bahaa Eldein](https://github.com/MohabHindawy/Software-Project/commits?author=AhmedSoliman1023)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
 import { AuthContext } from "../context/AuthContext";
 import { jobsAPI } from "../services/api";
@@ -48,11 +48,13 @@ function DarkSkeleton() {
 /* ── Dark job card ── */
 function DarkJobCard({ job, initialSaved }) {
   const { user, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const catColors = CATEGORY_COLORS[job.category] || CATEGORY_COLORS.Other;
 
   return (
     <div
+      onClick={() => navigate(`/jobs/${job._id}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -62,7 +64,7 @@ function DarkJobCard({ job, initialSaved }) {
         position: "relative",
         transition: "border-color 0.25s ease, background 0.25s ease, transform 0.25s ease",
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        cursor: "default",
+        cursor: "pointer",
         display: "flex", flexDirection: "column", gap: "0.85rem",
       }}
     >
@@ -304,7 +306,7 @@ const JobListPage = () => {
       <div style={{ minHeight: "100vh", background: "#030303", position: "relative", zIndex: 1 }}>
 
         {/* ── Header ── */}
-        <div style={{ padding: "4rem 6% 0", maxWidth: "1280px", margin: "0 auto" }}>
+        <div style={{ padding: "6.75rem 6% 0", maxWidth: "1280px", margin: "0 auto" }}>
           <p style={{ fontFamily: MONO, fontSize: "10px", letterSpacing: "3px", color: "rgba(0,229,204,0.6)", textTransform: "uppercase", marginBottom: "0.75rem" }}>
             SYS.LISTINGS
           </p>
@@ -326,7 +328,7 @@ const JobListPage = () => {
 
         {/* ── Filter bar ── */}
         <div style={{
-          position: "sticky", top: 0, zIndex: 20,
+          position: "sticky", top: "4.75rem", zIndex: 20,
           background: "rgba(3,3,3,0.95)", backdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(0,229,204,0.1)",
           padding: "0.875rem 6%",
