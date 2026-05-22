@@ -55,17 +55,7 @@ export default function RecruiterDashboard() {
 
       {error && <div className="rd-error">{error}</div>}
 
-<<<<<<< HEAD
       {loading ? <PageLoader /> : jobs.length === 0 && !error ? (
-=======
-      {loading ? (
-        <section className="rd-state-card">
-          <p className="nexus-eyebrow">Loading</p>
-          <h2>Retrieving jobs</h2>
-          <p>Your posted jobs and applicant data are being synced.</p>
-        </section>
-      ) : jobs.length === 0 && !error && user?.status !== "pending" ? (
->>>>>>> origin/main
         <section className="rd-state-card">
           <p className="nexus-eyebrow">No Jobs</p>
           <h2>No jobs posted yet</h2>
