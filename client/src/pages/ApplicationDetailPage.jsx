@@ -38,6 +38,7 @@ export default function ApplicationDetailPage() {
   const messageParams = new URLSearchParams();
   messageParams.set("role", "recruiter");
   if (application.job?.title) messageParams.set("job", application.job.title);
+  if (application.job?.company) messageParams.set("name", application.job.company);
   const canMessage = application.job?._id && application.status !== "rejected";
 
   return (

@@ -475,11 +475,27 @@ const JobDetailPage = () => {
 
             {isAuthenticated && isJobSeeker && (
               isApplied ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <span style={{ fontFamily: MONO, fontSize: "9px", letterSpacing: "2px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
-                    STATUS:
-                  </span>
-                  <ApplicationStatusBadge status={myApplication.status} />
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ fontFamily: MONO, fontSize: "9px", letterSpacing: "2px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
+                      STATUS:
+                    </span>
+                    <ApplicationStatusBadge status={myApplication.status} />
+                  </div>
+                  {myApplication.status !== "rejected" && (
+                    <Link
+                      to={`/conversations/${id}?role=recruiter&job=${encodeURIComponent(job.title || "")}&name=${encodeURIComponent(job.company || "")}`}
+                      style={{
+                        ...darkBtn,
+                        textDecoration: "none",
+                        color: TEAL,
+                        borderColor: "rgba(0,229,204,0.45)",
+                        background: "rgba(0,229,204,0.06)",
+                      }}
+                    >
+                      ✉️ Message recruiter
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <>

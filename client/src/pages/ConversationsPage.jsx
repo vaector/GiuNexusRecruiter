@@ -283,12 +283,55 @@ export default function ConversationsPage() {
                 fontFamily: "'Inter',system-ui,sans-serif",
                 fontSize: "0.82rem",
                 color: "rgba(234,242,255,0.2)",
+                textAlign: "center",
+                maxWidth: "400px",
+                lineHeight: 1.6,
               }}
             >
               {isAdmin
-                ? "No platform conversation threads have been created yet."
-                : "Start by applying to jobs or connecting with recruiters."}
+                ? "No messages have been sent on the platform yet. Messages appear here once users start communicating."
+                : user?.role === "recruiter"
+                ? "You haven't started any conversations yet. When applicants apply to your jobs, use the Message button on their row to chat with them."
+                : "When you apply to jobs, you can message the recruiter directly from your application. Browse jobs and apply to start a conversation."}
             </div>
+            {!isAdmin && (
+              <button
+                onClick={() =>
+                  navigate(
+                    user?.role === "recruiter"
+                      ? "/recruiter/dashboard"
+                      : "/jobs"
+                  )
+                }
+                style={{
+                  marginTop: "0.5rem",
+                  background: "rgba(0,229,204,0.1)",
+                  border: "1px solid rgba(0,229,204,0.3)",
+                  color: "#00e5cc",
+                  fontFamily: "'JetBrains Mono','Fira Code',monospace",
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  padding: "0.6rem 1.25rem",
+                  borderRadius: "2px",
+                  cursor: "pointer",
+                  transition: "all 0.18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0,229,204,0.15)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 8px rgba(0,229,204,0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(0,229,204,0.1)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                {user?.role === "recruiter"
+                  ? "Go to dashboard"
+                  : "Browse jobs"}
+              </button>
+            )}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
