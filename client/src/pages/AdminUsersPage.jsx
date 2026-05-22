@@ -23,6 +23,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   const { coords, scrollbarRef, scrollbarTrackRef, pctRef } = useAdminEffects();
@@ -50,6 +51,35 @@ export default function AdminUsersPage() {
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleStatusChange = async (userId, newStatus) => {
+    setActionLoading(true);
+    try {
+      await usersAPI.updateUserStatus(userId, newStatus);
+      showToast(`STATUS_UPDATED: ${newStatus.toUpperCase()}`);
+      setSelectedUser((prev) => prev ? { ...prev, status: newStatus } : null);
+      fetchUsers();
+    } catch {
+      showToast("SYS.ERR: FAILED_TO_UPDATE_STATUS", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("SYS.WARN: Permanently delete this user? This cannot be undone.")) return;
+    setActionLoading(true);
+    try {
+      await usersAPI.deleteUser(userId);
+      showToast("USER_DELETED");
+      setSelectedUser(null);
+      fetchUsers();
+    } catch {
+      showToast("SYS.ERR: FAILED_TO_DELETE_USER", "error");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const openDetail = async (id) => {
@@ -134,6 +164,36 @@ export default function AdminUsersPage() {
                   <p className="text-secondary" style={{ margin: 0, lineHeight: 1.6 }}>{selectedUser.bio}</p>
                 </div>
               )}
+            </div>
+
+            <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="nexus-eyebrow" style={{ marginBottom: "0.75rem" }}>ACTIONS</div>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                {["active", "pending", "suspended"]
+                  .filter((s) => s !== selectedUser.status)
+                  .map((s) => (
+                    <button
+                      key={s}
+                      className="nexus-btn secondary"
+                      style={{ fontSize: "0.68rem", padding: "0.3rem 0.75rem" }}
+                      disabled={actionLoading}
+                      onClick={() => handleStatusChange(selectedUser._id, s)}
+                    >
+                      SET_{s.toUpperCase()}
+                    </button>
+                  ))}
+                <button
+                  className="nexus-btn secondary"
+                  style={{
+                    fontSize: "0.68rem", padding: "0.3rem 0.75rem", marginLeft: "auto",
+                    borderColor: "rgba(239,68,68,0.4)", color: "#ef4444",
+                  }}
+                  disabled={actionLoading}
+                  onClick={() => handleDeleteUser(selectedUser._id)}
+                >
+                  DELETE_USER
+                </button>
+              </div>
             </div>
           </div>
         </div>
