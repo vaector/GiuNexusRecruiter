@@ -71,6 +71,16 @@ const register = asyncHandler(async (req, res, next) => {
     status: role === Role.RECRUITER ? UserStatus.PENDING : UserStatus.APPROVED,
   });
 
+  await AuditLog.record({
+    actor: { _id: user._id, role: user.role },
+    action: AuditAction.USER_CREATED,
+    targetModel: "User",
+    targetId: user._id,
+    metadata: { role: user.role, email: normalizedEmail },
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+  });
+
   return authResponse(res, 201, user);
 });
 
