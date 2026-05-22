@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-import { createContext, useState, useContext, useEffect } from "react";
-=======
-import { createContext, useState, useContext, useCallback } from "react";
+import { createContext, useState, useContext, useCallback, useEffect } from "react";
 import { authAPI } from "../services/api";
->>>>>>> origin/main
 
 export const AuthContext = createContext(null);
 
@@ -57,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, setUser, isAuthenticated: Boolean(token) }}>
+    <AuthContext.Provider value={{ user, token, login, logout, setUser, updateUser, isAuthenticated: Boolean(token) }}>
       {children}
     </AuthContext.Provider>
   );
